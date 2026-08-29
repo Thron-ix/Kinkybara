@@ -24,9 +24,11 @@ Kinkybara has no account, ads, analytics, tracking, cloud save, location request
 
 After one complete load, the app shell is cached for offline starts. Kinkybara does not run in the background; when reopened, it catches up from the device clock. Keeping the tab or installed app preserves the local save unless browser data is cleared.
 
-A restrictive content policy blocks analytics, network APIs, embedded pages, plug-ins and remote scripts. Player-entered names and restored memories are sanitized before display. The Repository and License links are the only external destinations; they open only when tapped and send no referrer.
+A restrictive content policy blocks analytics, network APIs, embedded pages, plug-ins and remote scripts. Player-entered names and restored memories are sanitized before display. The Repository, License and optional Instagram links are the only external destinations; they open only when tapped and send no referrer.
 
 No personal identity is published with this project. The creator is identified only as **Thron** and through this repository: [github.com/Thron-ix/Kinkybara](https://github.com/Thron-ix/Kinkybara).
+
+Instagram: [@thron.ix](https://www.instagram.com/thron.ix/)
 
 ## Development
 

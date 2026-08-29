@@ -1443,8 +1443,21 @@ function closeTray() {
   selectedItem = null;
   elements.tray.classList.remove("is-open");
   elements.tray.hidden = true;
-  elements.dropHint.hidden = true;
+  hideDropHint();
   $$('[data-action]', elements.actions).forEach((button) => button.classList.remove("is-active"));
+}
+
+function showDropHint(category, key, ready = false) {
+  elements.dropHint.textContent = targetFor(category, key) === "capy"
+    ? `${state.language === "de" ? "ZU" : "TO"} ${state.name.toUpperCase()}`
+    : (state.language === "de" ? "IN DIE WELT" : "INTO THE WORLD");
+  elements.dropHint.hidden = false;
+  elements.dropHint.classList.toggle("is-ready", ready);
+}
+
+function hideDropHint() {
+  elements.dropHint.hidden = true;
+  elements.dropHint.classList.remove("is-ready");
 }
 
 function selectItem(category, key) {
@@ -1454,6 +1467,7 @@ function selectItem(category, key) {
   });
   const item = itemFor(category, key);
   if (!item) return;
+  showDropHint(category, key);
   const target = targetFor(category, key) === "capy" ? state.name : (state.language === "de" ? "das Gehege" : "the yard");
   talk(state.language === "de"
     ? `${item.label} ausgewählt. Tippe jetzt auf ${target} – oder zieh es direkt hin.`
@@ -1504,8 +1518,7 @@ function startDrag(event) {
   };
   button.setPointerCapture?.(event.pointerId);
   showDragGhost(event.clientX, event.clientY, drag.key);
-  elements.dropHint.textContent = targetFor(drag.category, drag.key) === "capy" ? `${state.language === "de" ? "ZU" : "TO"} ${state.name.toUpperCase()}` : (state.language === "de" ? "IN DIE WELT" : "INTO THE WORLD");
-  elements.dropHint.hidden = false;
+  showDropHint(drag.category, drag.key);
   if (["brush", "rope"].includes(drag.key)) elements.trayProgress.hidden = false;
   haptic(9);
 }
@@ -1551,13 +1564,13 @@ function endDrag(event) {
   event.preventDefault();
   const finished = drag;
   drag = null;
-  suppressClickUntil = Date.now() + 450;
   elements.ghost.hidden = true;
-  elements.dropHint.hidden = true;
+  hideDropHint();
   elements.capy.classList.remove("drop-ready");
   elements.habitat.classList.remove("drop-ready");
   const point = { x: event.clientX, y: event.clientY };
   if (!finished.moved) return;
+  suppressClickUntil = Date.now() + 450;
   if (!hitTarget(finished.category, finished.key, point)) {
     showToast(targetFor(finished.category, finished.key) === "capy"
       ? (state.language === "de" ? `Noch näher zu ${state.name} ziehen!` : `Move it closer to ${state.name}!`)
@@ -1603,6 +1616,7 @@ async function performItem(category, key, clientPoint) {
   interactionBusy = true;
   pendingQuestAction = `${category}:${key}`;
   selectedItem = null;
+  hideDropHint();
   render();
 
   if (category === "feed") await feedAnimation(key, item);
@@ -2177,7 +2191,7 @@ elements.actions.addEventListener("click", (event) => {
 
 elements.trayItems.addEventListener("pointerdown", startDrag);
 elements.trayItems.addEventListener("click", (event) => {
-  if (event.detail !== 0) return;
+  if (Date.now() < suppressClickUntil) return;
   const button = event.target.closest(".tray-item");
   if (button) selectItem(button.dataset.category, button.dataset.key);
 });

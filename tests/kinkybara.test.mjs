@@ -100,6 +100,8 @@ test("semantic text colors remain readable without signature colors", () => {
     ["#3d343a", "#d8d1d5"],
     ["#5d5359", "#f0ebee"],
     ["#ffffff", "#5a5056"],
+    ["#251c27", "#dff3bc"],
+    ["#51464d", "#d8d1d5"],
   ];
   for (const [foreground, background] of pairs) {
     assert.ok(contrastRatio(foreground, background) >= 4.5, `${foreground} on ${background} must reach 4.5:1`);
@@ -471,7 +473,9 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.deepEqual(externalUrls, [
     "https://github.com/Thron-ix/Kinkybara",
     "https://github.com/Thron-ix/Kinkybara/blob/main/LICENSE",
+    "https://www.instagram.com/thron.ix/",
   ]);
+  assert.match(html, /Instagram @thron\.ix/);
   assert.match(i18n, /Ein kleiner Freund in deiner Hosentasche – freundlich, neugierig, ein bisschen kinky\./);
   assert.match(i18n, /Eine einfache Web-App/);
   assert.match(i18n, /Ein Geschenk von Thron\./);
@@ -533,7 +537,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v17/);
+  assert.match(serviceWorker, /kinkybara-shell-v21/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);
