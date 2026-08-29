@@ -2,6 +2,10 @@
 
 Kinkybara is a playful, installable pocket companion and a gift from **Thron**. It builds on a virtual-pet loop with a darker, friendly, pup-inspired world.
 
+## Open Kinkybara
+
+**[Play Kinkybara on GitHub Pages](https://thron-ix.github.io/Kinkybara/)**
+
 The interface starts in English and can switch to German. On first launch, the one-minute setup asks for a name, fur and two signature colors that shape the interface, world and accessories.
 
 ## Highlights
