@@ -1,0 +1,15 @@
+node_modules/
+coverage/
+.DS_Store
+.env*
+
+# Legacy build output kept locally during the clean-history migration.
+.next/
+.vinext/
+.wrangler/
+dist/
+out/
+
+# Local duplicates and backups must never enter the public repository.
+* 2.*
+*.private-backup

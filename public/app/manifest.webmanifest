@@ -1,0 +1,14 @@
+{
+  "name": "Kinkybara",
+  "short_name": "Kinkybara",
+  "description": "A private, playful pocket companion and gift from Thron.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#17121b",
+  "theme_color": "#17121b",
+  "lang": "en",
+  "categories": ["games", "lifestyle"]
+}

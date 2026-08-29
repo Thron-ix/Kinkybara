@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#17121b" />
+    <meta name="description" content="A playful, private pocket companion with a friendly kink and pup-inspired world." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Kinkybara" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>Kinkybara</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css?v=8" />
+  </head>
+  <body>
+    <main class="app-shell" id="app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow"><span id="day-label">DAY 1</span> · <time id="clock">08:42</time></p>
+          <h1>KINKYBARA</h1>
+        </div>
+        <div class="header-actions">
+          <button class="round-button quest-button" id="quest-button" type="button" data-i18n-aria="nav.quests" aria-label="Open daily activities"><span aria-hidden="true">✦</span><b id="quest-badge" hidden>!</b></button>
+          <button class="round-button library-button" id="library-button" type="button" data-i18n-aria="nav.library" aria-label="Open Kinkybara library"><span aria-hidden="true">▦</span></button>
+          <button class="round-button journal-button" id="journal-button" type="button" data-i18n-aria="nav.journal" aria-label="Open journal"><span aria-hidden="true">▤</span></button>
+          <button class="round-button" id="settings-button" type="button" data-i18n-aria="nav.settings" aria-label="Open settings"><span class="pixel-dots" aria-hidden="true"></span></button>
+        </div>
+      </header>
+
+      <section class="habitat" id="habitat" data-period="day" data-area="home" data-weather="partly" data-i18n-aria="world.label" aria-label="Your Kinkybara's world">
+        <div class="sky-pixels" aria-hidden="true">
+          <span class="sun"></span><span class="moon"></span>
+          <span class="star star-one"></span><span class="star star-two"></span>
+          <span class="cloud cloud-one"></span><span class="cloud cloud-two"></span>
+        </div>
+        <div class="weather-fx" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <button class="weather-chip" id="weather-button" type="button" aria-label="Open local world ambience"><span id="weather-icon" aria-hidden="true">P</span><strong id="weather-temperature">18°</strong><small>LOCAL MOOD</small></button>
+        <div class="area-name" id="area-name">THE DEN</div>
+        <div class="area-choice" id="area-choice" data-i18n="world.choice">KINKYBARA CHOOSES</div>
+
+        <div class="speech" role="status" aria-live="polite">
+          <span id="speech-text">A good pack makes every day warmer.</span>
+          <button id="speech-button" type="button" aria-label="Read Kinkybara's message aloud"><span class="speaker-icon" aria-hidden="true"></span></button>
+        </div>
+        <button class="quest-alert" id="quest-alert" type="button" hidden>
+          <span class="quest-alert-icon" aria-hidden="true">✦</span>
+          <span><small>NEUE GEMEINSAME QUEST</small><strong id="quest-alert-title">Glitzer im Schilf</strong></span>
+          <b aria-hidden="true">›</b>
+        </button>
+        <div class="drop-hint" id="drop-hint" hidden>HIERHER ZIEHEN</div>
+
+        <div class="landscape-scenery">
+          <span class="distant-hill hill-one" aria-hidden="true"></span><span class="distant-hill hill-two" aria-hidden="true"></span>
+          <button class="landmark cabin" type="button" data-landmark="cabin" aria-label="Visit the little den"><span class="cabin-roof"></span><span class="cabin-window"></span><span class="cabin-door"></span><small>THE DEN</small></button>
+          <div class="deer-pen" aria-label="Friends gather in the background"><span class="fence"></span><span class="pixel-deer deer-one"></span><span class="pixel-deer deer-two"></span><small>FRIENDS' YARD</small></div>
+          <button class="landmark garden-shed" type="button" data-landmark="garden" aria-label="Visit the Play Yard"><span></span><small>PLAY YARD</small></button>
+          <button class="landmark wintergarden-house" type="button" data-landmark="wintergarden" aria-label="Visit the Pack Lounge"><span class="glass-roof"></span><span class="glass-door"></span><small>PACK LOUNGE</small></button>
+          <span class="pixel-chicken" id="pixel-chicken" aria-label="Ein kleines Huhn läuft durch die Landschaft"></span>
+        </div>
+
+        <button class="pet-button" id="pet-button" type="button" aria-label="Pet Kinkybara or hand over the selected item">
+          <span class="pixel-capy" id="pixel-capy" role="img" aria-label="Ein freundliches, fein gepixeltes Capybara"></span>
+          <span class="outfit-layer" id="outfit-layer" aria-hidden="true"></span>
+          <span class="sleep-z sleep-z-one" aria-hidden="true">Z</span><span class="sleep-z sleep-z-two" aria-hidden="true">Z</span>
+          <span class="heart-layer" id="heart-layer" aria-hidden="true"></span>
+          <span class="pet-shadow" aria-hidden="true"></span>
+        </button>
+
+        <div class="scene-layer" id="scene-layer" aria-hidden="true"></div>
+        <div class="placed-items-layer" id="placed-items-layer" aria-label="Platzierte Sammlerstücke"></div>
+        <button class="animal-visitor" id="animal-visitor" type="button" hidden><span id="visitor-icon">♢</span><strong id="visitor-name">Hase Fips</strong><small>BESUCH</small></button>
+        <div class="bubble-layer" id="bubble-layer" aria-label="Seifenblasen-Spiel"></div>
+        <div class="splash-layer" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+        <button class="travel-postcard" id="travel-postcard" type="button" hidden>
+          <span class="travel-stamp" id="travel-stamp" aria-hidden="true">✦</span>
+          <span><small id="travel-kind">PARTY POST</small><strong id="travel-place">Folsom Weekend</strong><em id="travel-countdown">2 H LEFT</em></span>
+          <b>OPEN PARTY POST ›</b>
+        </button>
+
+        <div class="ground" aria-hidden="true">
+          <span class="reed reed-one"></span><span class="reed reed-two"></span>
+          <span class="water" id="pond"></span>
+        </div>
+        <nav class="world-navigation" id="world-navigation" aria-label="Kinkybara world areas">
+          <span data-area="home" class="is-active"><b>⌂</b><i data-i18n="world.home">THE DEN</i></span>
+          <span data-area="meadow"><b>♣</b><i data-i18n="world.meadow">KENNEL CLUB</i></span>
+          <span data-area="garden"><b>▰</b><i data-i18n="world.garden">PLAY YARD</i></span>
+          <span data-area="wintergarden"><b>◆</b><i data-i18n="world.wintergarden">PACK LOUNGE</i></span>
+        </nav>
+      </section>
+
+      <section class="pet-card" aria-labelledby="pet-name">
+        <div class="name-line">
+          <div>
+            <p class="eyebrow" data-i18n="pet.yours">YOUR KINKYBARA</p>
+            <div class="pet-title"><h2 id="pet-name">THRON</h2><span id="level">LV. 1</span></div>
+            <div class="growth-label" id="growth-label">LITTLE KINKYBARA · GROWS WITH YOU</div>
+            <div class="xp-track" aria-label="Fortschritt zum nächsten Level"><span id="xp-fill"></span></div>
+          </div>
+          <div class="mood mood-happy" id="mood"><span aria-hidden="true">♥</span> HAPPY</div>
+        </div>
+
+        <button class="collection-button" id="inventory-button" type="button"><span aria-hidden="true">▣</span><strong data-i18n="pet.collection">WARDROBE & COLLECTION</strong><small id="inventory-count">1 / 22 ITEMS</small><b aria-hidden="true">›</b></button>
+        <button class="pack-cards-button" id="pack-cards-button" type="button"><strong>PLAY PACK CARDS</strong><small>A friendly five-round stat duel</small><b aria-hidden="true">›</b></button>
+
+        <div class="need-grid">
+          <div class="need"><div><span data-i18n="need.satiety">FULL</span><strong data-value="satiety">82%</strong></div><div class="meter" data-meter="satiety" role="progressbar" aria-label="Full" aria-valuemin="0" aria-valuemax="100"><span></span></div></div>
+          <div class="need"><div><span data-i18n="need.fun">FUN</span><strong data-value="fun">78%</strong></div><div class="meter" data-meter="fun" role="progressbar" aria-label="Fun" aria-valuemin="0" aria-valuemax="100"><span></span></div></div>
+          <div class="need"><div><span data-i18n="need.clean">FRESH</span><strong data-value="clean">90%</strong></div><div class="meter" data-meter="clean" role="progressbar" aria-label="Fresh" aria-valuemin="0" aria-valuemax="100"><span></span></div></div>
+          <div class="need"><div><span data-i18n="need.energy">ENERGY</span><strong data-value="energy">88%</strong></div><div class="meter" data-meter="energy" role="progressbar" aria-label="Energy" aria-valuemin="0" aria-valuemax="100"><span></span></div></div>
+          <div class="need"><div><span data-i18n="need.social">BOND</span><strong data-value="social">84%</strong></div><div class="meter" data-meter="social" role="progressbar" aria-label="Bond" aria-valuemin="0" aria-valuemax="100"><span></span></div></div>
+          <div class="need"><div><span data-i18n="need.curiosity">CURIOUS</span><strong data-value="curiosity">76%</strong></div><div class="meter" data-meter="curiosity" role="progressbar" aria-label="Curious" aria-valuemin="0" aria-valuemax="100"><span></span></div></div>
+        </div>
+      </section>
+
+      <section class="activity-tray" id="activity-tray" hidden aria-live="polite">
+        <div class="tray-heading">
+          <div><p class="eyebrow" id="tray-kicker">FÜTTERN</p><h3 id="tray-title">Zieh Futter zu Emmi</h3></div>
+          <button id="tray-close" type="button" aria-label="Aktionsfach schließen">×</button>
+        </div>
+        <p class="tray-instruction" id="tray-instruction">Gegenstand halten und nach oben ziehen. Antippen und danach Emmi antippen geht auch.</p>
+        <div class="tray-progress" id="tray-progress" hidden><span></span></div>
+        <div class="tray-items" id="tray-items"></div>
+      </section>
+
+      <nav class="actions" id="actions" aria-label="Interact with your Kinkybara">
+        <button type="button" data-action="feed"><span class="action-icon icon-carrot" aria-hidden="true"></span><strong data-i18n="action.feed">FEED</strong><small data-i18n="action.feedHint">Drag</small></button>
+        <button type="button" data-action="play"><span class="action-icon icon-ball" aria-hidden="true"></span><strong data-i18n="action.play">PLAY</strong><small data-i18n="action.playHint">Toss</small></button>
+        <button type="button" data-action="care"><span class="action-icon icon-brush" aria-hidden="true"></span><strong data-i18n="action.care">CARE</strong><small data-i18n="action.careHint">Groom</small></button>
+        <button type="button" data-action="together"><span class="action-icon icon-heart" aria-hidden="true">♥</span><strong data-i18n="action.together">BOND</strong><small data-i18n="action.togetherHint">Together</small></button>
+        <button type="button" data-action="travel"><span class="action-icon icon-travel" aria-hidden="true">⌁</span><strong data-i18n="action.travel">PARTY</strong><small data-i18n="action.travelHint">Head out</small></button>
+        <button type="button" data-action="sleep" id="sleep-action"><span class="action-icon icon-moon" aria-hidden="true"></span><strong id="sleep-label" data-i18n="action.sleep">SLEEP</strong><small data-i18n="action.sleepHint">Lights out</small></button>
+      </nav>
+    </main>
+
+    <div class="drag-ghost" id="drag-ghost" hidden aria-hidden="true"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <dialog class="sheet gift-sheet onboarding-sheet" id="dedication-dialog">
+      <div class="language-picker" id="language-picker" role="group" aria-label="Language / Sprache">
+        <button type="button" data-language="en" class="is-active" data-i18n="common.english">ENGLISH</button>
+        <button type="button" data-language="de" data-i18n="common.german">DEUTSCH</button>
+      </div>
+      <p class="sheet-kicker" data-i18n="gift.kicker">A GIFT FROM THRON.</p>
+      <h2 data-i18n="gift.title">Your Kinkybara!</h2>
+      <p class="onboarding-lead" data-i18n="gift.copy">A little friend in your pocket — friendly, curious, a little kinky.</p>
+      <div class="onboarding-facts">
+        <div><strong data-i18n="gift.whatTitle">A small companion</strong><span data-i18n="gift.whatCopy">Care, play, dress up, collect memories and discover a welcoming pup-inspired world.</span></div>
+        <div><strong data-i18n="gift.privateTitle">Private by design</strong><span data-i18n="gift.privateCopy">No account, ads, analytics, tracking or cloud save. Your name and gameplay stay in this browser.</span></div>
+        <div><strong data-i18n="gift.aliveTitle">It keeps its rhythm</strong><span data-i18n="gift.aliveCopy">Browsers pause the app when closed. When you return, Kinkybara safely catches up from local time — and can never die.</span></div>
+      </div>
+      <button class="primary-button" id="dedication-next" type="button" data-i18n="gift.next">MAKE IT YOURS</button>
+    </dialog>
+
+    <dialog class="sheet welcome-sheet" id="welcome-dialog">
+      <form id="welcome-form">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <p class="sheet-kicker" id="welcome-kicker" data-i18n="welcome.kicker">YOUR KINKYBARA</p>
+        <h2 id="welcome-title" data-i18n="welcome.title">Choose a name and colors</h2>
+        <p id="welcome-copy" data-i18n="welcome.copy">Pick two signature colors. They shape the interface, your world and special accessories.</p>
+        <label class="text-field"><span data-i18n="welcome.name">NAME</span><input id="welcome-name" name="name" maxlength="14" autocomplete="off" value="Thron" /></label>
+        <fieldset class="fur-picker">
+          <legend data-i18n="welcome.fur">FUR</legend>
+          <label><input type="radio" name="fur" value="classic" checked /><span class="fur-swatch fur-classic"></span><small data-i18n="welcome.classic">Classic</small></label>
+          <label><input type="radio" name="fur" value="golden" /><span class="fur-swatch fur-golden"></span><small data-i18n="welcome.gold">Gold</small></label>
+          <label><input type="radio" name="fur" value="chocolate" /><span class="fur-swatch fur-chocolate"></span><small data-i18n="welcome.chocolate">Cocoa</small></label>
+          <label><input type="radio" name="fur" value="cream" /><span class="fur-swatch fur-cream"></span><small data-i18n="welcome.cream">Cream</small></label>
+        </fieldset>
+        <fieldset class="accent-picker">
+          <legend data-i18n="welcome.colors">SIGNATURE COLORS</legend>
+          <div><span data-i18n="welcome.primary">PRIMARY</span><div class="accent-options" id="primary-accent-options"></div></div>
+          <div><span data-i18n="welcome.secondary">SECONDARY</span><div class="accent-options" id="secondary-accent-options"></div></div>
+        </fieldset>
+        <div class="welcome-options">
+          <label><input type="checkbox" name="voice" /> <span data-i18n="welcome.voice">Read messages aloud</span></label>
+          <label><input type="checkbox" name="sound" checked /> <span data-i18n="welcome.sound">Pixel sounds</span></label>
+        </div>
+        <button class="primary-button" type="submit" data-i18n="welcome.start">START WITH KINKYBARA</button>
+        <button class="secondary-button" id="welcome-cancel" type="button" hidden data-i18n="welcome.cancel">CANCEL</button>
+        <small data-i18n="welcome.local">Ready in under a minute. You can change this later.</small>
+      </form>
+    </dialog>
+
+    <dialog class="sheet away-sheet" id="away-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <p class="sheet-kicker">WÄHREND DU WEG WARST</p>
+      <h2 id="away-title">Emmi hat auf dich gewartet</h2>
+      <div class="away-clock" id="away-clock">2 STUNDEN</div>
+      <p id="away-text">Dein Capybara war die ganze Zeit weiter lebendig.</p>
+      <div class="away-changes" id="away-changes"></div>
+      <button class="primary-button" id="away-close" type="button">JETZT KÜMMERN</button>
+    </dialog>
+
+    <dialog class="sheet travel-sheet" id="travel-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker" id="travel-dialog-kind">PARTY POST</p><h2 id="travel-dialog-title">Folsom Weekend</h2></div><button type="button" data-close aria-label="Close">×</button></div>
+      <div class="travel-illustration" id="travel-illustration" data-palette="glitter" aria-hidden="true"><span class="travel-capy-dot">●</span><i></i><i></i><i></i><i></i></div>
+      <div class="travel-location"><span id="travel-dialog-icon">F</span><div><small>RIGHT NOW IN</small><strong id="travel-dialog-place">Berlin</strong></div></div>
+      <p id="travel-dialog-doing"></p>
+      <div class="travel-fact"><strong>FRIENDLY FIRST STEP</strong><span id="travel-dialog-fact"></span></div>
+      <div class="travel-progress" aria-label="Fortschritt der Reise"><span id="travel-progress-fill"></span></div>
+      <div class="travel-return"><strong id="travel-dialog-countdown">2 H LEFT</strong><small>Your Kinkybara comes home on its own.</small></div>
+      <div class="travel-companion" id="travel-companion" hidden><span id="travel-companion-icon">F</span><p><small>PACK MATE</small><strong id="travel-companion-name">Fips</strong></p></div>
+      <div class="travel-treasure"><span>?</span><p><small>IN THE PARTY BAG</small><strong id="travel-reward-label">A still-unknown find</strong></p></div>
+      <p class="travel-history" id="travel-history"></p>
+    </dialog>
+
+    <dialog class="sheet journey-sheet" id="journey-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker">SURPRISE PARTY</p><h2 id="journey-title">Pack a small bag?</h2></div><button type="button" data-close aria-label="Close">×</button></div>
+      <div class="journey-hero" aria-hidden="true"><span>⌁</span><i>?</i><b>▣</b></div>
+      <p><strong id="journey-capy-name">Thron</strong> chooses the destination. The outing lasts two to three hours, and may bring back a new outfit or world item.</p>
+      <div class="journey-rules"><span>?</span><strong>DESTINATION STAYS A SURPRISE</strong><span>2–3 H</span></div>
+      <button class="primary-button" id="start-journey-button" type="button">HEAD TO A PARTY</button>
+      <button class="secondary-button" type="button" data-close>STAY HOME FOR NOW</button>
+    </dialog>
+
+    <dialog class="sheet inventory-sheet" id="inventory-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker">PARTY FINDS & WARDROBE</p><h2>Kinkybara collection</h2></div><button type="button" data-close aria-label="Close">×</button></div>
+      <div class="inventory-summary" id="inventory-summary"></div>
+      <div class="inventory-tabs" id="inventory-tabs" role="tablist" aria-label="Inventar filtern">
+        <button type="button" data-filter="all" class="is-active">ALL</button>
+        <button type="button" data-filter="wearable">OUTFITS</button>
+        <button type="button" data-filter="placeable">WORLD</button>
+        <button type="button" data-filter="harvest">FOOD</button>
+      </div>
+      <p class="inventory-hint" id="inventory-hint">Each outfit slot holds one item. Your two signature colors automatically shape special gear.</p>
+      <div class="inventory-grid" id="inventory-grid"></div>
+    </dialog>
+
+    <dialog class="sheet garden-sheet" id="garden-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker">WÄCHST AUCH OFFLINE</p><h2>Capy-Gemüsegarten</h2></div><button type="button" data-close aria-label="Schließen">×</button></div>
+      <p class="garden-intro">Wähle Saatgut und bepflanze ein freies Beet. Mit der gesammelten Gießkanne wächst alles schneller.</p>
+      <div class="seed-picker" id="seed-picker"></div>
+      <div class="garden-plots" id="garden-plots"></div>
+      <div class="harvest-pantry" id="harvest-pantry"></div>
+    </dialog>
+
+    <dialog class="sheet weather-sheet" id="weather-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker">LOCAL AMBIENCE</p><h2>Mood over the Kinkybara world</h2></div><button type="button" data-close aria-label="Close">×</button></div>
+      <div class="weather-hero"><span id="weather-dialog-icon">P</span><div><strong id="weather-dialog-label">Soft lights</strong><small id="weather-dialog-temp">18 °C</small></div></div>
+      <p id="weather-dialog-phrase"></p>
+      <div class="weather-metrics"><div><small>LIGHT LEVEL</small><strong id="weather-clouds">42 %</strong></div><div><small>RAIN</small><strong id="weather-rain">0 mm</strong></div></div>
+      <p class="weather-explanation">This is a playful local ambience generated from the time on your device. It does not request your location or contact a weather service.</p>
+    </dialog>
+
+    <dialog class="sheet library-sheet" id="library-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker">DEINE CAPYS</p><h2>Capy-Bibliothek</h2></div><button type="button" data-close aria-label="Schließen">×</button></div>
+      <p class="library-intro">Jedes Capy lebt in seinem eigenen Spielstand weiter – mit eigenen Bedürfnissen, Erinnerungen und Abenteuern.</p>
+      <div class="library-count" id="library-count"></div>
+      <div class="library-list" id="library-list"></div>
+      <button class="primary-button" id="new-pet-button" type="button">+ NEUES CAPY ERWECKEN</button>
+      <p class="privacy-note">Die gesamte Bibliothek bleibt ausschließlich auf diesem Gerät und in diesem Browser.</p>
+    </dialog>
+
+    <dialog class="sheet quest-sheet" id="quest-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker">ABENTEUER MIT DEINEM CAPY</p><h2>Tagesquests</h2></div><button type="button" data-close aria-label="Schließen">×</button></div>
+      <div class="quest-summary" id="quest-summary"></div>
+      <p class="quest-intro">Über den Tag warten Spiele, Ausflüge und kleine gemeinsame Aufgaben. Jeder Capy hat seinen eigenen Fortschritt.</p>
+      <div class="quest-list" id="quest-list"></div>
+    </dialog>
+
+    <dialog class="sheet quest-game-sheet" id="quest-game-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker" id="quest-game-kicker">GEMEINSAME QUEST</p><h2 id="quest-game-title">Glitzer im Schilf</h2></div><button type="button" id="quest-game-close" aria-label="Minispiel verlassen">×</button></div>
+      <p class="quest-game-instruction" id="quest-game-instruction"></p>
+      <div class="quest-game-status" id="quest-game-status" role="status" aria-live="polite"></div>
+      <div class="quest-stage" id="quest-stage"></div>
+      <button class="secondary-button" id="quest-game-cancel" type="button">SPÄTER WEITERSPIELEN</button>
+    </dialog>
+
+    <dialog class="sheet pack-cards-sheet" id="pack-cards-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker">PACK CARDS</p><h2>Friendly pack duel</h2></div><button type="button" id="pack-cards-close" aria-label="Close Pack Cards">×</button></div>
+      <p class="pack-cards-intro">Choose one value on your card. Highest number wins the round. The fictional cards celebrate trust, style, energy and pack spirit.</p>
+      <div class="quest-game-status" id="pack-cards-status" role="status" aria-live="polite"></div>
+      <p class="pack-cards-message" id="pack-cards-message"></p>
+      <div class="pack-cards-stage" id="pack-cards-stage"></div>
+      <p class="pack-cards-credit">Inspired by community card culture; no real people, artwork or rules are copied.</p>
+    </dialog>
+
+    <dialog class="sheet journal-sheet" id="journal-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker">ERINNERUNGEN</p><h2>Emmis Tagebuch</h2></div><button type="button" data-close aria-label="Schließen">×</button></div>
+      <div class="journal-summary" id="journal-summary"></div>
+      <ol class="memory-list" id="memory-list"></ol>
+    </dialog>
+
+    <dialog class="sheet dialogue-sheet" id="dialogue-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="dialogue-capy" aria-hidden="true"><span>♥</span></div>
+      <p class="sheet-kicker" id="dialogue-topic">CAPY-GESPRÄCH</p>
+      <h2 id="dialogue-title">Zeit zum Reden</h2>
+      <div class="dialogue-message" id="dialogue-message"></div>
+      <div class="dialogue-choices" id="dialogue-choices"></div>
+    </dialog>
+
+    <dialog class="sheet settings-sheet" id="settings-dialog">
+      <form id="settings-form">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-title"><div><p class="sheet-kicker">KINKYBARA</p><h2>Settings</h2></div><button type="button" data-close aria-label="Close">×</button></div>
+        <label class="text-field">NAME<input id="settings-name" maxlength="14" autocomplete="off" /></label>
+        <fieldset class="settings-language">
+          <legend data-i18n="settings.language">LANGUAGE</legend>
+          <label><input type="radio" name="settingsLanguage" value="en" /><span>ENGLISH</span></label>
+          <label><input type="radio" name="settingsLanguage" value="de" /><span>DEUTSCH</span></label>
+        </fieldset>
+        <fieldset class="accent-picker settings-accent-picker">
+          <legend data-i18n="settings.colors">SIGNATURE COLORS</legend>
+          <div><span data-i18n="welcome.primary">PRIMARY</span><div class="accent-options" id="settings-primary-accent-options"></div></div>
+          <div><span data-i18n="welcome.secondary">SECONDARY</span><div class="accent-options" id="settings-secondary-accent-options"></div></div>
+        </fieldset>
+        <div class="toggle-list">
+          <label><span><strong>Read messages aloud</strong><small>Uses a matching English or German system voice</small></span><input id="setting-voice" type="checkbox" /></label>
+          <label><span><strong>Pixel sounds</strong><small>Short sounds for interactions</small></span><input id="setting-sound" type="checkbox" /></label>
+          <label><span><strong>Haptics</strong><small>Short feedback where supported</small></span><input id="setting-haptics" type="checkbox" /></label>
+        </div>
+        <button class="primary-button" type="submit">SAVE</button>
+        <button class="secondary-button" id="install-help-button" type="button">INSTALL ON THIS PHONE</button>
+        <div class="install-help" id="install-help" hidden><strong>In Safari:</strong><ol><li>Tap Share.</li><li>Choose Add to Home Screen.</li><li>Confirm with Add.</li></ol></div>
+        <p class="privacy-note">Your name, needs, colors and memories stay in this browser. Closed browsers pause the app; elapsed time is calculated locally when you return.</p>
+        <aside class="about-box">
+          <strong data-i18n="about.label">ABOUT & SOURCE</strong>
+          <p>A playful, unofficial community gift from Thron. Kinkybara is not affiliated with any event, venue or brand named in its fictional outings.</p>
+          <p><a href="https://github.com/Thron-ix/Kinkybara" target="_blank" rel="noreferrer">Repository</a> · <a href="https://github.com/Thron-ix/Kinkybara/blob/main/LICENSE" target="_blank" rel="noreferrer">License</a></p>
+        </aside>
+        <button class="danger-button" id="reset-button" type="button">DELETE THIS KINKYBARA</button>
+      </form>
+    </dialog>
+
+    <script type="module" src="./app.js?v=8"></script>
+  </body>
+</html>
