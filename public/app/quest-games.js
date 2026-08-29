@@ -13,7 +13,8 @@ function emptyStage(stage, className) {
   stage.replaceChildren();
 }
 
-function sparkleGame({ stage, status, onFinish, onMessage }) {
+function sparkleGame({ stage, status, onFinish, onMessage, language }) {
+  const en = language === "en";
   emptyStage(stage, "sparkle-game");
   let caught = 0;
   let left = 22;
@@ -22,11 +23,11 @@ function sparkleGame({ stage, status, onFinish, onMessage }) {
   field.className = "sparkle-field";
   stage.append(field);
 
-  const update = () => { status.textContent = `✦ ${caught} GEFANGEN · ${left} SEK`; };
+  const update = () => { status.textContent = en ? `✦ ${caught} CAUGHT · ${left} SEC` : `✦ ${caught} GEFANGEN · ${left} SEK`; };
   const spawn = () => {
     if (ended) return;
     const target = button(icons[Math.floor(Math.random() * 2)], "sparkle-target");
-    target.setAttribute("aria-label", "Funkelstern fangen");
+    target.setAttribute("aria-label", en ? "Catch glitter star" : "Funkelstern fangen");
     target.style.setProperty("--left", `${5 + Math.random() * 82}%`);
     target.style.setProperty("--top", `${6 + Math.random() * 72}%`);
     target.style.setProperty("--hue", `${Math.floor(Math.random() * 300)}deg`);
@@ -41,7 +42,7 @@ function sparkleGame({ stage, status, onFinish, onMessage }) {
     window.setTimeout(() => target.remove(), 1700);
   };
   update();
-  onMessage("Schnell – ich sehe überall Glitzer!");
+  onMessage(en ? "Quick — I see glitter everywhere!" : "Schnell – ich sehe überall Glitzer!");
   const spawnTimer = window.setInterval(spawn, 430);
   spawn(); spawn();
   const clock = window.setInterval(() => {
@@ -57,7 +58,8 @@ function sparkleGame({ stage, status, onFinish, onMessage }) {
   return () => { ended = true; window.clearInterval(clock); window.clearInterval(spawnTimer); };
 }
 
-function memoryGame({ stage, status, onFinish, onMessage }) {
+function memoryGame({ stage, status, onFinish, onMessage, language }) {
+  const en = language === "en";
   emptyStage(stage, "memory-game");
   const symbols = ["☕", "✦", "▲", "♥", "♫", "●"];
   const deck = [...symbols, ...symbols].sort(() => Math.random() - 0.5);
@@ -68,11 +70,11 @@ function memoryGame({ stage, status, onFinish, onMessage }) {
   let stopped = false;
   const board = document.createElement("div");
   board.className = "memory-board";
-  const update = () => { status.textContent = `${matches}/6 PAARE · ${moves} ZÜGE`; };
+  const update = () => { status.textContent = en ? `${matches}/6 PAIRS · ${moves} MOVES` : `${matches}/6 PAARE · ${moves} ZÜGE`; };
   deck.forEach((symbol, index) => {
     const card = button("?", "memory-card");
     card.dataset.symbol = symbol;
-    card.setAttribute("aria-label", `Verdeckte Karte ${index + 1}`);
+    card.setAttribute("aria-label", en ? `Hidden card ${index + 1}` : `Verdeckte Karte ${index + 1}`);
     card.addEventListener("click", () => {
       if (locked || card.classList.contains("is-open") || card.classList.contains("is-matched")) return;
       card.textContent = symbol;
@@ -102,11 +104,12 @@ function memoryGame({ stage, status, onFinish, onMessage }) {
   });
   stage.append(board);
   update();
-  onMessage("Ich bin Team Glitzerkarte. Welche merkst du dir?");
+  onMessage(en ? "I am team glitter card. Which ones will you remember?" : "Ich bin Team Glitzerkarte. Welche merkst du dir?");
   return () => { stopped = true; };
 }
 
-function coffeeGame({ stage, status, onFinish, onMessage }) {
+function coffeeGame({ stage, status, onFinish, onMessage, language }) {
+  const en = language === "en";
   emptyStage(stage, "coffee-game");
   let position = 0;
   let direction = 1;
@@ -120,8 +123,8 @@ function coffeeGame({ stage, status, onFinish, onMessage }) {
   meter.className = "coffee-meter";
   meter.innerHTML = '<span class="coffee-sweetspot"></span><i class="coffee-marker"></i>';
   const marker = meter.querySelector(".coffee-marker");
-  const stop = button("JETZT STOPPEN", "quest-game-action");
-  const update = () => { status.textContent = `${rounds}/5 MISCHUNGEN · ${points} PUNKTE`; };
+  const stop = button(en ? "STOP NOW" : "JETZT STOPPEN", "quest-game-action");
+  const update = () => { status.textContent = en ? `${rounds}/5 MIXES · ${points} POINTS` : `${rounds}/5 MISCHUNGEN · ${points} PUNKTE`; };
   stop.addEventListener("click", () => {
     if (stopped) return;
     rounds += 1;
@@ -145,16 +148,17 @@ function coffeeGame({ stage, status, onFinish, onMessage }) {
   }, 30);
   stage.append(cup, meter, stop);
   update();
-  onMessage("Genau goldbraun ist er perfekt. Bereit?");
+  onMessage(en ? "Perfect when it is golden brown. Ready?" : "Genau goldbraun ist er perfekt. Bereit?");
   return () => { stopped = true; window.clearInterval(animation); };
 }
 
-function grillGame({ stage, status, onFinish, onMessage }) {
+function grillGame({ stage, status, onFinish, onMessage, language }) {
+  const en = language === "en";
   emptyStage(stage, "grill-game");
   const ingredients = [
-    ["Mais", "🌽", true], ["Zwiebel", "◉", false], ["Paprika", "◆", true], ["Pilz", "♠", true],
-    ["Zwiebelring", "◎", false], ["Zucchini", "●", true], ["Kürbis", "▲", true], ["Rote Zwiebel", "◉", false],
-    ["Kartoffel", "●", true], ["Melone", "♥", true], ["Zwiebel", "◎", false], ["Tofu", "■", true],
+    [en ? "Corn" : "Mais", "🌽", true], [en ? "Onion" : "Zwiebel", "◉", false], [en ? "Pepper" : "Paprika", "◆", true], [en ? "Mushroom" : "Pilz", "♠", true],
+    [en ? "Onion ring" : "Zwiebelring", "◎", false], ["Zucchini", "●", true], [en ? "Pumpkin" : "Kürbis", "▲", true], [en ? "Red onion" : "Rote Zwiebel", "◉", false],
+    [en ? "Potato" : "Kartoffel", "●", true], [en ? "Melon" : "Melone", "♥", true], [en ? "Onion" : "Zwiebel", "◎", false], ["Tofu", "■", true],
   ];
   let index = 0;
   let correct = 0;
@@ -162,13 +166,13 @@ function grillGame({ stage, status, onFinish, onMessage }) {
   plate.className = "grill-plate";
   const choices = document.createElement("div");
   choices.className = "grill-choices";
-  const yes = button("AUF DEN GRILL", "quest-game-action");
-  const no = button("WEGLASSEN", "quest-game-action danger-choice");
+  const yes = button(en ? "ONTO THE GRILL" : "AUF DEN GRILL", "quest-game-action");
+  const no = button(en ? "LEAVE IT OUT" : "WEGLASSEN", "quest-game-action danger-choice");
   choices.append(yes, no);
   const update = () => {
-    const [name, symbol] = ingredients[index] || ["Fertig", "✦"];
+    const [name, symbol] = ingredients[index] || [en ? "Done" : "Fertig", "✦"];
     plate.innerHTML = `<span>${symbol}</span><strong>${name}</strong>`;
-    status.textContent = `${index}/12 SORTIERT · ${correct} RICHTIG`;
+    status.textContent = en ? `${index}/12 SORTED · ${correct} RIGHT` : `${index}/12 SORTIERT · ${correct} RICHTIG`;
   };
   const choose = (grill) => {
     const right = ingredients[index][2] === grill;
@@ -186,20 +190,21 @@ function grillGame({ stage, status, onFinish, onMessage }) {
   no.addEventListener("click", () => choose(false));
   stage.append(plate, choices);
   update();
-  onMessage("Alles riecht gut – außer diese verdächtigen Zwiebeln.");
+  onMessage(en ? "Everything smells good — except those suspicious onions." : "Alles riecht gut – außer diese verdächtigen Zwiebeln.");
   return () => {};
 }
 
-function routeGame({ stage, status, onFinish, onMessage }) {
+function routeGame({ stage, status, onFinish, onMessage, language }) {
+  const en = language === "en";
   emptyStage(stage, "route-game");
   const places = [
     { id: "cafe", icon: "☕", label: "Café" },
     { id: "park", icon: "♣", label: "Park" },
-    { id: "game", icon: "▦", label: "Spieleladen" },
-    { id: "view", icon: "▲", label: "Aussicht" },
-    { id: "pond", icon: "≈", label: "Teich" },
+    { id: "game", icon: "▦", label: en ? "Game shop" : "Spieleladen" },
+    { id: "view", icon: "▲", label: en ? "Viewpoint" : "Aussicht" },
+    { id: "pond", icon: "≈", label: en ? "Pond" : "Teich" },
   ];
-  const decoys = [{ icon: "◆", label: "Markt" }, { icon: "■", label: "Bahnhof" }, { icon: "●", label: "Platz" }];
+  const decoys = [{ icon: "◆", label: en ? "Market" : "Markt" }, { icon: "■", label: en ? "Station" : "Bahnhof" }, { icon: "●", label: en ? "Square" : "Platz" }];
   let next = 0;
   let mistakes = 0;
   const route = document.createElement("div");
@@ -217,24 +222,25 @@ function routeGame({ stage, status, onFinish, onMessage }) {
         marker.classList.add("is-visited");
         route.querySelector(`[data-route="${next}"]`).classList.add("is-visited");
         next += 1;
-        status.textContent = `${next}/5 ZIELE · ${mistakes} UMWEGE`;
+        status.textContent = en ? `${next}/5 STOPS · ${mistakes} DETOURS` : `${next}/5 ZIELE · ${mistakes} UMWEGE`;
         if (next === places.length) onFinish(Math.max(35, 100 - mistakes * 12));
       } else {
         mistakes += 1;
         marker.classList.add("is-wrong");
         window.setTimeout(() => marker.classList.remove("is-wrong"), 300);
-        status.textContent = `${next}/5 ZIELE · ${mistakes} UMWEGE`;
+        status.textContent = en ? `${next}/5 STOPS · ${mistakes} DETOURS` : `${next}/5 ZIELE · ${mistakes} UMWEGE`;
       }
     });
     map.append(marker);
   });
   stage.append(route, map);
-  status.textContent = "0/5 ZIELE · 0 UMWEGE";
-  onMessage("Erst Kaffee, dann Park – ich kenne den Weg … fast!");
+  status.textContent = en ? "0/5 STOPS · 0 DETOURS" : "0/5 ZIELE · 0 UMWEGE";
+  onMessage(en ? "Coffee first, then the park — I almost know the way!" : "Erst Kaffee, dann Park – ich kenne den Weg … fast!");
   return () => {};
 }
 
-function rhythmGame({ stage, status, onFinish, onMessage }) {
+function rhythmGame({ stage, status, onFinish, onMessage, language }) {
+  const en = language === "en";
   emptyStage(stage, "rhythm-game");
   const colors = ["rose", "gold", "green", "blue"];
   const sequence = [Math.floor(Math.random() * 4)];
@@ -267,7 +273,7 @@ function rhythmGame({ stage, status, onFinish, onMessage }) {
         mistakes += 1;
         accepting = false;
         inputIndex = 0;
-        status.textContent = `RUNDE ${round}/6 · ${mistakes} PATZER`;
+        status.textContent = en ? `ROUND ${round}/6 · ${mistakes} MISSES` : `RUNDE ${round}/6 · ${mistakes} PATZER`;
         window.setTimeout(showSequence, 650);
       }
     });
@@ -282,16 +288,16 @@ function rhythmGame({ stage, status, onFinish, onMessage }) {
     if (stopped) return;
     accepting = false;
     inputIndex = 0;
-    status.textContent = `RUNDE ${round}/6 · GUT AUFPASSEN`;
+    status.textContent = en ? `ROUND ${round}/6 · WATCH CLOSELY` : `RUNDE ${round}/6 · GUT AUFPASSEN`;
     sequence.forEach((value, index) => window.setTimeout(() => flash(value), 500 * index));
     window.setTimeout(() => {
       if (stopped) return;
       accepting = true;
-      status.textContent = `RUNDE ${round}/6 · JETZT DU`;
+      status.textContent = en ? `ROUND ${round}/6 · YOUR TURN` : `RUNDE ${round}/6 · JETZT DU`;
     }, sequence.length * 500 + 250);
   };
   stage.append(pads);
-  onMessage("Psst, die Seerosen spielen uns etwas vor.");
+  onMessage(en ? "Psst, the water lilies are playing something for us." : "Psst, die Seerosen spielen uns etwas vor.");
   window.setTimeout(showSequence, 450);
   return () => { stopped = true; };
 }
@@ -300,6 +306,6 @@ const GAMES = { sparkles: sparkleGame, memory: memoryGame, coffee: coffeeGame, g
 
 export function startQuestGame(options) {
   const game = GAMES[options.quest?.game];
-  if (!game) throw new Error(`Unbekanntes Questspiel: ${options.quest?.game}`);
+  if (!game) throw new Error(`Unknown quest game: ${options.quest?.game}`);
   return game(options);
 }

@@ -71,7 +71,7 @@ export const DIALOGUES = Object.freeze([
   {
     id: "brave-capy",
     title: "Mutig sein",
-    memory: "Emmi hat dir ihr kleines Geheimnis über Mut verraten.",
+    memory: "Dein Kinkybara hat dir ein kleines Geheimnis über Mut verraten.",
     turns: [
       {
         prompt: "Manchmal bin ich vor neuen Dingen aufgeregt. Was bedeutet mutig sein?",
@@ -117,7 +117,7 @@ export const DIALOGUES = Object.freeze([
   {
     id: "friendship",
     title: "Was Freunde können",
-    memory: "Emmi und du habt besprochen, was eure Freundschaft besonders macht.",
+    memory: "Dein Kinkybara und du habt besprochen, was eure Freundschaft besonders macht.",
     turns: [
       {
         prompt: "Was magst du am liebsten daran, dass wir Freunde sind?",
@@ -140,7 +140,7 @@ export const DIALOGUES = Object.freeze([
   {
     id: "feelings",
     title: "Wie war dein Tag?",
-    memory: "Emmi hat dir zugehört und war einfach für dich da.",
+    memory: "Dein Kinkybara hat dir zugehört und war einfach für dich da.",
     turns: [
       {
         prompt: "Wie fühlt sich dein Tag heute an? Ich höre zu, ohne zu urteilen.",
@@ -160,7 +160,117 @@ export const DIALOGUES = Object.freeze([
       },
     ],
   },
+  {
+    id: "switch-energy",
+    title: "Heute Switch?",
+    memory: "Ihr habt Rollen, Grenzen und die Kunst des guten Wechselns ausgehandelt.",
+    turns: [
+      {
+        prompt: "Heute fühle ich mich gleichzeitig nach ‚braver Pup‘ und ‚mach Platz, ich übernehme‘. Welche Seite willst du zuerst?",
+        choices: [
+          { label: "Zeig mir deinen Dom", response: "Klare Ansage. Ich kann wunderschön zuhören – wenn ich will.", changes: { social: 6, fun: 4 } },
+          { label: "Sei mein braver Sub", response: "Oh. Dann komm näher und tu nicht so unschuldig.", changes: { social: 5, fun: 6 } },
+          { label: "Lass uns switchen", response: "Perfekt. Wer führt, entscheidet der Blick – und der darf jederzeit wechseln.", changes: { social: 7, curiosity: 3 } },
+        ],
+      },
+      {
+        prompt: "Und wonach ist dir danach?",
+        choices: [
+          { label: "Cuddles & Snuggles", response: "Endlich eine klare Ansage. Komm her – heute bekommst du die weiche Seite.", changes: { social: 9, energy: 2 } },
+          { label: "Netflix & Chill", response: "Ich nehme die Fernbedienung. Wer wen chillt, handeln wir später aus.", changes: { fun: 6, social: 5 } },
+          { label: "Sniff & Worship", response: "Mutige Wahl. Nase runter, Blick hoch – und immer schön aufmerksam.", changes: { curiosity: 5, social: 6 } },
+        ],
+      },
+    ],
+  },
 ]);
+
+const ENGLISH_DIALOGUES = Object.freeze({
+  "favorite-things": {
+    title: "Capy's favorite things",
+    memory: "You talked about glitter, outings and a perfect game night.",
+    turns: [
+      ["I like glitter, company and going out. What should we do on our next outing?", [["Find a cozy café", "Oh yes! Oat-milk foam and a seat where we can watch everyone."], ["Collect shiny stones by the pond", "I will find the sparkly ones, and you keep me from falling in with excitement."], ["Visit a game shop", "Board games! I choose the glittery piece and lose with remarkable dignity."]]],
+      ["We could barbecue afterwards. You know what must never touch my plate, right?", [["Onions — absolutely not", "You know me! Those round impostors stay far away from my snout."], ["Only corn and melon", "Crunchy, sweet and onion-free. You are clearly the grill master of my heart."], ["A surprise plate", "Deal — but we do the big onion check together first."]]],
+    ],
+  },
+  "perfect-day": {
+    title: "A perfect Capy day",
+    memory: "You planned your perfect day together.",
+    turns: [
+      ["I am planning our perfect day. How should we begin?", [["Melon in bed", "You understand me! Breakfast melon is officially the coziest melon."], ["With an adventure", "Yes! I am packing courage, curiosity and an emergency carrot."], ["With a long cuddle", "Then I am moving very close already. Just for practice."]]],
+      ["And where should we watch the sky together tonight?", [["By the warm pond", "The water sparkles and you are here. A day cannot end better."], ["On a cuddle blanket", "I will bring my fluffiest belly as a pillow."], ["In a melon field", "Romantic and edible — clearly the best kind of view."]]],
+    ],
+  },
+  "missing-you": {
+    title: "When you are away",
+    memory: "You talked about how friendship can hold a pause.",
+    turns: [
+      ["When you close the app, I miss you a little. Do you know what helps?", [["Thinking of me?", "Exactly. I think of you and look after our home."], ["A Capy nap?", "Quite right. You can visit me in a dream anytime."], ["Remembering today", "That goes straight into my journal. Good moments do not shrink when someone leaves."]]],
+      ["What should I say first when you return?", [["I missed you", "Deal. Then you get an extra-long welcome cuddle."], ["Good to see you", "That is my favorite sentence. Right after: here is your melon."], ["Come on, let's play", "Then I will be ready with my ears wiggling."]]],
+    ],
+  },
+  "brave-capy": {
+    title: "Being brave",
+    memory: "Your Kinkybara shared a little secret about courage.",
+    turns: [
+      ["New things make me nervous sometimes. What does being brave mean?", [["Trying anyway", "So my heart may race and I can still take one small step. I like that."], ["Having someone with you", "Then you are my courage person. Big things look capy-small together."], ["Taking your time", "Gentle courage! No racing, no pressure — just one step when it feels right."]]],
+      ["What small adventure should we dare today?", [["Dive into the pond", "Blub! I will look for sparkling pond treasures."], ["Take a new path", "I will sniff ahead. My nose is an excellent adventure compass."], ["Simply rest today", "Rest can be brave too. We will guard the cuddle blanket together."]]],
+    ],
+  },
+  dreams: {
+    title: "Capy dreams",
+    memory: "You imagined an especially lovely dream together.",
+    turns: [
+      ["Last night I could fly in my dream. What did my wings look like?", [["Like little clouds", "Soft, round and a little slow — perfect Capy wings."], ["Made of melon peel", "Practical! During a flying break I can simply eat my wings."], ["Golden and glittery", "Then I must have glowed over the pond like a little sunbeam."]]],
+      ["Where should we travel in our dream tonight?", [["To the moon", "I hear its craters make perfect Capy bathtubs."], ["To the sea", "You, me and a thousand little waves. I will pack the towel."], ["To our home", "Sometimes the loveliest dream place is exactly where you feel safe."]]],
+    ],
+  },
+  friendship: {
+    title: "What friends can do",
+    memory: "You talked about what makes your friendship special.",
+    turns: [
+      ["What do you like best about us being friends?", [["You make me laugh", "Then I will keep practicing my famous wiggly-ear joke."], ["We care for each other", "You look after me, and I remind you to breathe. Good team."], ["We discover new things", "Curiosity feels warm and safe with you. That is special."]]],
+      ["What should our secret friendship sign be?", [["Two nose boops", "Boop, boop! Now it is official and strictly secret."], ["A melon code word", "Code word: mmelon. Truly impossible to detect."], ["A little heart", "I will wear it invisibly behind my left ear."]]],
+    ],
+  },
+  feelings: {
+    title: "How was your day?",
+    memory: "Your Kinkybara listened and was simply there for you.",
+    turns: [
+      ["How does your day feel? I am listening without judging.", [["Light and lovely", "Then I am happy with you! Let us hold onto this good moment."], ["Pretty exhausting", "Then you do not have to achieve anything here. Breathe in with me … and out."], ["Somehow mixed", "Mixed feelings may sit next to each other. I have room for all of them."]]],
+      ["What would feel good right now?", [["A quiet moment", "Then we will simply be quiet together for a bit. I am here."], ["Something silly", "Attention: I hereby declare this the roundest butt of the day."], ["A virtual cuddle", "Coming right up — warm, soft and without a time limit."]]],
+    ],
+  },
+  "switch-energy": {
+    title: "Switch energy",
+    memory: "You negotiated roles, boundaries, and the fine art of switching.",
+    turns: [
+      ["Today I feel like ‘good pup’ and ‘move over, I’m taking charge’ at the same time. Which side do you want first?", [["Show me your dom side", "Clear words. I can listen beautifully — when I want to."], ["Be my good sub", "Oh. Then come closer and stop pretending to be innocent."], ["Let’s switch", "Perfect. The look decides who leads — and it may change anytime."]]],
+      ["And what do you want afterwards?", [["Cuddles & snuggles", "Finally, a clear request. Come here — you get the soft side today."], ["Netflix & chill", "I get the remote. We’ll negotiate who chills whom later."], ["Sniff & worship", "Bold choice. Nose down, eyes up — and pay close attention."]]],
+    ],
+  },
+});
+
+export function localizedDialogue(dialogue, language = "de") {
+  if (!dialogue || language !== "en") return dialogue;
+  const copy = ENGLISH_DIALOGUES[dialogue.id];
+  if (!copy) return dialogue;
+  return {
+    ...dialogue,
+    title: copy.title,
+    memory: copy.memory,
+    turns: dialogue.turns.map((turn, turnIndex) => ({
+      ...turn,
+      prompt: copy.turns[turnIndex]?.[0] || turn.prompt,
+      choices: turn.choices.map((choice, choiceIndex) => ({
+        ...choice,
+        label: copy.turns[turnIndex]?.[1]?.[choiceIndex]?.[0] || choice.label,
+        response: copy.turns[turnIndex]?.[1]?.[choiceIndex]?.[1] || choice.response,
+      })),
+    })),
+  };
+}
 
 export function dialogueFor(state) {
   if (state.social < 38) return DIALOGUES.find((dialogue) => dialogue.id === "missing-you");

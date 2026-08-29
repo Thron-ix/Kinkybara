@@ -3,12 +3,12 @@ const MINUTE = 60_000;
 export const WORLD_AREAS = Object.freeze({
   home: { id: "home", label: "THE DEN", short: "DEN", icon: "⌂" },
   meadow: { id: "meadow", label: "KENNEL CLUB", short: "KENNEL", icon: "K" },
-  garden: { id: "garden", label: "PLAY YARD", short: "PLAY YARD", icon: "P" },
+  garden: { id: "garden", label: "PLAY AREA", short: "PLAY AREA", icon: "P" },
   wintergarden: { id: "wintergarden", label: "PACK LOUNGE", short: "LOUNGE", icon: "L" },
 });
 
 export const ANIMAL_FRIENDS = Object.freeze({
-  chicken: { id: "chicken", label: "Hilda", icon: "H", phrase: "Hilda checks every corner of the Play Yard. Nothing escapes her." },
+  chicken: { id: "chicken", label: "Hilda", icon: "H", phrase: "Hilda checks every corner of the Play Area. Nothing escapes her." },
   rabbit: { id: "rabbit", label: "Fips", icon: "F", phrase: "Fips came over for a bounce. I am doing my best to keep up." },
   duck: { id: "duck", label: "Lotte", icon: "L", phrase: "Lotte tells the loudest and friendliest stories in the whole pack." },
   hedgehog: { id: "hedgehog", label: "Piek", icon: "P", phrase: "Piek is visiting today. Hugs require particularly careful consent." },
@@ -16,12 +16,38 @@ export const ANIMAL_FRIENDS = Object.freeze({
   goose: { id: "goose", label: "Greta", icon: "G", phrase: "Greta walks through the Kennel Club with very important little steps." },
 });
 
+const FRIEND_COPY_DE = Object.freeze({
+  chicken: "Hilda prüft jede Ecke in der Play Area. Ihr entgeht nichts.",
+  rabbit: "Fips ist zum Herumhüpfen vorbeigekommen. Ich versuche mitzuhalten.",
+  duck: "Lotte erzählt die lautesten und freundlichsten Geschichten im ganzen Pack.",
+  hedgehog: "Piek ist heute zu Besuch. Umarmungen brauchen besonders vorsichtigen Konsens.",
+  alpaca: "Wolke und ich vergleichen unsere Flauschigkeit. Es bleibt unentschieden.",
+  goose: "Greta läuft mit sehr wichtigen kleinen Schritten durch den Kennel Club.",
+});
+
+export function localizedFriend(friend, language = "en") {
+  return friend && language === "de" ? { ...friend, phrase: FRIEND_COPY_DE[friend.id] || friend.phrase } : friend;
+}
+
 export const CROPS = Object.freeze({
   carrot: { id: "carrot", label: "Gartenkarotte", seedLabel: "Karottensamen", icon: "▲", growMs: 2 * MINUTE, yield: 2, food: { satiety: 19, fun: 3, curiosity: 2, xp: 5, phrase: "Selbst angebaut schmeckt die Karotte doppelt knackig!" } },
   tomato: { id: "tomato", label: "Sonnentomate", seedLabel: "Tomatensamen", icon: "●", growMs: 4 * MINUTE, yield: 2, food: { satiety: 15, fun: 5, clean: -2, xp: 6, phrase: "Plopp – diese Tomate schmeckt nach Gartensonne!" } },
   cucumber: { id: "cucumber", label: "Gartengurke", seedLabel: "Gurkensamen", icon: "▰", growMs: 6 * MINUTE, yield: 3, food: { satiety: 13, fun: 9, social: 2, xp: 7, phrase: "KNACK! Fast so gut wie Gewürzgurke – und selbst gezogen!" } },
   pumpkin: { id: "pumpkin", label: "Minikürbis", seedLabel: "Kürbissamen", icon: "◉", growMs: 10 * MINUTE, yield: 2, food: { satiety: 23, curiosity: 5, xp: 8, phrase: "Unser eigener Kürbis! Der ist capygroßartig." } },
 });
+
+const CROP_COPY_EN = Object.freeze({
+  carrot: ["Garden carrot", "Carrot seeds", "Homegrown carrots taste twice as crunchy!"],
+  tomato: ["Sun tomato", "Tomato seeds", "Pop — this tomato tastes like garden sunshine!"],
+  cucumber: ["Garden cucumber", "Cucumber seeds", "CRUNCH! Almost as good as a pickle — and homegrown!"],
+  pumpkin: ["Mini pumpkin", "Pumpkin seeds", "Our very own pumpkin! That is capy-tastic."],
+});
+
+export function localizedCrop(crop, language = "en") {
+  if (!crop || language === "de") return crop;
+  const copy = CROP_COPY_EN[crop.id];
+  return copy ? { ...crop, label: copy[0], seedLabel: copy[1], food: { ...crop.food, phrase: copy[2] } } : crop;
+}
 
 function seedNumber(value) {
   return [...String(value)].reduce((sum, character) => ((sum * 33) ^ character.charCodeAt(0)) >>> 0, 2_166_136_261);
@@ -80,6 +106,19 @@ export function normalizeWorld(candidate, now = Date.now(), seed = "capy") {
     world.friendUntil = 0;
   }
   return world;
+}
+
+export function selectWorldArea(candidate, area, now = Date.now(), seed = "capy") {
+  const world = normalizeWorld(candidate, now, seed);
+  if (!WORLD_AREAS[area] || area === world.area) return world;
+  return {
+    ...world,
+    area,
+    movedAt: now,
+    nextMoveAt: Math.max(world.nextMoveAt, now + 5 * MINUTE),
+    friendId: null,
+    friendUntil: 0,
+  };
 }
 
 export function createGarden() {
@@ -179,12 +218,13 @@ export function cropProgress(plot, now = Date.now()) {
   return Math.max(0, Math.min(100, ((now - plot.plantedAt) / duration) * 100));
 }
 
-export function cropTimeLabel(plot, now = Date.now()) {
-  if (!plot) return "FREIES BEET";
-  if (now >= plot.readyAt) return "ERNTEREIF";
+export function cropTimeLabel(plot, now = Date.now(), language = "de") {
+  const en = language === "en";
+  if (!plot) return en ? "EMPTY PLOT" : "FREIES BEET";
+  if (now >= plot.readyAt) return en ? "READY TO HARVEST" : "ERNTEREIF";
   const seconds = Math.max(1, Math.ceil((plot.readyAt - now) / 1000));
-  if (seconds < 60) return `NOCH ${seconds} SEK.`;
-  return `NOCH ${Math.ceil(seconds / 60)} MIN.`;
+  if (seconds < 60) return en ? `${seconds} SEC LEFT` : `NOCH ${seconds} SEK.`;
+  return en ? `${Math.ceil(seconds / 60)} MIN LEFT` : `NOCH ${Math.ceil(seconds / 60)} MIN.`;
 }
 
 export function travelCompanion(world, seed = "capy") {

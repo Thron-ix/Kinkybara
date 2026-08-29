@@ -1,4 +1,4 @@
-import { normalizeState } from "./game-core.js?v=8";
+import { normalizeState } from "./game-core.js";
 
 export const LIBRARY_KEY = "kinkybara-library-v1";
 

@@ -45,6 +45,7 @@ import {
   destinationById,
   isTraveling,
   normalizeTravel,
+  recallTravel,
   travelProgress,
 } from "../public/app/travel-core.js";
 import {
@@ -52,6 +53,7 @@ import {
   ITEM_DEFINITIONS,
   addInventoryItem,
   createInventory,
+  normalizeInventory,
   rewardForDestination,
   toggleEquipment,
   togglePlacedItem,
@@ -65,6 +67,7 @@ import {
   createWorld,
   harvestCrop,
   normalizeWorld,
+  selectWorldArea,
   plantCrop,
   selectCrop,
   travelCompanion,
@@ -73,9 +76,39 @@ import {
 import { localAmbience } from "../public/app/weather.js";
 import { PACK_CARD_DECK } from "../public/app/pack-cards.js";
 
+function contrastRatio(foreground, background) {
+  const luminance = (hex) => {
+    const value = hex.replace("#", "");
+    const normalized = value.length === 3 ? [...value].map((part) => part + part).join("") : value;
+    const channels = [0, 2, 4].map((index) => Number.parseInt(normalized.slice(index, index + 2), 16) / 255);
+    const linear = channels.map((channel) => channel <= 0.04045
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4);
+    return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+  };
+  const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+  return (values[0] + 0.05) / (values[1] + 0.05);
+}
+
+test("semantic text colors remain readable without signature colors", () => {
+  const pairs = [
+    ["#ffffff", "#302235"],
+    ["#251c27", "#f4edf1"],
+    ["#584a54", "#f4edf1"],
+    ["#61545c", "#f4edf1"],
+    ["#5b4e56", "#ffffff"],
+    ["#3d343a", "#d8d1d5"],
+    ["#5d5359", "#f0ebee"],
+    ["#ffffff", "#5a5056"],
+  ];
+  for (const [foreground, background] of pairs) {
+    assert.ok(contrastRatio(foreground, background) >= 4.5, `${foreground} on ${background} must reach 4.5:1`);
+  }
+});
+
 test("six needs continue changing while the app is closed", () => {
   const start = Date.UTC(2026, 7, 21, 12);
-  const state = makeState(start, "Emmi");
+  const state = makeState(start, "Nox");
   const later = advanceState(state, start + 3_600_000);
 
   assert.equal(later.satiety, 77.8);
@@ -129,28 +162,36 @@ test("pet state remains valid, names stay compact, and Thron is the default", ()
   assert.equal(makeState(1).name, "Thron");
   assert.equal(makeState(1).language, "en");
   assert.equal(Object.keys(ACCENT_COLORS).length, 8);
-  const customized = makeState(1, "Nox", "classic", { language: "de", primaryAccent: "pink", secondaryAccent: "blue" });
+  const customized = makeState(1, "Nox", "classic", { language: "de", primaryAccent: "black", secondaryAccent: "white" });
   assert.equal(customized.language, "de");
-  assert.equal(customized.primaryAccent, "pink");
-  assert.equal(customized.secondaryAccent, "blue");
+  assert.equal(customized.primaryAccent, "black");
+  assert.equal(customized.secondaryAccent, "white");
+  assert.ok(ACCENT_COLORS.black);
+  assert.ok(ACCENT_COLORS.white);
   assert.equal(makeState(1, "Goldie", "golden").furVariant, "golden");
   assert.equal(normalizeState({ furVariant: "unknown" }, 12).furVariant, "classic");
+  const hostileName = cleanName('  <img src=x onerror="open(1)"> Nox & Co  ');
+  assert.doesNotMatch(hostileName, /[<>&"'`=]/);
+  assert.ok(hostileName.length <= 14);
+  const sanitizedMemory = normalizeState({ memories: [{ icon: "<b>", text: "hello <script>alert(1)</script> & bye" }] }, 12).memories[0];
+  assert.doesNotMatch(sanitizedMemory.icon, /[<>&]/);
+  assert.doesNotMatch(sanitizedMemory.text, /[<>&]/);
 });
 
 test("the library keeps multiple independent capy saves and switches safely", () => {
-  const emmi = { ...makeState(100, "Emmi", "classic"), satiety: 91 };
+  const nox = { ...makeState(100, "Nox", "classic"), satiety: 91 };
   const pino = { ...makeState(200, "Pino", "golden"), satiety: 23 };
-  let library = addProfile(emptyLibrary(), emmi, 100, "emmi");
+  let library = addProfile(emptyLibrary(), nox, 100, "nox");
   library = addProfile(library, pino, 200, "pino");
 
   assert.equal(LIBRARY_KEY, "kinkybara-library-v1");
   assert.equal(library.profiles.length, 2);
   assert.equal(activeProfile(library, 200).state.name, "Pino");
   library = updateProfile(library, "pino", { ...pino, satiety: 55 }, 220);
-  library = selectProfile(library, "emmi", 220);
+  library = selectProfile(library, "nox", 220);
   assert.equal(activeProfile(library, 220).state.satiety, 91);
   assert.equal(library.profiles.find((profile) => profile.id === "pino").state.satiety, 55);
-  library = removeProfile(library, "emmi", 230);
+  library = removeProfile(library, "nox", 230);
   assert.equal(library.profiles.length, 1);
   assert.equal(library.activeId, "pino");
   assert.equal(normalizeLibrary({ ...library, activeId: "fehlt" }, 230).activeId, "pino");
@@ -161,9 +202,9 @@ test("mood, level, memories, and situation-aware phrases respond to care", () =>
   assert.equal(moodFor({ ...makeState(1), sleeping: true }).tone, "sleeping");
   assert.equal(levelInfo(0).level, 1);
   assert.ok(levelInfo(220).level > 1);
-  const remembered = addMemory(makeState(1), "Emmi hat Melone gegessen.", "♥", 2);
+  const remembered = addMemory(makeState(1), "Kinkybara hat Melone gegessen.", "♥", 2);
   assert.equal(remembered.memories.length, 1);
-  assert.match(statusPhrase({ ...makeState(1), social: 4 }, Date.UTC(2026, 7, 21, 12)), /(Nähe|bei mir|vermiss|bleiben|an dich|lehnen|zusammen)/i);
+  assert.match(statusPhrase({ ...makeState(1), social: 4 }, Date.UTC(2026, 7, 21, 12)), /(Nähe|bei mir|vermiss|bleiben|an dich|lehnen|zusammen|Aufmerksamkeit)/i);
 });
 
 test("the finer capybara uses a consistent image-free pixel grid", () => {
@@ -176,14 +217,23 @@ test("the finer capybara uses a consistent image-free pixel grid", () => {
   assert.ok(CAPY_PIXELS.join("").includes("h"));
 });
 
+test("the pup hood uses high-resolution layered raster assets", async () => {
+  for (const name of ["pup-hood-base.png", "pup-hood-primary-mask.png", "pup-hood-secondary-mask.png"]) {
+    const image = await readFile(new URL(`../public/app/assets/${name}`, import.meta.url));
+    assert.equal(image.subarray(1, 4).toString(), "PNG");
+    assert.ok(image.readUInt32BE(16) >= 300);
+    assert.ok(image.readUInt32BE(20) >= 300);
+  }
+});
+
 test("growth follows levels without changing the saved pet identity", () => {
-  assert.equal(growthFor({ ...makeState(1, "Emmi"), xp: 0 }).id, "baby");
-  assert.equal(growthFor({ ...makeState(1, "Emmi"), xp: 22 * 5 ** 2 }).id, "grown");
-  assert.equal(growthFor({ ...makeState(1, "Emmi"), xp: 22 * 9 ** 2 }).id, "majestic");
+  assert.equal(growthFor({ ...makeState(1, "Nox"), xp: 0 }).id, "baby");
+  assert.equal(growthFor({ ...makeState(1, "Nox"), xp: 22 * 5 ** 2 }).id, "grown");
+  assert.equal(growthFor({ ...makeState(1, "Nox"), xp: 22 * 9 ** 2 }).id, "majestic");
 });
 
 test("pickles and onions are temporary foods with opposite emotional effects", () => {
-  const state = makeState(Date.UTC(2026, 7, 22, 12), "Emmi");
+  const state = makeState(Date.UTC(2026, 7, 22, 12), "Nox");
   const forcedPickle = foodAvailability("pickle", state, state.adoptedAt, "pickle-picnic");
   assert.equal(forcedPickle.available, true);
   assert.equal(forcedPickle.limited, true);
@@ -198,7 +248,7 @@ test("pickles and onions are temporary foods with opposite emotional effects", (
 
 test("solo trips are deterministic, last two to three hours, and return with a souvenir", () => {
   const adoptedAt = Date.UTC(2026, 7, 1, 9);
-  const seed = "emmi:reise";
+  const seed = "nox:reise";
   let travel = normalizeTravel(null, adoptedAt, adoptedAt, seed);
   const departure = travel.nextDepartureAt;
   travel = normalizeTravel(travel, adoptedAt, departure + 1, seed);
@@ -216,23 +266,37 @@ test("solo trips are deterministic, last two to three hours, and return with a s
 
 test("a player can send the Capy on a destination-blind surprise trip", () => {
   const now = Date.UTC(2026, 7, 29, 10);
-  const travel = departNow(null, now - 86_400_000, now, "emmi:surprise");
+  const travel = departNow(null, now, now, "nox:surprise");
 
   assert.equal(travel.status, "away");
   assert.equal(travel.initiatedBy, "player");
   assert.ok(destinationById(travel.destinationId));
   assert.ok(travel.returnsAt - travel.departedAt >= 120 * 60_000);
   assert.ok(travel.returnsAt - travel.departedAt <= 180 * 60_000);
-  const stillAway = departNow(travel, now - 86_400_000, now + 1, "emmi:surprise");
+  const stillAway = departNow(travel, now, now + 1, "nox:surprise");
   assert.equal(stillAway.destinationId, travel.destinationId);
   assert.equal(stillAway.departedAt, travel.departedAt);
   assert.equal(stillAway.returnsAt, travel.returnsAt);
 });
 
+test("a player can call the Kinkybara home from a party", () => {
+  const now = Date.UTC(2026, 7, 29, 10);
+  const adoptedAt = now - 86_400_000;
+  const travel = departNow(null, adoptedAt, now, "nox:recall");
+  const recalled = recallTravel(travel, adoptedAt, now + 1, "nox:recall");
+
+  assert.equal(recalled.status, "home");
+  assert.equal(recalled.returnPending, true);
+  assert.equal(recalled.lastDestinationId, travel.destinationId);
+  assert.equal(recalled.lastReturnAt, now + 1);
+});
+
 test("the collection has exclusive clothing slots and placeable finds", () => {
   let inventory = createInventory();
-  assert.deepEqual(inventory.ownedItemIds, ["soft_harness", "card_table"]);
-  assert.equal(inventory.equipped.harness, "soft_harness");
+  assert.deepEqual(inventory.ownedItemIds, ["signature_hood", "card_table"]);
+  assert.equal(inventory.equipped.hood, "signature_hood");
+  assert.equal(inventory.equipped.neck, null);
+  assert.equal(inventory.equipped.harness, null);
   assert.deepEqual(inventory.placedItemIds, ["card_table"]);
   for (const id of ["cross_harness", "reflective_harness", "neon_lamp"]) {
     inventory = addInventoryItem(inventory, id, 100).inventory;
@@ -242,7 +306,11 @@ test("the collection has exclusive clothing slots and placeable finds", () => {
   const swapped = toggleEquipment(inventory, "reflective_harness");
   assert.equal(swapped.replacedId, "cross_harness");
   assert.equal(swapped.inventory.equipped.harness, "reflective_harness");
-  assert.equal(Object.values(swapped.inventory.equipped).filter(Boolean).length, 1);
+  assert.equal(Object.values(swapped.inventory.equipped).filter(Boolean).length, 2);
+
+  const hoodOff = toggleEquipment(createInventory(), "signature_hood").inventory;
+  assert.equal(hoodOff.equipped.hood, null);
+  assert.equal(normalizeInventory(hoodOff).equipped.hood, null);
 
   const placed = togglePlacedItem(swapped.inventory, "neon_lamp");
   assert.equal(placed.placed, true);
@@ -250,6 +318,15 @@ test("the collection has exclusive clothing slots and placeable finds", () => {
   assert.equal(togglePlacedItem(placed.inventory, "neon_lamp").placed, false);
   assert.ok(Object.keys(ITEM_DEFINITIONS).length >= 20);
   assert.ok(Object.values(ITEM_DEFINITIONS).filter((item) => item.type === "wearable").every((item) => EQUIPMENT_SLOTS[item.slot]));
+
+  const migratedStarter = normalizeInventory({
+    ownedItemIds: ["soft_harness", "card_table"],
+    equipped: { hood: null, eyes: null, neck: null, harness: "soft_harness", paws: null },
+    placedItemIds: ["card_table"],
+  });
+  assert.equal(migratedStarter.equipped.hood, "signature_hood");
+  assert.equal(migratedStarter.equipped.neck, null);
+  assert.equal(migratedStarter.equipped.harness, null);
 });
 
 test("travel finds prefer an unowned destination reward and never duplicate", () => {
@@ -266,13 +343,14 @@ test("travel finds prefer an unowned destination reward and never duplicate", ()
 
 test("the Capy changes between four living areas and can meet travel companions", () => {
   const now = Date.UTC(2026, 7, 29, 10);
-  const initial = createWorld(now, "home", "emmi");
-  const moved = normalizeWorld(initial, initial.nextMoveAt + 1, "emmi");
+  const initial = createWorld(now, "home", "nox");
+  const moved = normalizeWorld(initial, initial.nextMoveAt + 1, "nox");
   assert.notEqual(moved.area, "home");
   assert.ok(WORLD_AREAS[moved.area]);
   assert.ok(Object.keys(WORLD_AREAS).includes("wintergarden"));
+  assert.equal(selectWorldArea(moved, "wintergarden", now + 1, "Mika").area, "wintergarden");
   assert.ok(!moved.friendId || ANIMAL_FRIENDS[moved.friendId]);
-  const companion = travelCompanion({ ...moved, friendId: "duck" }, "emmi");
+  const companion = travelCompanion({ ...moved, friendId: "duck" }, "nox");
   assert.equal(companion, "duck");
 });
 
@@ -312,7 +390,7 @@ test("dialogues offer multiple two-step conversations and adapt to needs", () =>
 
 test("the first quest becomes due exactly one minute after adoption", () => {
   const adoptedAt = Date.UTC(2026, 7, 21, 12);
-  const progress = normalizeQuestProgress(null, adoptedAt, adoptedAt, "Emmi");
+  const progress = normalizeQuestProgress(null, adoptedAt, adoptedAt, "Nox");
   assert.equal(progress.queue[0], "glitter-hunt");
   assert.equal(progress.nextAt, adoptedAt + 60_000);
   assert.equal(questIsDue(progress, adoptedAt + 59_999), false);
@@ -321,7 +399,7 @@ test("the first quest becomes due exactly one minute after adoption", () => {
 });
 
 test("daily quest plans mix complex games and shared pet-care tasks", () => {
-  const queue = dailyQuestQueue("2026-08-21", "Emmi", false);
+  const queue = dailyQuestQueue("2026-08-21", "Nox", false);
   assert.equal(queue.length, 5);
   assert.ok(queue.filter((id) => QUEST_DEFINITIONS[id].type === "minigame").length >= 3);
   assert.ok(queue.filter((id) => QUEST_DEFINITIONS[id].type === "task").length >= 2);
@@ -331,7 +409,7 @@ test("daily quest plans mix complex games and shared pet-care tasks", () => {
 test("shared tasks progress only through matching completed interactions", () => {
   const now = Date.UTC(2026, 7, 21, 12);
   const progress = {
-    ...normalizeQuestProgress(null, now - 60_000, now, "Emmi"),
+    ...normalizeQuestProgress(null, now - 60_000, now, "Nox"),
     queue: ["social-circle", "glitter-hunt", "day-trip", "board-memory", "city-tour"],
     nextAt: now,
   };
@@ -356,7 +434,7 @@ test("state migration preserves Capys and adds quests, inventory, garden, and wo
   assert.equal(migrated.name, "Lotti");
   assert.equal(migrated.xp, 77);
   assert.equal(migrated.version, 7);
-  assert.deepEqual(migrated.inventory.ownedItemIds, ["soft_harness", "card_table"]);
+  assert.deepEqual(migrated.inventory.ownedItemIds, ["signature_hood", "card_table"]);
   assert.equal(migrated.garden.plots.length, 4);
   assert.ok(WORLD_AREAS[migrated.world.area]);
   assert.equal(quests.nextAt, migrated.adoptedAt + 60_000);
@@ -364,22 +442,40 @@ test("state migration preserves Capys and adds quests, inventory, garden, and wo
 });
 
 test("the published app is English-first, private, installable, and Kinkybara-branded", async () => {
-  const [html, app, i18n, manifest, serviceWorker, readme, license] = await Promise.all([
+  const [html, styles, app, i18n, gameCoreSource, dialogueSource, packCardsSource, manifest, serviceWorker, serverSource, readme, license] = await Promise.all([
     readFile(new URL("../public/app/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/app/styles.css", import.meta.url), "utf8"),
     readFile(new URL("../public/app/app.js", import.meta.url), "utf8"),
     readFile(new URL("../public/app/i18n.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/app/game-core.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/app/dialogues.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/app/pack-cards.js", import.meta.url), "utf8"),
     readFile(new URL("../public/app/manifest.webmanifest", import.meta.url), "utf8"),
     readFile(new URL("../public/app/sw.js", import.meta.url), "utf8"),
+    readFile(new URL("../scripts/serve.mjs", import.meta.url), "utf8"),
     readFile(new URL("../README.md", import.meta.url), "utf8"),
     readFile(new URL("../LICENSE", import.meta.url), "utf8"),
   ]);
 
-  assert.match(html, /<html lang="en">/);
+  assert.match(html, /<html lang="en" data-app-state="booting">/);
   assert.match(html, /A GIFT FROM THRON/);
   assert.match(html, /value="Thron"/);
   assert.match(html, /data-language="de"/);
   assert.match(html, /A little friend in your pocket — friendly, curious, a little kinky\./);
+  assert.match(html, /A simple web app/);
+  assert.match(html, /connect-src 'none'/);
+  assert.match(html, /name="referrer" content="no-referrer"/);
+  assert.match(html, /rel="noopener noreferrer external"/);
+  assert.match(html, /id="boot-cover"/);
+  const externalUrls = [...html.matchAll(/https:\/\/[^"\s]+/g)].map((match) => match[0]);
+  assert.deepEqual(externalUrls, [
+    "https://github.com/Thron-ix/Kinkybara",
+    "https://github.com/Thron-ix/Kinkybara/blob/main/LICENSE",
+  ]);
   assert.match(i18n, /Ein kleiner Freund in deiner Hosentasche – freundlich, neugierig, ein bisschen kinky\./);
+  assert.match(i18n, /Eine einfache Web-App/);
+  assert.match(i18n, /Ein Geschenk von Thron\./);
+  assert.doesNotMatch(i18n, /Ein verspieltes Geschenk von Thron/);
   assert.match(html, /dialogue-dialog/);
   assert.match(html, /library-dialog/);
   assert.match(html, /quest-dialog/);
@@ -387,17 +483,28 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(html, /pack-cards-dialog/);
   assert.match(html, /quest-alert/);
   assert.match(html, /travel-dialog/);
+  assert.match(html, /recall-travel-button/);
   assert.match(html, /journey-dialog/);
   assert.match(html, /inventory-dialog/);
   assert.match(html, /garden-dialog/);
   assert.match(html, /PACK LOUNGE/);
+  assert.match(html, /PLAY AREA/);
   assert.match(html, /animal-visitor/);
   assert.match(html, /weather-dialog/);
   assert.match(html, /world-navigation/);
+  assert.match(html, /hood-toggle/);
   assert.match(html, /FRIENDS' YARD/);
   assert.match(html, /value="golden"/);
   assert.doesNotMatch(html, /<(img|svg)\b/i);
   assert.match(app, /pointermove/);
+  assert.match(app, /if \(code === "\."\) return/);
+  assert.match(app, /currentPhrase = runBootStep\("status"/);
+  assert.ok(app.indexOf("const ENGLISH_STATUS_COPY") < app.indexOf('currentPhrase = runBootStep("status"'));
+  assert.match(app, /dataset\.appState = "ready"/);
+  assert.match(app, /traveling && button\.dataset\.action !== "travel"/);
+  assert.match(app, /updateViaCache: "none"/);
+  assert.match(i18n, /PARTY POST/);
+  assert.match(i18n, /REISEPOST/);
   assert.match(app, /bathAnimation/);
   assert.match(app, /startBubbles/);
   assert.doesNotMatch(app, /localStorage\.removeItem/);
@@ -407,16 +514,30 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(app, /switchToPet/);
   assert.match(app, /normalizeTravel/);
   assert.match(app, /departNow/);
+  assert.match(app, /recallTravel/);
   assert.match(app, /toggleEquipment/);
+  assert.match(app, /removeEquippedHood/);
   assert.match(app, /plantCrop/);
   assert.match(app, /normalizeWorld/);
   assert.doesNotMatch(app, /selectLandscapeArea/);
   assert.match(app, /foodAvailability/);
   assert.doesNotMatch(app, /loadGermanyWeather|api\.open-meteo|navigator\.geolocation/);
   assert.match(app, /startPackCards/);
+  assert.match(app, /Dom, sub, alpha, switch/);
+  assert.match(gameCoreSource, /Dom, Sub, Alpha, Switch/);
+  assert.match(gameCoreSource, /Blow … bubbles/);
+  assert.match(dialogueSource, /switch-energy/);
+  assert.match(dialogueSource, /Netflix & chill/);
+  assert.match(packCardsSource, /BARK/);
+  assert.match(packCardsSource, /FRECHHEIT/);
+  assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-v1/);
+  assert.match(serviceWorker, /kinkybara-shell-v17/);
+  assert.match(serviceWorker, /cache: "reload"/);
+  assert.match(serviceWorker, /cachedShellResponse/);
+  assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);
+  assert.match(serviceWorker, /pup-hood-base\.png/);
   assert.match(serviceWorker, /dialogues\.js/);
   assert.match(serviceWorker, /pet-library\.js/);
   assert.match(serviceWorker, /quest-core\.js/);
@@ -427,10 +548,27 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(serviceWorker, /weather\.js/);
   assert.match(serviceWorker, /pack-cards\.js/);
   assert.match(serviceWorker, /i18n\.js/);
-  assert.equal(PACK_CARD_DECK.length, 8);
+  const shellBlock = serviceWorker.match(/const APP_SHELL = Object\.freeze\(\[([\s\S]*?)\]\);/)?.[1] || "";
+  const shellFiles = [...shellBlock.matchAll(/"\.\/([^"?]+)"/g)].map((match) => match[1]);
+  assert.ok(shellFiles.length >= 18);
+  for (const file of shellFiles) {
+    const contents = await readFile(new URL(`../public/app/${file}`, import.meta.url));
+    assert.ok(contents.length > 0, `${file} must exist and be non-empty`);
+  }
+  assert.doesNotMatch(html + styles + app + serviceWorker, /\?v=\d+/);
+  assert.doesNotMatch(styles, /(?:^|[;{]\s*)color:\s*var\(--accent-(?:primary|secondary)/m);
+  assert.doesNotMatch(app, /accent-(?:primary|secondary)-ink/);
+  assert.match(serverSource, /content-security-policy/);
+  assert.match(serverSource, /connect-src 'self'/);
+  assert.match(serverSource, /x-content-type-options/);
+  assert.match(serverSource, /permissions-policy/);
+  assert.match(serverSource, /"\.png": "image\/png"/);
+  assert.equal(PACK_CARD_DECK.length, 17);
+  assert.ok(PACK_CARD_DECK.some((card) => card.name === "Switch Hitter"));
+  assert.ok(PACK_CARD_DECK.some((card) => card.name === "Soft Dom"));
   assert.match(readme, /MIT No Attribution/);
   assert.match(license, /Copyright 2026 Thron/);
-  for (const content of [html, app, readme, license]) {
+  for (const content of [html, app, gameCoreSource, dialogueSource, packCardsSource, readme, license]) {
     assert.doesNotMatch(content, /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
   }
 });

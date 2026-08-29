@@ -51,6 +51,25 @@ export const TRAVEL_DESTINATIONS = Object.freeze([
   },
 ]);
 
+const DESTINATION_COPY_DE = Object.freeze({
+  folsom: ["COMMUNITY-WOCHENENDE", "Berlin", "Folsom-Wochenende", "Ein großes Community-Wochenende fühlt sich mit einem Hallo, einem Lächeln und dem eigenen Tempo schnell kleiner an.", "trifft farbenfrohe Packs, bewundert aufwendig gestaltete Outfits und macht freundliche Pausen zwischen den Menschen", "ein leuchtender kleiner Freundschaftsanhänger"],
+  laboratory: ["CLUBNACHT", "Berlin", "Laboratory-Nacht", "Klare Grenzen, gegenseitiger Respekt und ein einfacher Heimweg sind gute Zutaten für jede neue Nacht.", "prüft die Stimmung, wahrt klare Grenzen und tanzt nur dort, wo es sich wohlfühlt", "eine reflektierende Schrankmarke"],
+  berghain: ["CLUBNACHT", "Berlin", "Berghain-Nacht", "Bequeme Schuhe, Wasser, ein geladenes Handy und Respekt für alle um dich herum sind ein guter Tanzflächenplan.", "findet einen gleichmäßigen Beat, achtet auf seine Energie und bewundert ein besonders elegantes Harness", "ein winziger betongrauer Tanztaler"],
+  ruhr_pack: ["PACK-PARTY", "Ruhrgebiet", "Zechen-Pack-Nacht", "Alte Industrieorte und neue Community-Energie sind eine starke Kulisse für Musik, Outfits und Packfotos.", "folgt den Lichtern durch Backsteinhallen, singt im Gruppenchor und findet die ruhigste Ecke für einen Saft", "ein poliertes, kohlschwarzes Abzeichen"],
+  mannheim: ["COMMUNITY-NACHT", "Mannheim", "Mannheim-Pack-Party", "Kleinere Abende sind oft der einfachste Ort, um Namen zu lernen, Fragen zu stellen und vertraute Gesichter zu finden.", "startet ein Karaoke-Duett, teilt Ananassaft und lernt drei neue Pack-Namen", "ein kleiner quadratischer Karaoke-Pass"],
+  csd_berlin: ["PRIDE-TAG", "Berlin", "Berliner CSD", "Pride kann zugleich laut, politisch, fröhlich und anstrengend sein. Pausen und gegenseitige Fürsorge gehören dazu.", "läuft mit dem Pack, entdeckt Signaturfarben in der Menge und denkt an eine Wasserpause", "ein kleines zweifarbiges Pride-Band"],
+  csd_cologne: ["PRIDE-TAG", "Köln", "Kölner CSD", "Ein freundliches Winken oder Kompliment kann ein Gespräch öffnen; ein höfliches Nein sollte es genauso leicht beenden.", "winkt an der Strecke, tauscht Outfit-Komplimente und lässt die Pfoten am Rhein ruhen", "ein leuchtendes Freundschaftsband"],
+  csd_hamburg: ["PRIDE-TAG", "Hamburg", "Hamburger CSD", "Community ist kein Dresscode. Neugier, Freundlichkeit und Konsens zählen mehr als bestimmte Ausrüstung.", "zieht bei der Parade mit, singt bei einem Barstopp und macht vor dem Heimweg einen ruhigen Hafenspaziergang", "ein kleiner hafenblauer Pack-Pin"],
+});
+
+export function localizedDestination(destination, language = "en") {
+  if (!destination || language !== "de") return destination;
+  const copy = DESTINATION_COPY_DE[destination.id];
+  if (!copy) return destination;
+  const [kind, place, title, fact, doing, souvenir] = copy;
+  return { ...destination, kind, place, title, fact, doing, souvenir };
+}
+
 function seedNumber(value) {
   return [...String(value)].reduce((total, character) => ((total * 33) ^ character.charCodeAt(0)) >>> 0, 2_166_136_261);
 }
@@ -187,17 +206,24 @@ export function departNow(candidate, adoptedAt, now = Date.now(), seed = "capy")
   };
 }
 
+export function recallTravel(candidate, adoptedAt, now = Date.now(), seed = "capy") {
+  const travel = normalizeTravel(candidate, adoptedAt, now, seed);
+  if (!isTraveling(travel, now)) return travel;
+  return normalizeTravel({ ...travel, returnsAt: now }, adoptedAt, now, seed);
+}
+
 export function isTraveling(travel, now = Date.now()) {
   return Boolean(travel?.status === "away" && now < travel.returnsAt && destinationById(travel.destinationId));
 }
 
-export function travelTimeLabel(travel, now = Date.now()) {
-  if (!isTraveling(travel, now)) return "AT HOME";
+export function travelTimeLabel(travel, now = Date.now(), language = "en") {
+  const de = language === "de";
+  if (!isTraveling(travel, now)) return de ? "ZU HAUSE" : "AT HOME";
   const minutes = Math.max(1, Math.ceil((travel.returnsAt - now) / 60_000));
-  if (minutes < 60) return `ABOUT ${minutes} MIN LEFT`;
+  if (minutes < 60) return de ? `NOCH ETWA ${minutes} MIN` : `ABOUT ${minutes} MIN LEFT`;
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  return `${hours} H ${rest ? `${rest} MIN` : ""} LEFT`.trim();
+  return de ? `NOCH ${hours} H ${rest ? `${rest} MIN` : ""}`.trim() : `${hours} H ${rest ? `${rest} MIN` : ""} LEFT`.trim();
 }
 
 export function travelProgress(travel, now = Date.now()) {
