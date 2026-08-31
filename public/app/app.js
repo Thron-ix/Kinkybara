@@ -168,6 +168,8 @@ const elements = {
   questGameDialog: $("#quest-game-dialog"),
   packCardsDialog: $("#pack-cards-dialog"),
   questAlert: $("#quest-alert"),
+  questAlertOpen: $("#quest-alert-open"),
+  questAlertDismiss: $("#quest-alert-dismiss"),
   questBadge: $("#quest-badge"),
   questStage: $("#quest-stage"),
   questGameStatus: $("#quest-game-status"),
@@ -176,6 +178,7 @@ const elements = {
   weatherDialog: $("#weather-dialog"),
   weatherIcon: $("#weather-icon"),
   weatherTemperature: $("#weather-temperature"),
+  weatherCondition: $("#weather-condition"),
   journeyDialog: $("#journey-dialog"),
   inventoryDialog: $("#inventory-dialog"),
   gardenDialog: $("#garden-dialog"),
@@ -385,6 +388,21 @@ function itemCopy(item) {
   return localizedItem(item, state.language);
 }
 
+function createItemArtwork(item, className, fallback = "?") {
+  if (item?.asset) {
+    const image = document.createElement("img");
+    image.className = className;
+    image.src = item.asset;
+    image.alt = "";
+    image.decoding = "async";
+    return image;
+  }
+  const icon = document.createElement("span");
+  icon.className = className;
+  icon.textContent = item?.icon || fallback;
+  return icon;
+}
+
 function cropCopy(crop) {
   return localizedCrop(crop, state.language);
 }
@@ -576,11 +594,10 @@ function renderPlacedItems(traveling = false) {
     button.dataset.itemId = item.id;
     button.style.setProperty("--left", `${19 + ((index * 31) % 66)}%`);
     button.style.setProperty("--bottom", `${105 + ((index % 2) * 48)}px`);
-    const icon = document.createElement("span");
-    icon.textContent = item.icon;
-    const label = document.createElement("small");
-    label.textContent = itemCopy(item).label;
-    button.append(icon, label);
+    const copy = itemCopy(item);
+    button.setAttribute("aria-label", copy.label);
+    button.title = copy.label;
+    button.append(createItemArtwork(item, "placed-world-icon"));
     elements.placedItemsLayer.append(button);
   });
 }
@@ -607,13 +624,6 @@ function renderLandscape(now = Date.now(), traveling = isTraveling(state.travel,
   elements.hoodToggle.hidden = traveling || state.sleeping || !state.inventory.equipped.hood;
   elements.hoodToggle.setAttribute("aria-label", state.language === "de" ? "Hood abnehmen" : "Take off hood");
   elements.hoodToggle.title = state.language === "de" ? "Hood abnehmen" : "Take off hood";
-  $("#growth-label").textContent = `${ui().growth[growth.id]} · ${state.language === "de" ? "WÄCHST MIT DIR" : "GROWS WITH YOU"}`;
-  $("#area-name").textContent = traveling ? ui().traveling : ui().area[state.landscapeArea];
-  $("#area-choice").textContent = traveling
-    ? (state.language === "de" ? "ZIEL SELBST GEWÄHLT" : "DESTINATION SELF-CHOSEN")
-    : `${state.language === "de" ? "DU WÄHLST" : "YOU CHOOSE"} · ${ui().areaVibe[state.landscapeArea]}`;
-  $(".deer-pen").dataset.sign = ui().areaVibe.meadow;
-  $(".garden-shed").dataset.sign = ui().areaVibe.garden;
   $$("button[data-area]", $("#world-navigation")).forEach((item) => {
     item.classList.toggle("is-active", item.dataset.area === state.landscapeArea);
     item.setAttribute("aria-pressed", String(item.dataset.area === state.landscapeArea));
@@ -640,9 +650,11 @@ function renderLandscape(now = Date.now(), traveling = isTraveling(state.travel,
 
 function renderWeather() {
   elements.habitat.dataset.weather = weatherData.kind;
-  elements.weatherIcon.textContent = weatherData.icon;
+  elements.weatherIcon.textContent = "BERLIN";
   elements.weatherTemperature.textContent = `${Math.round(weatherData.temperature)}°`;
-  $("#weather-dialog-icon").textContent = weatherData.icon;
+  elements.weatherCondition.textContent = weatherData.label.toUpperCase();
+  elements.weatherDialog.setAttribute("aria-label", state.language === "de" ? `Berliner Wetterreferenz: ${weatherData.label}, ${Math.round(weatherData.temperature)} Grad` : `Berlin weather reference: ${weatherData.label}, ${Math.round(weatherData.temperature)} degrees`);
+  $("#weather-dialog-icon").textContent = "BERLIN";
   $("#weather-dialog-label").textContent = weatherData.label;
   $("#weather-dialog-temp").textContent = `${weatherData.temperature.toLocaleString("de-DE")} °C`;
   $("#weather-dialog-phrase").textContent = weatherData.phrase;
@@ -781,9 +793,9 @@ function renderInventory(filter = inventoryFilter) {
     const placed = state.inventory.placedItemIds.includes(item.id);
     const card = document.createElement("article");
     card.className = `inventory-card${owned ? "" : " is-locked"}${equipped ? " is-equipped" : ""}${placed ? " is-placed" : ""}`;
-    const icon = document.createElement("span");
-    icon.className = "inventory-card-icon";
-    icon.textContent = owned ? item.icon : "?";
+    const icon = owned
+      ? createItemArtwork(item, "inventory-card-icon")
+      : createItemArtwork(null, "inventory-card-icon", "?");
     const name = document.createElement("strong");
     name.textContent = owned ? item.label : (state.language === "de" ? "Unbekannter Reisefund" : "Unknown party find");
     const detail = document.createElement("small");
@@ -945,6 +957,23 @@ function scheduleQuestWake(now = Date.now()) {
   }, delay);
 }
 
+function questNoticeKey(quest) {
+  return quest && state.questProgress
+    ? `${activePetId}:${state.questProgress.dayKey}:${quest.id}`
+    : "";
+}
+
+function dismissQuestIndicator() {
+  const quest = currentQuest(state.questProgress);
+  const noticeKey = questNoticeKey(quest);
+  if (!noticeKey) return;
+  state.questProgress = { ...state.questProgress, dismissedNotice: noticeKey };
+  elements.questAlert.hidden = true;
+  saveState();
+  playSound("tap");
+  haptic(10);
+}
+
 function renderQuestIndicator(now = Date.now()) {
   if (!hasStoredState || !state.questProgress) {
     elements.questAlert.hidden = true;
@@ -954,11 +983,12 @@ function renderQuestIndicator(now = Date.now()) {
   }
   const quest = currentQuest(state.questProgress);
   const due = questIsDue(state.questProgress, now) && !isTraveling(state.travel, now);
-  elements.questAlert.hidden = !due;
+  const noticeKey = questNoticeKey(quest);
+  const dismissed = Boolean(due && noticeKey && state.questProgress.dismissedNotice === noticeKey);
+  elements.questAlert.hidden = !due || dismissed;
   elements.questBadge.hidden = !due;
   if (quest) $("#quest-alert-title").textContent = quest.title;
   if (due && quest) {
-    const noticeKey = `${activePetId}:${state.questProgress.dayKey}:${quest.id}`;
     if (noticeKey !== lastQuestNotice && !document.hidden && !interactionBusy && !elements.welcomeDialog.open && !elements.dedicationDialog.open) {
       lastQuestNotice = noticeKey;
       talk(state.questProgress.activeId
@@ -2214,7 +2244,8 @@ $("#tray-close").addEventListener("click", closeTray);
 $("#speech-button").addEventListener("click", () => talk(currentPhrase));
 $("#library-button").addEventListener("click", openLibrary);
 $("#quest-button").addEventListener("click", openQuestBoard);
-elements.questAlert.addEventListener("click", openQuestBoard);
+elements.questAlertOpen.addEventListener("click", openQuestBoard);
+elements.questAlertDismiss.addEventListener("click", dismissQuestIndicator);
 $("#journal-button").addEventListener("click", () => { renderJournal(); openDialog(elements.journalDialog); });
 $("#settings-button").addEventListener("click", () => { syncSettingsForm(); openDialog(elements.settingsDialog); });
 $("#weather-button").addEventListener("click", openWeatherDetails);

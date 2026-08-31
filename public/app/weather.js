@@ -1,26 +1,31 @@
 const AMBIENCE_COPY = Object.freeze({
-  clear: { icon: "C", label: "Clear glow", phrase: "The Den feels bright and ready for a small adventure." },
-  partly: { icon: "P", label: "Soft lights", phrase: "Soft light moves across the world. A good moment to check in with the pack." },
-  cloud: { icon: "Q", label: "Quiet mood", phrase: "The world feels a little quieter — perfect for cards, care or a calm break." },
-  night: { icon: "N", label: "Night lights", phrase: "The signature colors glow while the Pack Lounge settles into its night rhythm." },
+  clear: { label: "Sunny", phrase: "Berlin reference: sunny and clear." },
+  partly: { label: "Partly cloudy", phrase: "Berlin reference: bright with a few clouds." },
+  cloud: { label: "Cloudy", phrase: "Berlin reference: cloudy." },
+  night: { label: "Night", phrase: "Berlin reference: night-time conditions." },
 });
 
 const AMBIENCE_COPY_DE = Object.freeze({
-  clear: { icon: "C", label: "Klares Leuchten", phrase: "Die Höhle wirkt hell und bereit für ein kleines Abenteuer." },
-  partly: { icon: "P", label: "Sanftes Licht", phrase: "Sanftes Licht wandert durch die Welt. Ein guter Moment, beim Pack nachzusehen." },
-  cloud: { icon: "Q", label: "Ruhige Stimmung", phrase: "Die Welt wirkt etwas ruhiger — perfekt für Karten, Pflege oder eine entspannte Pause." },
-  night: { icon: "N", label: "Nachtlichter", phrase: "Die Signaturfarben leuchten, während die Pack Lounge ihren Nachtrhythmus findet." },
+  clear: { label: "Sonnig", phrase: "Berlin-Referenz: sonnig und klar." },
+  partly: { label: "Heiter", phrase: "Berlin-Referenz: heiter bis leicht bewölkt." },
+  cloud: { label: "Bewölkt", phrase: "Berlin-Referenz: bewölkt." },
+  night: { label: "Nacht", phrase: "Berlin-Referenz: nächtliche Bedingungen." },
 });
 
+const BERLIN_SEASONAL_TEMPERATURE = Object.freeze([3, 4, 7, 11, 15, 18, 20, 20, 16, 11, 7, 4]);
+
 export function localAmbience(now = Date.now(), language = "en") {
-  const hour = new Date(now).getHours();
-  const cycle = Math.floor(now / 21_600_000) % 3;
+  const date = new Date(now);
+  const hour = date.getHours();
+  const cycle = (date.getDate() + Math.floor(hour / 6)) % 3;
   const kind = hour < 7 || hour >= 21 ? "night" : ["partly", "cloud", "clear"][cycle];
-  const temperature = [18, 20, 22][cycle];
+  const daytimeOffset = hour < 9 || hour >= 20 ? -2 : hour >= 12 && hour < 18 ? 2 : 0;
+  const temperature = BERLIN_SEASONAL_TEMPERATURE[date.getMonth()] + daytimeOffset;
   return {
-    version: 2,
+    version: 3,
     fetchedAt: now,
     source: "local",
+    reference: "Berlin",
     kind,
     temperature,
     precipitation: 0,

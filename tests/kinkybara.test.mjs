@@ -378,8 +378,10 @@ test("vegetables grow offline, watering helps, and harvest becomes food", () => 
 test("world ambience is generated locally without a network source", () => {
   const ambience = localAmbience(Date.UTC(2026, 0, 15, 12));
   assert.equal(ambience.source, "local");
+  assert.equal(ambience.reference, "Berlin");
   assert.ok(Number.isFinite(ambience.temperature));
   assert.equal(ambience.precipitation, 0);
+  assert.doesNotMatch(ambience.label, /light|mood/i);
 });
 
 test("dialogues offer multiple two-step conversations and adapt to needs", () => {
@@ -486,6 +488,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(html, /quest-game-dialog/);
   assert.match(html, /pack-cards-dialog/);
   assert.match(html, /quest-alert/);
+  assert.match(html, /quest-alert-dismiss/);
   assert.match(html, /travel-dialog/);
   assert.match(html, /recall-travel-button/);
   assert.match(html, /journey-dialog/);
@@ -497,7 +500,8 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(html, /weather-dialog/);
   assert.match(html, /world-navigation/);
   assert.match(html, /hood-toggle/);
-  assert.match(html, /FRIENDS' YARD/);
+  assert.doesNotMatch(html, /id="area-name"|id="area-choice"|id="growth-label"|FRIENDS' YARD/);
+  assert.match(html, /id="weather-icon"[^>]*>BERLIN</);
   assert.match(html, /value="golden"/);
   assert.doesNotMatch(html, /<(img|svg)\b/i);
   assert.match(app, /pointermove/);
@@ -514,6 +518,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(app, /localStorage\.removeItem/);
   assert.doesNotMatch(app, /capygotchi-library-v1/);
   assert.match(app, /normalizeQuestProgress/);
+  assert.match(app, /dismissedNotice/);
   assert.match(app, /startQuestGame/);
   assert.match(app, /switchToPet/);
   assert.match(app, /normalizeTravel/);
@@ -525,6 +530,9 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(app, /normalizeWorld/);
   assert.doesNotMatch(app, /selectLandscapeArea/);
   assert.match(app, /foodAvailability/);
+  assert.match(app, /createItemArtwork/);
+  assert.match(styles, /Need bars read like reserves/);
+  assert.match(styles, /\.placed-world-icon/);
   assert.doesNotMatch(app, /loadGermanyWeather|api\.open-meteo|navigator\.geolocation/);
   assert.match(app, /startPackCards/);
   assert.match(app, /Dom, sub, alpha, switch/);
@@ -537,11 +545,13 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v21/);
+  assert.match(serviceWorker, /kinkybara-shell-v22/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);
   assert.match(serviceWorker, /pup-hood-base\.png/);
+  assert.match(serviceWorker, /pack-cards-joker\.png/);
+  assert.match(serviceWorker, /kennel-fruit-pair\.png/);
   assert.match(serviceWorker, /dialogues\.js/);
   assert.match(serviceWorker, /pet-library\.js/);
   assert.match(serviceWorker, /quest-core\.js/);

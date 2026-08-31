@@ -44,27 +44,28 @@
           <span class="cloud cloud-one"></span><span class="cloud cloud-two"></span>
         </div>
         <div class="weather-fx" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        <button class="weather-chip" id="weather-button" type="button" data-i18n-aria="weather.open" aria-label="Open local world ambience"><span id="weather-icon" aria-hidden="true">P</span><strong id="weather-temperature">18°</strong><small data-i18n="weather.chip">LOCAL MOOD</small></button>
-        <div class="area-name" id="area-name">THE DEN</div>
-        <div class="area-choice" id="area-choice" data-i18n="world.choice">KINKYBARA CHOOSES</div>
+        <button class="weather-chip" id="weather-button" type="button" data-i18n-aria="weather.open" aria-label="Open Berlin weather reference"><span id="weather-icon" aria-hidden="true">BERLIN</span><strong id="weather-temperature">18°</strong><small id="weather-condition">PARTLY CLOUDY</small></button>
 
         <div class="speech" role="status" aria-live="polite">
           <span id="speech-text">A good pack makes every day warmer.</span>
           <button id="speech-button" type="button" data-i18n-aria="speech.read" aria-label="Read Kinkybara's message aloud"><span class="speaker-icon" aria-hidden="true"></span></button>
         </div>
-        <button class="quest-alert" id="quest-alert" type="button" hidden>
-          <span class="quest-alert-icon" aria-hidden="true">✦</span>
-          <span><small data-i18n="quest.new">NEW SHARED QUEST</small><strong id="quest-alert-title">Glitter in the reeds</strong></span>
-          <b aria-hidden="true">›</b>
-        </button>
+        <div class="quest-alert" id="quest-alert" hidden>
+          <button class="quest-alert-open" id="quest-alert-open" type="button">
+            <span class="quest-alert-icon" aria-hidden="true">✦</span>
+            <span><small data-i18n="quest.new">NEW SHARED QUEST</small><strong id="quest-alert-title">Glitter in the reeds</strong></span>
+            <b aria-hidden="true">›</b>
+          </button>
+          <button class="quest-alert-dismiss" id="quest-alert-dismiss" type="button" data-i18n-aria="quest.dismiss" aria-label="Dismiss quest reminder">×</button>
+        </div>
         <div class="drop-hint" id="drop-hint" hidden data-i18n="common.drop">DROP HERE</div>
 
         <div class="landscape-scenery">
           <span class="distant-hill hill-one" aria-hidden="true"></span><span class="distant-hill hill-two" aria-hidden="true"></span>
-          <button class="landmark cabin" type="button" data-landmark="cabin" data-i18n-aria="world.visitHome" aria-label="Visit the little den"><span class="cabin-roof"></span><span class="cabin-window"></span><span class="cabin-door"></span><small data-i18n="world.home">THE DEN</small></button>
-          <div class="deer-pen" data-i18n-aria="world.friendsAria" aria-label="Friends gather in the background"><span class="fence"></span><span class="pixel-deer deer-one"></span><span class="pixel-deer deer-two"></span><small data-i18n="world.friends">FRIENDS' YARD</small></div>
-          <button class="landmark garden-shed" type="button" data-landmark="garden" data-i18n-aria="world.visitGarden" aria-label="Visit the Play Area"><span></span><small data-i18n="world.garden">PLAY AREA</small></button>
-          <button class="landmark wintergarden-house" type="button" data-landmark="wintergarden" data-i18n-aria="world.visitLounge" aria-label="Visit the Pack Lounge"><span class="glass-roof"></span><span class="glass-door"></span><small data-i18n="world.wintergarden">PACK LOUNGE</small></button>
+          <button class="landmark cabin" type="button" data-landmark="cabin" data-i18n-aria="world.visitHome" aria-label="Visit the little den"><span class="cabin-roof"></span><span class="cabin-window"></span><span class="cabin-door"></span></button>
+          <div class="deer-pen" data-i18n-aria="world.friendsAria" aria-label="Friends gather in the background"><span class="fence"></span><span class="pixel-deer deer-one"></span><span class="pixel-deer deer-two"></span></div>
+          <button class="landmark garden-shed" type="button" data-landmark="garden" data-i18n-aria="world.visitGarden" aria-label="Visit the Play Area"><span></span></button>
+          <button class="landmark wintergarden-house" type="button" data-landmark="wintergarden" data-i18n-aria="world.visitLounge" aria-label="Visit the Pack Lounge"><span class="glass-roof"></span><span class="glass-door"></span></button>
           <span class="pixel-chicken" id="pixel-chicken" data-i18n-aria="world.chicken" aria-label="A little chicken crosses the world"></span>
         </div>
 
@@ -107,7 +108,6 @@
           <div>
             <p class="eyebrow" data-i18n="pet.yours">YOUR KINKYBARA</p>
             <div class="pet-title"><h2 id="pet-name">THRON</h2><span id="level">LV. 1</span></div>
-            <div class="growth-label" id="growth-label">LITTLE KINKYBARA · GROWS WITH YOU</div>
             <div class="xp-track" data-i18n-aria="pet.xp" aria-label="Progress to the next level"><span id="xp-fill"></span></div>
           </div>
           <div class="mood mood-happy" id="mood"><span aria-hidden="true">♥</span> HAPPY</div>
@@ -252,7 +252,7 @@
     <dialog class="sheet weather-sheet" id="weather-dialog">
       <div class="sheet-handle" aria-hidden="true"></div>
       <div class="sheet-title"><div><p class="sheet-kicker" data-i18n="weather.kicker">LOCAL AMBIENCE</p><h2 data-i18n="weather.title">Mood over the Kinkybara world</h2></div><button type="button" data-close data-i18n-aria="common.close" aria-label="Close">×</button></div>
-      <div class="weather-hero"><span id="weather-dialog-icon">P</span><div><strong id="weather-dialog-label">Soft lights</strong><small id="weather-dialog-temp">18 °C</small></div></div>
+      <div class="weather-hero"><span id="weather-dialog-icon">BERLIN</span><div><strong id="weather-dialog-label">Partly cloudy</strong><small id="weather-dialog-temp">18 °C</small></div></div>
       <p id="weather-dialog-phrase"></p>
       <div class="weather-metrics"><div><small data-i18n="weather.light">LIGHT LEVEL</small><strong id="weather-clouds">42 %</strong></div><div><small data-i18n="weather.rain">RAIN</small><strong id="weather-rain">0 mm</strong></div></div>
       <p class="weather-explanation" data-i18n="weather.explanation">This playful ambience uses only the time on your device. No location or weather service is used.</p>
