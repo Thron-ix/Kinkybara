@@ -588,7 +588,7 @@ dialog::backdrop { background: rgb(32 26 23 / 58%); backdrop-filter: blur(2px); 
 .travel-companion, .travel-treasure { display: flex; align-items: center; gap: 10px; margin-top: 11px; padding: 10px; border: 2px solid var(--ink); background: #f4e7ca; }.travel-companion > span, .travel-treasure > span { width: 38px; height: 38px; display: grid; place-items: center; background: #dcebbf; font-size: 20px; }.travel-companion p, .travel-treasure p { margin: 0; }.travel-companion small, .travel-companion strong, .travel-treasure small, .travel-treasure strong { display: block; }.travel-companion small, .travel-treasure small { color: #77655b; font-size: 7px; }.travel-companion strong, .travel-treasure strong { margin-top: 4px; font-size: 10px; }
 
 .inventory-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 12px; }.inventory-summary div { padding: 9px 4px; border: 2px solid var(--ink); background: #fff; text-align: center; }.inventory-summary strong, .inventory-summary small { display: block; }.inventory-summary strong { font-size: 14px; }.inventory-summary small { margin-top: 4px; color: #73635a; font-size: 6px; }
-.inventory-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }.inventory-tabs button { min-height: 34px; padding: 4px 1px; border: 2px solid var(--ink); background: #e0d6c6; font-size: 7px; font-weight: 900; }.inventory-tabs button.is-active { background: var(--gold); box-shadow: 2px 2px var(--ink); }
+.inventory-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }.inventory-tabs button { min-height: 34px; padding: 4px 1px; border: 2px solid var(--ink); background: #e0d6c6; font-size: 7px; font-weight: 900; }.inventory-tabs button.is-active { background: var(--gold); box-shadow: 2px 2px var(--ink); }
 .inventory-hint { margin: 11px 0 !important; padding: 8px; background: #e8f0df; font-size: 9px !important; }
 .inventory-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
 .inventory-card { position: relative; min-height: 160px; display: grid; grid-template-rows: 45px auto auto 36px; align-content: start; padding: 9px; border: 3px solid var(--ink); background: #fff; box-shadow: 4px 4px var(--ink); }.inventory-card.is-equipped { background: #e1f1ce; }.inventory-card.is-placed { background: #dceef0; }.inventory-card.is-locked { filter: grayscale(.7); opacity: .55; }
@@ -1143,14 +1143,13 @@ dialog.sheet[open] { animation: modal-in .18s steps(3, end); }
 .habitat[data-solar="night"] .sun { display: none; }
 .habitat[data-solar="night"] .moon, .habitat[data-solar="night"] .star { display: block; }
 
-/* Long area sessions have one compact, explicit control. */
-.area-stay-panel { position: absolute; z-index: 39; left: 50%; bottom: 57px; width: min(92%, 410px); min-height: 52px; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 7px 8px; transform: translateX(-50%); border: 3px solid #251c27; background: #f4edf1; color: #251c27; box-shadow: 4px 4px #251c27; }
-.area-stay-panel > span { display: grid; place-items: center; width: 29px; height: 29px; background: #302235; color: #fff; font-size: 16px; }
-.area-stay-panel strong, .area-stay-panel small { display: block; }
-.area-stay-panel strong { font-size: 8px; }
-.area-stay-panel small { margin-top: 3px; color: #594c54; font: 700 6px/1.25 ui-rounded, system-ui, sans-serif; }
-.area-stay-panel button { min-height: 34px; padding: 5px 7px; border: 2px solid #251c27; background: #302235; color: #fff; font-size: 6px; font-weight: 900; box-shadow: 2px 2px #251c27; }
-.area-stay-panel button:disabled { background: #dad2d6; color: #3d343a; box-shadow: none; }
+/* Area sessions live in the existing world signs instead of another panel. */
+.placed-world-item.is-activity-sign { z-index: 2; cursor: pointer; }
+.placed-world-item.is-activity-sign::after { content: "›"; position: absolute; right: -7px; top: -7px; width: 18px; height: 18px; display: grid; place-items: center; border: 2px solid #251c27; border-radius: 50%; background: #f4edf1; color: #251c27; font-size: 13px; font-weight: 900; box-shadow: 2px 2px #251c27; }
+.activity-sign-badge { position: absolute; left: 50%; bottom: -9px; min-width: 43px; padding: 3px 4px; transform: translateX(-50%); border: 2px solid #251c27; background: #302235; color: #fff; font-size: 6px; font-weight: 900; white-space: nowrap; box-shadow: 2px 2px #251c27; }
+.placed-world-item.is-activity-sign.is-running { animation: activity-sign-pulse .9s steps(2, end) infinite alternate; }
+.placed-world-item.is-activity-sign.is-running::after { content: "•"; background: #dff3bc; }
+@keyframes activity-sign-pulse { to { transform: translateX(-50%) translateY(-3px); } }
 .meter.is-boosted { position: relative; overflow: visible; box-shadow: 0 0 0 2px #fff3b7, 0 0 12px #ffe568; }
 .meter.is-boosted::after { content: "✦"; position: absolute; right: -8px; top: -12px; color: #fff3a6; font-size: 12px; animation: bond-sparkle .8s steps(2, end) infinite alternate; }
 @keyframes bond-sparkle { to { transform: translateY(-4px) rotate(25deg) scale(1.2); } }
@@ -1212,7 +1211,6 @@ dialog.sheet[open] { animation: modal-in .18s steps(3, end); }
 .outfit-piece[data-slot="paws"]::after { content: ""; position: absolute; left: 0; right: 8px; bottom: -3px; height: 5px; background: linear-gradient(90deg, var(--ink) 0 31px, transparent 31px 76px, var(--ink) 76px 112px, transparent 112px); }
 
 @media (max-width: 360px) {
-  .area-stay-panel { bottom: 54px; }
   .gear-locker-grid, .friend-book-grid { grid-template-columns: 1fr; }
   .pack-card-title { min-height: 72px; }
 }

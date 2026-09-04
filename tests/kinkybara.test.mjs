@@ -298,7 +298,7 @@ test("a player can call the Kinkybara home from a party", () => {
 
 test("the collection has exclusive clothing slots and placeable finds", () => {
   let inventory = createInventory();
-  assert.deepEqual(inventory.ownedItemIds, ["signature_hood", "card_table"]);
+  assert.deepEqual(inventory.ownedItemIds, ["gear_locker", "signature_hood", "card_table"]);
   assert.equal(inventory.equipped.hood, "signature_hood");
   assert.equal(inventory.equipped.neck, null);
   assert.equal(inventory.equipped.harness, null);
@@ -325,6 +325,8 @@ test("the collection has exclusive clothing slots and placeable finds", () => {
   assert.ok(Object.values(ITEM_DEFINITIONS).filter((item) => item.type === "wearable").every((item) => EQUIPMENT_SLOTS[item.slot]));
   assert.equal(ITEM_DEFINITIONS.gear_locker.type, "container");
   assert.equal(ITEM_DEFINITIONS.friend_book.type, "container");
+  assert.equal(inventory.ownedItemIds.includes("gear_locker"), true);
+  assert.equal(inventory.ownedItemIds.includes("friend_book"), false);
   assert.equal(togglePlacedItem(addInventoryItem(placed.inventory, "gear_locker").inventory, "gear_locker").placed, false);
 
   const migratedStarter = normalizeInventory({
@@ -472,7 +474,7 @@ test("state migration preserves Capys and adds quests, inventory, garden, and wo
   assert.equal(migrated.name, "Lotti");
   assert.equal(migrated.xp, 77);
   assert.equal(migrated.version, 7);
-  assert.deepEqual(migrated.inventory.ownedItemIds, ["signature_hood", "card_table"]);
+  assert.deepEqual(migrated.inventory.ownedItemIds, ["gear_locker", "signature_hood", "card_table"]);
   assert.equal(migrated.garden.plots.length, 4);
   assert.ok(WORLD_AREAS[migrated.world.area]);
   assert.equal(quests.nextAt, migrated.adoptedAt + 60_000);
@@ -534,7 +536,9 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(html, /weather-dialog/);
   assert.match(html, /world-navigation/);
   assert.match(html, /hood-toggle/);
-  assert.match(html, /area-stay-panel/);
+  assert.doesNotMatch(html, /area-stay-panel/);
+  assert.match(html, /data-filter="container"/);
+  assert.match(app, /activity-sign-badge/);
   assert.match(html, /gear-locker-dialog/);
   assert.match(html, /friend-book-dialog/);
   assert.match(html, /pack-difficulty/);
@@ -583,7 +587,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v24/);
+  assert.match(serviceWorker, /kinkybara-shell-v25/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);

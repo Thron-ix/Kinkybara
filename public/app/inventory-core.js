@@ -72,14 +72,17 @@ export const DESTINATION_REWARDS = Object.freeze({
   folsom: ["signature_hood", "soft_collar", "friend_book"],
   laboratory: ["night_hood", "reflective_harness", "neon_lamp"],
   berghain: ["neon_visors", "cross_harness", "tiny_speaker"],
-  ruhr_pack: ["sturdy_boots", "kennel_sign", "gear_locker"],
+  ruhr_pack: ["sturdy_boots", "kennel_sign", "memory_camera"],
   mannheim: ["pack_bandana", "karaoke_mic", "juice_bar", "friend_book"],
   csd_berlin: ["prism_hood", "card_table", "memory_camera"],
   csd_cologne: ["paw_warmers", "play_mat", "juice_bar", "friend_book"],
   csd_hamburg: ["round_glasses", "tiny_speaker", "neon_lamp"],
 });
 
-const STARTER_ITEMS = Object.freeze(["signature_hood", "card_table"]);
+// The locker is collection navigation, not a lucky travel drop. Keeping it in
+// every save makes the wardrobe reliably findable while the friend book stays
+// a real souvenir to discover.
+const STARTER_ITEMS = Object.freeze(["gear_locker", "signature_hood", "card_table"]);
 
 function uniqueKnown(values) {
   return [...new Set(Array.isArray(values) ? values.filter((id) => ITEM_DEFINITIONS[id]) : [])];

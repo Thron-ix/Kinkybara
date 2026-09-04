@@ -194,8 +194,6 @@ const elements = {
   animalVisitor: $("#animal-visitor"),
   outfitLayer: $("#outfit-layer"),
   hoodToggle: $("#hood-toggle"),
-  areaStayPanel: $("#area-stay-panel"),
-  areaStayButton: $("#area-stay-button"),
   placedItemsLayer: $("#placed-items-layer"),
   dialogueDialog: $("#dialogue-dialog"),
   settingsDialog: $("#settings-dialog"),
@@ -652,23 +650,46 @@ function renderOutfit() {
   }
 }
 
-function renderPlacedItems(traveling = false) {
+function renderPlacedItems(traveling = false, now = Date.now()) {
   elements.placedItemsLayer.replaceChildren();
   if (traveling) return;
   const areaItems = state.inventory.placedItemIds
     .map((id) => ITEM_DEFINITIONS[id])
     .filter((item) => item?.area === state.landscapeArea);
-  areaItems.forEach((item, index) => {
+  const activityArea = ["meadow", "garden"].includes(state.landscapeArea) ? state.landscapeArea : null;
+  const activityItemId = activityArea === "meadow" ? "kennel_sign" : activityArea === "garden" ? "play_mat" : null;
+  const hasActivityItem = activityItemId && areaItems.some((item) => item.id === activityItemId);
+  const visibleItems = hasActivityItem || !activityItemId
+    ? areaItems
+    : [ITEM_DEFINITIONS[activityItemId], ...areaItems];
+
+  visibleItems.forEach((item, index) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "placed-world-item";
     button.dataset.itemId = item.id;
+    const isActivitySign = item.id === activityItemId;
+    if (isActivitySign) {
+      button.classList.add("is-activity-sign");
+      button.dataset.worldActivity = activityArea;
+    }
     button.style.setProperty("--left", `${19 + ((index * 31) % 66)}%`);
     button.style.setProperty("--bottom", `${105 + ((index % 2) * 48)}px`);
     const copy = itemCopy(item);
-    button.setAttribute("aria-label", copy.label);
-    button.title = copy.label;
+    const active = state.world.activity?.area === activityArea;
+    const activityLabel = active
+      ? worldActivityTimeLabel(state.world, now, state.language, worldSeed())
+      : (state.language === "de" ? "40-MINUTEN-SESSION STARTEN" : "START 40-MINUTE SESSION");
+    button.setAttribute("aria-label", isActivitySign ? `${copy.label}: ${activityLabel}` : copy.label);
+    button.title = isActivitySign ? `${copy.label} · ${activityLabel}` : copy.label;
     button.append(createItemArtwork(item, "placed-world-icon"));
+    if (isActivitySign) {
+      const badge = document.createElement("small");
+      badge.className = "activity-sign-badge";
+      badge.textContent = active ? worldActivityTimeLabel(state.world, now, state.language, worldSeed()) : "40 MIN";
+      button.append(badge);
+      button.classList.toggle("is-running", active);
+    }
     elements.placedItemsLayer.append(button);
   });
 }
@@ -682,30 +703,14 @@ function renderAnimalVisitor(traveling = false) {
   elements.animalVisitor.setAttribute("aria-label", state.language === "de" ? `${friend.label} begrüßen` : `Greet ${friend.label}`);
 }
 
-function renderAreaStay(now = Date.now(), traveling = false) {
-  const area = state.world.activity?.area || state.landscapeArea;
-  const supported = ["meadow", "garden"].includes(area);
-  elements.areaStayPanel.hidden = traveling || state.sleeping || !supported;
-  if (elements.areaStayPanel.hidden) return;
-  const active = Boolean(state.world.activity);
-  const kennel = area === "meadow";
-  $("#area-stay-icon").textContent = kennel ? "♣" : "▰";
-  $("#area-stay-title").textContent = kennel ? "KENNEL CLUB" : "PLAY AREA";
-  $("#area-stay-copy").textContent = active
-    ? worldActivityTimeLabel(state.world, now, state.language, worldSeed())
-    : (state.language === "de"
-      ? (kennel ? "40 MIN · NÄHE VOLL + GLITZERN · MACHT HUNGRIG" : "40 MIN · ROUGH PLAY · MACHT MÜDE & DRECKIG")
-      : (kennel ? "40 MIN · FULL BOND + SPARKLE · MAKES HUNGRY" : "40 MIN · ROUGH PLAY · TIRING & MESSY"));
-  elements.areaStayButton.disabled = active;
-  elements.areaStayButton.textContent = active
-    ? (state.language === "de" ? "LÄUFT" : "IN SESSION")
-    : (state.language === "de" ? "40 MIN STARTEN" : "START 40 MIN");
-}
-
-function startAreaStay() {
-  if (state.world.activity || isTraveling(state.travel) || state.sleeping || interactionBusy) return;
+function startAreaStay(area = state.landscapeArea) {
+  if (state.world.activity) {
+    showToast(worldActivityTimeLabel(state.world, Date.now(), state.language, worldSeed()));
+    return;
+  }
+  if (isTraveling(state.travel) || state.sleeping || interactionBusy) return;
   const now = Date.now();
-  const result = startWorldActivity(state.world, state.landscapeArea, now, worldSeed());
+  const result = startWorldActivity(state.world, area, now, worldSeed());
   if (!result.started) return;
   state.world = result.world;
   state = awardChanges({ curiosity: 2, xp: 2 }, now);
@@ -737,9 +742,8 @@ function renderLandscape(now = Date.now(), traveling = isTraveling(state.travel,
     item.disabled = Boolean(state.world.activity);
   });
   renderOutfit();
-  renderPlacedItems(traveling);
+  renderPlacedItems(traveling, now);
   renderAnimalVisitor(traveling);
-  renderAreaStay(now, traveling);
   elements.travelPostcard.hidden = !traveling;
   if (!traveling) {
     if (elements.travelDialog.open) elements.travelDialog.close();
@@ -886,6 +890,12 @@ function renderInventory(filter = inventoryFilter) {
     <div><strong>${equippedCount}/5</strong><small>WORN</small></div>
     <div><strong>${state.inventory.placedItemIds.length}</strong><small>PLACED</small></div>`;
   $$("button[data-filter]", $("#inventory-tabs")).forEach((button) => button.classList.toggle("is-active", button.dataset.filter === filter));
+  const hint = $("#inventory-hint");
+  hint.textContent = filter === "container"
+    ? (state.language === "de" ? "Der Gear-Schrank ist immer hier. Das Freundebuch kann dein Kinkybara von einer Reise mitbringen." : "The gear locker is always here. Your Kinkybara can bring the friend book home from a trip.")
+    : filter === "placeable"
+      ? (state.language === "de" ? "Weltfunde kannst du platzieren und direkt in der jeweiligen Welt anklicken." : "World finds can be placed and clicked directly in their matching area.")
+      : (state.language === "de" ? "Jeder Outfit-Platz hält ein Teil. Deine Signaturfarben prägen besondere Ausrüstung automatisch." : "Each outfit slot holds one item. Your signature colors automatically shape special gear.");
   elements.inventoryGrid.replaceChildren();
 
   if (filter === "harvest") {
@@ -905,21 +915,24 @@ function renderInventory(filter = inventoryFilter) {
     return;
   }
 
-  const definitions = Object.values(ITEM_DEFINITIONS).filter((item) => filter === "all" || item.type === filter);
+  const definitions = Object.values(ITEM_DEFINITIONS)
+    .filter((item) => filter === "all" || item.type === filter)
+    .sort((a, b) => Number(b.type === "container") - Number(a.type === "container"));
   for (const baseItem of definitions) {
     const item = itemCopy(baseItem);
     const owned = state.inventory.ownedItemIds.includes(item.id);
+    const known = owned || item.type === "container";
     const equipped = item.slot && state.inventory.equipped[item.slot] === item.id;
     const placed = state.inventory.placedItemIds.includes(item.id);
     const card = document.createElement("article");
     card.className = `inventory-card${owned ? "" : " is-locked"}${equipped ? " is-equipped" : ""}${placed ? " is-placed" : ""}`;
-    const icon = owned
+    const icon = known
       ? createItemArtwork(item, "inventory-card-icon")
       : createItemArtwork(null, "inventory-card-icon", "?");
     const name = document.createElement("strong");
-    name.textContent = owned ? item.label : (state.language === "de" ? "Unbekannter Reisefund" : "Unknown party find");
+    name.textContent = known ? item.label : (state.language === "de" ? "Unbekannter Reisefund" : "Unknown party find");
     const detail = document.createElement("small");
-    detail.textContent = owned ? item.detail : (state.language === "de" ? "Dein Kinkybara kann diesen Gegenstand von einer Party mitbringen." : "Your Kinkybara may bring this item home from a party.");
+    detail.textContent = known ? item.detail : (state.language === "de" ? "Dein Kinkybara kann diesen Gegenstand von einer Party mitbringen." : "Your Kinkybara may bring this item home from a party.");
     const tag = document.createElement("em");
     tag.textContent = item.slot
       ? localizedSlot(item.slot, state.language)
@@ -929,8 +942,8 @@ function renderInventory(filter = inventoryFilter) {
     action.dataset.inventoryItem = item.id;
     action.disabled = !owned;
     action.textContent = state.language === "de"
-      ? (!owned ? "NOCH UNENTDECKT" : item.type === "wearable" ? (equipped ? "AUSZIEHEN" : "ANZIEHEN") : item.type === "container" ? "ÖFFNEN" : (placed ? "EINPACKEN" : "PLATZIEREN"))
-      : (!owned ? "UNDISCOVERED" : item.type === "wearable" ? (equipped ? "TAKE OFF" : "PUT ON") : item.type === "container" ? "OPEN" : (placed ? "PACK AWAY" : "PLACE"));
+      ? (!owned ? (item.type === "container" ? "AUF REISE FINDEN" : "NOCH UNENTDECKT") : item.type === "wearable" ? (equipped ? "AUSZIEHEN" : "ANZIEHEN") : item.type === "container" ? "ÖFFNEN" : (placed ? "EINPACKEN" : "PLATZIEREN"))
+      : (!owned ? (item.type === "container" ? "FIND ON A TRIP" : "UNDISCOVERED") : item.type === "wearable" ? (equipped ? "TAKE OFF" : "PUT ON") : item.type === "container" ? "OPEN" : (placed ? "PACK AWAY" : "PLACE"));
     card.append(icon, name, detail, tag, action);
     elements.inventoryGrid.append(card);
   }
@@ -2477,7 +2490,6 @@ $("#pack-difficulty").addEventListener("click", (event) => {
   $$("button[data-pack-difficulty]", $("#pack-difficulty")).forEach((item) => item.classList.toggle("is-active", item === button));
 });
 $("#pack-cards-start").addEventListener("click", beginPackCards);
-elements.areaStayButton.addEventListener("click", startAreaStay);
 elements.packCardsDialog.addEventListener("cancel", (event) => {
   event.preventDefault();
   closePackCards();
@@ -2556,6 +2568,10 @@ elements.placedItemsLayer.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-item-id]");
   const item = itemCopy(ITEM_DEFINITIONS[button?.dataset.itemId]);
   if (!item) return;
+  if (button.dataset.worldActivity) {
+    startAreaStay(button.dataset.worldActivity);
+    return;
+  }
   if (item.id === "card_table") {
     openPackCards();
     return;
