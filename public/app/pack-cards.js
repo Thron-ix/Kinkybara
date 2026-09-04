@@ -1,41 +1,47 @@
 const STATS = Object.freeze(["trust", "style", "energy", "pack"]);
 
 export const PACK_CARD_DIFFICULTIES = Object.freeze({
-  soft: Object.freeze({ id: "soft", rounds: 5, rivalBonus: 0, specials: false, xp: 8 }),
-  switch: Object.freeze({ id: "switch", rounds: 7, rivalBonus: 3, specials: true, xp: 12 }),
-  alpha: Object.freeze({ id: "alpha", rounds: 7, rivalBonus: 7, specials: true, xp: 16 }),
+  soft: Object.freeze({ id: "soft", rounds: 5, rivalBonus: 0, rivalChoices: 1, counterChance: 0, repeatPenalty: 0, specials: false, xp: 8 }),
+  switch: Object.freeze({ id: "switch", rounds: 7, rivalBonus: 2, rivalChoices: 2, counterChance: 60, repeatPenalty: 6, specials: true, xp: 14 }),
+  alpha: Object.freeze({ id: "alpha", rounds: 7, rivalBonus: 4, rivalChoices: 3, counterChance: 100, repeatPenalty: 10, specials: true, xp: 20 }),
 });
 
 export const PACK_CARD_DECK = Object.freeze([
-  { id: "neon-scout", name: "Neon Sniffer", role: "Nose down. Tail up.", stats: { trust: 82, style: 76, energy: 68, pack: 88 } },
-  { id: "gentle-guard", name: "Leash Tease", role: "Pulls just hard enough.", stats: { trust: 91, style: 64, energy: 72, pack: 86 } },
-  { id: "karaoke-pup", name: "Karaoke Pup", role: "Howls till the collars jingle.", stats: { trust: 78, style: 86, energy: 94, pack: 84 } },
-  { id: "night-runner", name: "Night Runner", role: "Still bouncing at sunrise.", stats: { trust: 70, style: 88, energy: 93, pack: 72 }, special: "boost" },
-  { id: "juice-mixer", name: "Juicy Pup", role: "Brings pineapple. Keeps it juicy.", stats: { trust: 88, style: 72, energy: 76, pack: 92 } },
-  { id: "gear-maker", name: "Gear Gremlin", role: "More straps. Better silhouette.", stats: { trust: 84, style: 94, energy: 66, pack: 80 }, special: "shield" },
-  { id: "quiet-friend", name: "Shy Biter", role: "Quiet stare. Cheeky teeth.", stats: { trust: 92, style: 70, energy: 58, pack: 90 }, special: "lowball" },
-  { id: "pack-host", name: "Pack Flirt", role: "Wags first. Steals the room.", stats: { trust: 90, style: 82, energy: 84, pack: 94 } },
-  { id: "soft-dom", name: "Soft Dom", role: "Firm voice. Soft landing.", stats: { trust: 91, style: 85, energy: 74, pack: 89 }, special: "shield" },
-  { id: "bratty-sub", name: "Bratty Sub", role: "Says ‘make me’ with excellent posture.", stats: { trust: 73, style: 92, energy: 89, pack: 90 }, special: "boost" },
-  { id: "switch-hitter", name: "Switch Hitter", role: "Changes sides before you blink.", stats: { trust: 87, style: 90, energy: 91, pack: 83 }, special: "switch" },
-  { id: "rubber-rascal", name: "Rubber Rascal", role: "Shines louder than the strobes.", stats: { trust: 68, style: 94, energy: 86, pack: 81 } },
-  { id: "furry-menace", name: "Furry Menace", role: "All fluff. Questionable intentions.", stats: { trust: 89, style: 78, energy: 83, pack: 92 }, special: "lowball" },
-  { id: "worship-pup", name: "Worship Pup", role: "Devotion with dramatic eye contact.", stats: { trust: 94, style: 87, energy: 62, pack: 90 } },
-  { id: "edge-runner", name: "Edge Runner", role: "Stops one beat before the drop.", stats: { trust: 76, style: 91, energy: 93, pack: 85 }, special: "switch" },
-  { id: "chill-handler", name: "Chill Handler", role: "Owns the remote. Negotiates the rest.", stats: { trust: 92, style: 80, energy: 69, pack: 91 } },
-  { id: "bubble-blower", name: "Bubble Blower", role: "Blow … bubbles. Obviously.", stats: { trust: 79, style: 84, energy: 88, pack: 90 }, special: "boost" },
+  { id: "neon-scout", name: "Neon Sniffer", role: "Nose down. Tail up.", stats: { trust: 64, style: 77, energy: 52, pack: 85 } },
+  { id: "gentle-guard", name: "Leash Tease", role: "Pulls just hard enough.", stats: { trust: 88, style: 48, energy: 61, pack: 75 } },
+  { id: "karaoke-pup", name: "Karaoke Pup", role: "Howls till the collars jingle.", stats: { trust: 57, style: 81, energy: 89, pack: 72 } },
+  { id: "night-runner", name: "Night Runner", role: "Still bouncing at sunrise.", stats: { trust: 45, style: 76, energy: 88, pack: 60 }, special: "boost" },
+  { id: "juice-mixer", name: "Juicy Pup", role: "Brings pineapple. Keeps it juicy.", stats: { trust: 73, style: 62, energy: 68, pack: 86 } },
+  { id: "gear-maker", name: "Gear Gremlin", role: "More straps. Better silhouette.", stats: { trust: 69, style: 89, energy: 49, pack: 66 }, special: "shield" },
+  { id: "quiet-friend", name: "Shy Biter", role: "Quiet stare. Cheeky teeth.", stats: { trust: 87, style: 53, energy: 41, pack: 70 }, special: "lowball" },
+  { id: "pack-host", name: "Pack Flirt", role: "Wags first. Steals the room.", stats: { trust: 65, style: 80, energy: 74, pack: 88 } },
+  { id: "soft-dom", name: "Soft Dom", role: "Firm voice. Soft landing.", stats: { trust: 89, style: 71, energy: 57, pack: 82 }, special: "shield" },
+  { id: "bratty-sub", name: "Bratty Sub", role: "Says ‘make me’ with excellent posture.", stats: { trust: 51, style: 87, energy: 79, pack: 73 }, special: "brat" },
+  { id: "switch-hitter", name: "Switch Hitter", role: "Changes sides before you blink.", stats: { trust: 76, style: 73, energy: 85, pack: 68 }, special: "switch" },
+  { id: "rubber-rascal", name: "Rubber Rascal", role: "Shines louder than the strobes.", stats: { trust: 54, style: 88, energy: 75, pack: 63 } },
+  { id: "furry-menace", name: "Furry Menace", role: "All fluff. Questionable intentions.", stats: { trust: 72, style: 60, energy: 69, pack: 87 }, special: "lowball" },
+  { id: "worship-pup", name: "Worship Pup", role: "Devotion with dramatic eye contact.", stats: { trust: 88, style: 78, energy: 43, pack: 83 } },
+  { id: "edge-runner", name: "Edge Runner", role: "Stops one beat before the drop.", stats: { trust: 62, style: 82, energy: 86, pack: 67 }, special: "edge" },
+  { id: "chill-handler", name: "Chill Handler", role: "Owns the remote. Negotiates the rest.", stats: { trust: 86, style: 67, energy: 46, pack: 80 } },
+  { id: "bubble-blower", name: "Bubble Blower", role: "Blow … bubbles. Obviously.", stats: { trust: 59, style: 72, energy: 84, pack: 89 }, special: "boost" },
+  { id: "cuddle-bandit", name: "Cuddle Bandit", role: "Steals blankets. Returns affection.", stats: { trust: 89, style: 55, energy: 47, pack: 79 }, special: "brat" },
+  { id: "latex-legend", name: "Latex Legend", role: "Polished, squeaky and impossible to ignore.", stats: { trust: 56, style: 87, energy: 71, pack: 65 }, special: "shield" },
+  { id: "couch-wolf", name: "Couch Wolf", role: "Looks harmless until the lights go low.", stats: { trust: 82, style: 61, energy: 44, pack: 88 }, special: "lowball" },
+  { id: "sniff-inspector", name: "Sniff Inspector", role: "Checks every corner twice.", stats: { trust: 68, style: 75, energy: 87, pack: 81 }, special: "edge" },
 ]);
 
 const LABELS = Object.freeze({
-  en: { trust: "BARK", style: "GEAR", energy: "STAMINA", pack: "CHEEK", choose: "Pick a stat — read the special card first", next: "DEAL ANOTHER", draw: "SHOW THE SCORE", win: "You take the trick", lose: "Kinkybara takes the trick", tie: "Same heat. No point.", you: "YOU", special: "SPECIAL" },
-  de: { trust: "WUFF", style: "GEAR", energy: "AUSDAUER", pack: "FRECHHEIT", choose: "Wähl einen Wert – lies vorher die Sonderkarte", next: "NOCH EINE KARTE", draw: "ZEIG DEN ENDSCORE", win: "Du holst den Stich", lose: "Kinkybara holt den Stich", tie: "Gleich heiß. Kein Punkt.", you: "DU", special: "SONDERKARTE" },
+  en: { trust: "BARK", style: "GEAR", energy: "STAMINA", pack: "CHEEK", choose: "Pick a stat — the rival has a hidden hand", next: "DEAL ANOTHER", draw: "SHOW THE SCORE", win: "You take the trick", lose: "Kinkybara takes the trick", tie: "Same heat. No point.", you: "YOU", special: "SPECIAL", hidden: "HIDDEN", read: "READ", matchPoint: "MATCH POINT" },
+  de: { trust: "WUFF", style: "GEAR", energy: "AUSDAUER", pack: "FRECHHEIT", choose: "Wähl einen Wert – dein Gegenüber hält verdeckte Karten", next: "NOCH EINE KARTE", draw: "ZEIG DEN ENDSCORE", win: "Du holst den Stich", lose: "Kinkybara holt den Stich", tie: "Gleich heiß. Kein Punkt.", you: "DU", special: "SONDERKARTE", hidden: "VERDECKT", read: "GELESEN", matchPoint: "MATCHBALL" },
 });
 
 const SPECIALS = Object.freeze({
   boost: Object.freeze({ en: ["POWER PLAY", "+8 on the chosen stat"], de: ["POWER PLAY", "+8 auf den gewählten Wert"] }),
-  shield: Object.freeze({ en: ["SAFE WORD", "Cancels the rival bonus"], de: ["SAFE WORD", "Stoppt den Rivalen-Bonus"] }),
+  shield: Object.freeze({ en: ["SAFE WORD", "Cancels rival bonus and power"], de: ["SAFE WORD", "Stoppt Rivalenbonus und Power"] }),
   lowball: Object.freeze({ en: ["SUB SPACE", "Lower number wins this trick"], de: ["SUB SPACE", "Der kleinere Wert gewinnt"] }),
   switch: Object.freeze({ en: ["SWITCH", "The next stat is compared"], de: ["SWITCH", "Der nächste Wert wird verglichen"] }),
+  brat: Object.freeze({ en: ["BRAT MODE", "+24 when you dare the weakest stat"], de: ["BRAT MODE", "+24, wenn du den schwächsten Wert wagst"] }),
+  edge: Object.freeze({ en: ["EDGING", "+12 on a value from 65 to 79"], de: ["EDGING", "+12 auf einen Wert von 65 bis 79"] }),
 });
 
 const CARD_COPY_DE = Object.freeze({
@@ -48,13 +54,22 @@ const CARD_COPY_DE = Object.freeze({
   "furry-menace": ["Furry-Bedrohung", "Nur Flausch. Fragwürdige Absichten."], "worship-pup": ["Worship-Pup", "Hingabe mit dramatischem Blickkontakt."],
   "edge-runner": ["Edge Runner", "Stoppt einen Beat vor dem Drop."], "chill-handler": ["Chill-Handler", "Hat die Fernbedienung. Verhandelt den Rest."],
   "bubble-blower": ["Bubble Blower", "Blow … bubbles. Natürlich."],
+  "cuddle-bandit": ["Kuschel-Bandit", "Klaut Decken. Gibt Zuneigung zurück."], "latex-legend": ["Latex-Legende", "Poliert, quietschig und nicht zu übersehen."],
+  "couch-wolf": ["Sofa-Wolf", "Sieht harmlos aus, bis das Licht ausgeht."], "sniff-inspector": ["Schnüffel-Inspektor", "Prüft jede Ecke zweimal."],
 });
 
 function seedNumber(value) { return [...String(value)].reduce((sum, character) => ((sum * 33) ^ character.charCodeAt(0)) >>> 0, 2_166_136_261); }
 function shuffledDeck(seed) { return PACK_CARD_DECK.map((card, index) => ({ card, order: seedNumber(`${seed}:${index}:${card.id}`) })).sort((a, b) => a.order - b.order).map(({ card }) => card); }
 function activeSpecial(card, difficulty) { return difficulty.specials ? card.special : null; }
+function specialBonus(card, special, stat) {
+  const value = card.stats[stat];
+  if (special === "boost") return 8;
+  if (special === "brat" && value === Math.min(...Object.values(card.stats))) return 24;
+  if (special === "edge" && value >= 65 && value <= 79) return 12;
+  return 0;
+}
 
-export function resolvePackCardRound({ playerCard, rivalCard, stat, difficulty = "switch" }) {
+export function resolvePackCardRound({ playerCard, rivalCard, stat, difficulty = "switch", previousStat = null }) {
   const mode = PACK_CARD_DIFFICULTIES[difficulty] || PACK_CARD_DIFFICULTIES.switch;
   const playerSpecial = activeSpecial(playerCard, mode);
   const rivalSpecial = activeSpecial(rivalCard, mode);
@@ -62,17 +77,35 @@ export function resolvePackCardRound({ playerCard, rivalCard, stat, difficulty =
   const currentIndex = Math.max(0, STATS.indexOf(stat));
   const comparisonStat = switchCard ? STATS[(currentIndex + 1) % STATS.length] : STATS[currentIndex];
   const lowerWins = playerSpecial === "lowball" || rivalSpecial === "lowball";
-  const playerValue = playerCard.stats[comparisonStat] + (playerSpecial === "boost" ? 8 : 0);
-  const rivalValue = rivalCard.stats[comparisonStat] + (rivalSpecial === "boost" ? 8 : 0) + (playerSpecial === "shield" ? 0 : mode.rivalBonus);
+  const repeatPenalty = previousStat === stat ? mode.repeatPenalty : 0;
+  const playerPower = rivalSpecial === "shield" ? 0 : specialBonus(playerCard, playerSpecial, comparisonStat);
+  const rivalPower = playerSpecial === "shield" ? 0 : specialBonus(rivalCard, rivalSpecial, comparisonStat);
+  const playerValue = Math.max(0, playerCard.stats[comparisonStat] + playerPower - repeatPenalty);
+  const rivalValue = rivalCard.stats[comparisonStat] + rivalPower + (playerSpecial === "shield" ? 0 : mode.rivalBonus);
   const winner = playerValue === rivalValue ? "tie" : ((playerValue < rivalValue) === lowerWins ? "player" : "rival");
-  return { comparisonStat, playerValue, rivalValue, winner, lowerWins, playerSpecial, rivalSpecial };
+  return { comparisonStat, playerValue, rivalValue, winner, lowerWins, playerSpecial, rivalSpecial, repeatPenalty, playerPower, rivalPower };
 }
 
-function cardView(card, owner, labels, language, difficulty, hidden = false) {
+export function choosePackCardRival({ playerCard, rivalCards, stat, difficulty = "switch", previousStat = null }) {
+  const mode = PACK_CARD_DIFFICULTIES[difficulty] || PACK_CARD_DIFFICULTIES.switch;
+  const candidates = rivalCards.slice(0, mode.rivalChoices);
+  const ranked = candidates.map((card, index) => ({
+    card,
+    index,
+    result: resolvePackCardRound({ playerCard, rivalCard: card, stat, difficulty: mode.id, previousStat }),
+  }));
+  const outcome = Object.freeze({ player: 0, tie: 1, rival: 2 });
+  ranked.sort((left, right) => outcome[right.result.winner] - outcome[left.result.winner]
+    || right.result.rivalValue - left.result.rivalValue
+    || left.index - right.index);
+  return ranked[0];
+}
+
+function cardView(card, owner, labels, language, difficulty, hidden = false, hiddenCount = 1) {
   const article = document.createElement("article");
   article.className = `pack-card ${hidden ? "is-hidden" : ""}`;
   article.dataset.owner = owner;
-  if (hidden) { article.innerHTML = '<div class="pack-card-back"><strong>KINKYBARA</strong><span>PACK CARDS</span></div>'; return article; }
+  if (hidden) { article.innerHTML = `<div class="pack-card-back"><strong>KINKYBARA</strong><span>${hiddenCount} ${labels.hidden}</span></div>`; return article; }
   const displayCard = language === "de" && CARD_COPY_DE[card.id] ? { ...card, name: CARD_COPY_DE[card.id][0], role: CARD_COPY_DE[card.id][1] } : card;
   const portrait = document.createElement("div"); portrait.className = "pack-card-portrait"; portrait.textContent = displayCard.name.split(" ").map((part) => part[0]).join("");
   const title = document.createElement("div"); title.className = "pack-card-title"; title.innerHTML = `<strong>${displayCard.name}</strong><small>${displayCard.role}</small>`;
@@ -84,27 +117,41 @@ function cardView(card, owner, labels, language, difficulty, hidden = false) {
 }
 
 export function startPackCards({ stage, status, message, language = "en", seed = Date.now(), difficulty = "switch", onFinish }) {
-  const lang = language === "de" ? "de" : "en"; const labels = LABELS[lang]; const mode = PACK_CARD_DIFFICULTIES[difficulty] || PACK_CARD_DIFFICULTIES.switch; const deck = shuffledDeck(seed);
-  let round = 0; let playerWins = 0; let kinkybaraWins = 0; let stopped = false;
-  const updateStatus = () => { status.textContent = `${Math.min(round + 1, mode.rounds)}/${mode.rounds} · ${labels.you} ${playerWins} · KINKYBARA ${kinkybaraWins}`; };
+  const lang = language === "de" ? "de" : "en"; const labels = LABELS[lang]; const mode = PACK_CARD_DIFFICULTIES[difficulty] || PACK_CARD_DIFFICULTIES.switch;
+  const playerDeck = shuffledDeck(`${seed}:player`); const rivalDeck = shuffledDeck(`${seed}:rival`); const targetWins = Math.floor(mode.rounds / 2) + 1;
+  let round = 0; let playerWins = 0; let kinkybaraWins = 0; let previousStat = null; let stopped = false;
+  const updateStatus = () => {
+    const matchPoint = playerWins === targetWins - 1 || kinkybaraWins === targetWins - 1;
+    status.textContent = `${Math.min(round + 1, mode.rounds)}/${mode.rounds} · ${labels.you} ${playerWins} · KINKYBARA ${kinkybaraWins}${matchPoint ? ` · ${labels.matchPoint}` : ""}`;
+  };
   const renderRound = () => {
     if (stopped) return;
     stage.replaceChildren(); stage.className = "pack-cards-stage";
-    const playerCard = deck[(round * 2) % deck.length]; const rivalCard = deck[(round * 2 + 1) % deck.length];
+    const playerCard = playerDeck[round % playerDeck.length];
+    const rivalCards = Array.from({ length: mode.rivalChoices }, (_, offset) => rivalDeck[(round * mode.rivalChoices + offset) % rivalDeck.length]);
     const cards = document.createElement("div"); cards.className = "pack-card-table";
-    const playerView = cardView(playerCard, "you", labels, lang, mode); let rivalView = cardView(rivalCard, "kinkybara", labels, lang, mode, true);
+    const playerView = cardView(playerCard, "you", labels, lang, mode); let rivalView = cardView(rivalCards[0], "kinkybara", labels, lang, mode, true, mode.rivalChoices);
     cards.append(playerView, rivalView); message.textContent = labels.choose; updateStatus();
     playerView.querySelectorAll("button[data-stat]").forEach((button) => button.addEventListener("click", () => {
       if (stopped || playerView.classList.contains("is-played")) return;
-      const result = resolvePackCardRound({ playerCard, rivalCard, stat: button.dataset.stat, difficulty: mode.id }); playerView.classList.add("is-played");
+      const countersPerfectly = seedNumber(`${seed}:counter:${round}`) % 100 < mode.counterChance;
+      const chosenRival = choosePackCardRival({ playerCard, rivalCards: countersPerfectly ? rivalCards : rivalCards.slice(0, 1), stat: button.dataset.stat, difficulty: mode.id, previousStat });
+      const { card: rivalCard, result } = chosenRival; playerView.classList.add("is-played");
       const revealed = cardView(rivalCard, "kinkybara", labels, lang, mode); rivalView.replaceWith(revealed); rivalView = revealed;
       playerView.querySelector(`[data-stat="${result.comparisonStat}"]`)?.classList.add("is-chosen"); revealed.querySelector(`[data-stat="${result.comparisonStat}"]`)?.classList.add("is-chosen");
       if (result.winner === "player") playerWins += 1; if (result.winner === "rival") kinkybaraWins += 1;
       const baseMessage = result.winner === "player" ? labels.win : result.winner === "rival" ? labels.lose : labels.tie;
-      const rule = result.comparisonStat !== button.dataset.stat ? ` · SWITCH → ${labels[result.comparisonStat]}` : result.lowerWins ? ` · ${lang === "de" ? "KLEINER GEWINNT" : "LOWER WINS"}` : "";
-      message.textContent = `${baseMessage} · ${result.playerValue}:${result.rivalValue}${rule}`; updateStatus();
-      const next = document.createElement("button"); next.type = "button"; next.className = "primary-button pack-card-next"; next.textContent = round === mode.rounds - 1 ? labels.draw : labels.next;
-      next.addEventListener("click", () => { round += 1; if (round >= mode.rounds) { stopped = true; onFinish({ playerWins, kinkybaraWins, difficulty: mode.id, score: Math.max(35, 50 + (playerWins - kinkybaraWins) * 10), xp: mode.xp }); } else renderRound(); }); stage.append(next);
+      const rules = [];
+      if (result.comparisonStat !== button.dataset.stat) rules.push(`SWITCH → ${labels[result.comparisonStat]}`);
+      if (result.lowerWins) rules.push(lang === "de" ? "KLEINER GEWINNT" : "LOWER WINS");
+      if (result.repeatPenalty) rules.push(`${labels.read} −${result.repeatPenalty}`);
+      message.textContent = `${baseMessage} · ${result.playerValue}:${result.rivalValue}${rules.length ? ` · ${rules.join(" · ")}` : ""}`; previousStat = button.dataset.stat; updateStatus();
+      const decisive = playerWins >= targetWins || kinkybaraWins >= targetWins;
+      const next = document.createElement("button"); next.type = "button"; next.className = "primary-button pack-card-next"; next.textContent = decisive || round === mode.rounds - 1 ? labels.draw : labels.next;
+      next.addEventListener("click", () => {
+        if (decisive || round === mode.rounds - 1) { stopped = true; onFinish({ playerWins, kinkybaraWins, difficulty: mode.id, roundsPlayed: round + 1, score: Math.max(35, 50 + (playerWins - kinkybaraWins) * 10), xp: mode.xp }); }
+        else { round += 1; renderRound(); }
+      }); stage.append(next);
     }, { once: true }));
     stage.append(cards);
   };

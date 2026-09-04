@@ -79,7 +79,7 @@ import {
   waterCrop,
 } from "../public/app/world-core.js";
 import { localAmbience } from "../public/app/weather.js";
-import { PACK_CARD_DECK, PACK_CARD_DIFFICULTIES, resolvePackCardRound } from "../public/app/pack-cards.js";
+import { PACK_CARD_DECK, PACK_CARD_DIFFICULTIES, choosePackCardRival, resolvePackCardRound } from "../public/app/pack-cards.js";
 
 function contrastRatio(foreground, background) {
   const luminance = (hex) => {
@@ -410,15 +410,34 @@ test("secret session preparations are captured quietly and revealed only on retu
   assert.equal(spotlessReturn.world.socialGlowUntil, spotless.world.activity.returnsAt + 4 * 60 * 60_000);
 });
 
-test("Pack Cards avoids automatic 99s and adds meaningful difficulty and specials", () => {
-  assert.equal(Math.max(...PACK_CARD_DECK.flatMap((card) => Object.values(card.stats))), 94);
-  assert.ok(PACK_CARD_DECK.filter((card) => card.special).length >= 6);
+test("Pack Cards keeps elite values rare and makes hidden rival hands meaningfully harder", () => {
+  const values = PACK_CARD_DECK.flatMap((card) => Object.values(card.stats));
+  assert.equal(Math.max(...values), 89);
+  assert.equal(values.filter((value) => value > 90).length, 0);
+  assert.ok(values.filter((value) => value >= 85).length / values.length <= 0.25);
+  assert.ok(PACK_CARD_DECK.every((card) => Math.max(...Object.values(card.stats)) - Math.min(...Object.values(card.stats)) >= 15));
+  assert.ok(PACK_CARD_DECK.filter((card) => card.special).length >= 10);
   assert.equal(PACK_CARD_DIFFICULTIES.soft.rounds, 5);
   assert.equal(PACK_CARD_DIFFICULTIES.alpha.rounds, 7);
+  assert.equal(PACK_CARD_DIFFICULTIES.switch.rivalChoices, 2);
+  assert.equal(PACK_CARD_DIFFICULTIES.alpha.rivalChoices, 3);
   const playerCard = { stats: { trust: 80, style: 80, energy: 80, pack: 80 } };
   const rivalCard = { stats: { trust: 80, style: 80, energy: 80, pack: 80 } };
   assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "soft" }).winner, "tie");
   assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "alpha" }).winner, "rival");
+  assert.equal(resolvePackCardRound({ playerCard, rivalCard: { stats: { trust: 72, style: 72, energy: 72, pack: 72 } }, stat: "trust", previousStat: "trust", difficulty: "alpha" }).winner, "rival");
+  const counter = choosePackCardRival({
+    playerCard,
+    rivalCards: [
+      { id: "weak", stats: { trust: 50, style: 50, energy: 50, pack: 50 } },
+      { id: "counter", stats: { trust: 84, style: 50, energy: 50, pack: 50 } },
+      { id: "extra", stats: { trust: 60, style: 60, energy: 60, pack: 60 } },
+    ],
+    stat: "trust",
+    difficulty: "switch",
+  });
+  assert.equal(counter.card.id, "counter");
+  assert.equal(counter.result.winner, "rival");
 });
 
 test("vegetables grow offline, watering helps, and harvest becomes food", () => {
@@ -567,9 +586,12 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(html, /weather-dialog/);
   assert.match(html, /world-navigation/);
   assert.match(html, /hood-toggle/);
+  assert.ok(html.indexOf('id="placed-background-items-layer"') < html.indexOf('id="pet-button"'));
   assert.doesNotMatch(html, /area-stay-panel/);
   assert.match(html, /data-filter="container"/);
   assert.match(app, /activity-sign-badge/);
+  assert.match(app, /is-container-card/);
+  assert.match(app, /placedBackgroundItemsLayer/);
   assert.match(app, /id: "play_area_sign"/);
   assert.match(app, /asset: "\.\/assets\/kennel-fruit-pair\.png"/);
   assert.ok(app.indexOf("if (button.dataset.worldActivity)") < app.indexOf("const item = itemCopy(ITEM_DEFINITIONS[button.dataset.itemId])"));
@@ -609,6 +631,8 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(app, /createItemArtwork/);
   assert.match(styles, /Need bars read like reserves/);
   assert.match(styles, /\.placed-world-icon/);
+  assert.match(styles, /\.placed-background-items-layer \{ z-index: 4; \}/);
+  assert.match(styles, /\.inventory-card\.is-container-card/);
   assert.doesNotMatch(app, /loadGermanyWeather|api\.open-meteo|navigator\.geolocation/);
   assert.match(app, /startPackCards/);
   assert.match(app, /Dom, sub, alpha, switch/);
@@ -621,7 +645,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v33/);
+  assert.match(serviceWorker, /kinkybara-shell-v34/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);
@@ -655,7 +679,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(serverSource, /x-content-type-options/);
   assert.match(serverSource, /permissions-policy/);
   assert.match(serverSource, /"\.png": "image\/png"/);
-  assert.equal(PACK_CARD_DECK.length, 17);
+  assert.equal(PACK_CARD_DECK.length, 21);
   assert.ok(PACK_CARD_DECK.some((card) => card.name === "Switch Hitter"));
   assert.ok(PACK_CARD_DECK.some((card) => card.name === "Soft Dom"));
   assert.match(readme, /MIT No Attribution/);

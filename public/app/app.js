@@ -197,6 +197,7 @@ const elements = {
   animalVisitor: $("#animal-visitor"),
   outfitLayer: $("#outfit-layer"),
   hoodToggle: $("#hood-toggle"),
+  placedBackgroundItemsLayer: $("#placed-background-items-layer"),
   placedItemsLayer: $("#placed-items-layer"),
   dialogueDialog: $("#dialogue-dialog"),
   settingsDialog: $("#settings-dialog"),
@@ -672,6 +673,7 @@ function renderOutfit() {
 }
 
 function renderPlacedItems(traveling = false, now = Date.now()) {
+  elements.placedBackgroundItemsLayer.replaceChildren();
   elements.placedItemsLayer.replaceChildren();
   if (traveling) return;
   const areaItems = state.inventory.placedItemIds
@@ -686,8 +688,9 @@ function renderPlacedItems(traveling = false, now = Date.now()) {
     : [activityItem, ...areaItems];
 
   visibleItems.forEach((item, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
+    const isHomePlayMat = item.id === "play_mat" && state.landscapeArea === "home";
+    const button = document.createElement(isHomePlayMat ? "div" : "button");
+    if (button instanceof HTMLButtonElement) button.type = "button";
     button.className = "placed-world-item";
     button.dataset.itemId = item.id;
     const isActivitySign = item.id === activityItemId;
@@ -695,7 +698,6 @@ function renderPlacedItems(traveling = false, now = Date.now()) {
       button.classList.add("is-activity-sign");
       button.dataset.worldActivity = activityArea;
     }
-    const isHomePlayMat = item.id === "play_mat" && state.landscapeArea === "home";
     button.style.setProperty("--left", isHomePlayMat ? "40%" : `${19 + ((index * 31) % 66)}%`);
     button.style.setProperty("--bottom", isHomePlayMat ? "101px" : `${105 + ((index % 2) * 48)}px`);
     const copy = itemCopy(item);
@@ -703,8 +705,10 @@ function renderPlacedItems(traveling = false, now = Date.now()) {
     const activityLabel = active
       ? worldActivityTimeLabel(state.world, now, state.language, worldSeed())
       : (state.language === "de" ? "40-MINUTEN-SESSION STARTEN" : "START 40-MINUTE SESSION");
-    button.setAttribute("aria-label", isActivitySign ? `${copy.label}: ${activityLabel}` : copy.label);
-    button.title = isActivitySign ? `${copy.label} · ${activityLabel}` : copy.label;
+    if (!isHomePlayMat) {
+      button.setAttribute("aria-label", isActivitySign ? `${copy.label}: ${activityLabel}` : copy.label);
+      button.title = isActivitySign ? `${copy.label} · ${activityLabel}` : copy.label;
+    }
     button.append(createItemArtwork(item, "placed-world-icon"));
     if (isActivitySign) {
       const badge = document.createElement("small");
@@ -713,7 +717,7 @@ function renderPlacedItems(traveling = false, now = Date.now()) {
       button.append(badge);
       button.classList.toggle("is-running", active);
     }
-    elements.placedItemsLayer.append(button);
+    (isHomePlayMat ? elements.placedBackgroundItemsLayer : elements.placedItemsLayer).append(button);
   });
 }
 
@@ -1053,7 +1057,7 @@ function renderInventory(filter = inventoryFilter) {
     const equipped = item.slot && state.inventory.equipped[item.slot] === item.id;
     const placed = state.inventory.placedItemIds.includes(item.id);
     const card = document.createElement("article");
-    card.className = `inventory-card${owned ? "" : " is-locked"}${equipped ? " is-equipped" : ""}${placed ? " is-placed" : ""}`;
+    card.className = `inventory-card${item.type === "container" ? " is-container-card" : ""}${owned ? "" : " is-locked"}${equipped ? " is-equipped" : ""}${placed ? " is-placed" : ""}`;
     const icon = known
       ? createItemArtwork(item, "inventory-card-icon")
       : createItemArtwork(null, "inventory-card-icon", "?");
@@ -1486,8 +1490,8 @@ function openPackCards() {
   $("#pack-difficulty").hidden = false;
   $("#pack-difficulty-label").textContent = state.language === "de" ? "SCHWIERIGKEIT" : "DIFFICULTY";
   const difficultyCopy = state.language === "de"
-    ? { soft: "SOFT<br><small>5 · KLASSISCH</small>", switch: "SWITCH<br><small>7 · SPECIALS</small>", alpha: "ALPHA<br><small>7 · RIVALE +7</small>" }
-    : { soft: "SOFT<br><small>5 · CLASSIC</small>", switch: "SWITCH<br><small>7 · SPECIALS</small>", alpha: "ALPHA<br><small>7 · RIVAL +7</small>" };
+    ? { soft: "SOFT<br><small>5 · 1 KARTE</small>", switch: "SWITCH<br><small>7 · 2 VERDECKTE</small>", alpha: "ALPHA<br><small>7 · 3 VERDECKTE</small>" }
+    : { soft: "SOFT<br><small>5 · 1 CARD</small>", switch: "SWITCH<br><small>7 · 2 HIDDEN</small>", alpha: "ALPHA<br><small>7 · 3 HIDDEN</small>" };
   $$("button[data-pack-difficulty]", $("#pack-difficulty")).forEach((button) => { button.innerHTML = difficultyCopy[button.dataset.packDifficulty]; });
   $("#pack-cards-start").textContent = state.language === "de" ? "KARTEN GEBEN" : "DEAL THE CARDS";
   const stage = $("#pack-cards-stage");
