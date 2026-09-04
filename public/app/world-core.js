@@ -175,6 +175,24 @@ export function settleWorldActivity(candidate, now = Date.now(), seed = "capy") 
   };
 }
 
+export function recallWorldActivity(candidate, now = Date.now(), seed = "capy") {
+  const world = normalizeWorld(candidate, now, seed);
+  if (!world.activity) return { world, completion: null };
+  const activity = { ...world.activity };
+  const duration = Math.max(1, activity.returnsAt - activity.startedAt);
+  const progress = Math.max(0, Math.min(1, (now - activity.startedAt) / duration));
+  return {
+    completion: { ...activity, recalled: true, progress },
+    world: {
+      ...world,
+      area: "home",
+      movedAt: now,
+      nextMoveAt: now + nextMoveDelay(seed, now, world.visits),
+      activity: null,
+    },
+  };
+}
+
 export function worldActivityTimeLabel(candidate, now = Date.now(), language = "de", seed = "capy") {
   const activity = normalizeWorld(candidate, now, seed).activity;
   if (!activity) return "";

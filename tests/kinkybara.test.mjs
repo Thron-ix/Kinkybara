@@ -68,6 +68,7 @@ import {
   harvestCrop,
   normalizeWorld,
   recordFriendMeeting,
+  recallWorldActivity,
   selectWorldArea,
   settleWorldActivity,
   startWorldActivity,
@@ -379,6 +380,13 @@ test("friends are recorded and 40-minute area sessions settle exactly once", () 
   assert.equal(finished.world.area, "home");
   assert.ok(finished.world.socialGlowUntil > started.world.activity.returnsAt);
   assert.equal(settleWorldActivity(finished.world, started.world.activity.returnsAt + 2, "nox").completion, null);
+
+  const recalledStart = startWorldActivity(createWorld(now, "garden", "nox"), "garden", now, "nox").world;
+  const recalled = recallWorldActivity(recalledStart, now + 10 * 60_000, "nox");
+  assert.equal(recalled.completion.recalled, true);
+  assert.equal(Math.round(recalled.completion.progress * 100), 25);
+  assert.equal(recalled.world.area, "home");
+  assert.equal(recalled.world.activity, null);
 });
 
 test("Pack Cards avoids automatic 99s and adds meaningful difficulty and specials", () => {
@@ -528,6 +536,8 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(html, /travel-dialog/);
   assert.match(html, /recall-travel-button/);
   assert.match(html, /journey-dialog/);
+  assert.match(html, /area-session-dialog/);
+  assert.match(html, /area-session-primary/);
   assert.match(html, /inventory-dialog/);
   assert.match(html, /garden-dialog/);
   assert.match(html, /PACK LOUNGE/);
@@ -587,7 +597,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v25/);
+  assert.match(serviceWorker, /kinkybara-shell-v26/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);

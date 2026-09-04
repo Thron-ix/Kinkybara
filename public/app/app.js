@@ -79,6 +79,7 @@ import {
   normalizeWorld,
   plantCrop,
   recordFriendMeeting,
+  recallWorldActivity,
   selectCrop,
   selectWorldArea,
   settleWorldActivity,
@@ -187,6 +188,7 @@ const elements = {
   weatherTemperature: $("#weather-temperature"),
   weatherCondition: $("#weather-condition"),
   journeyDialog: $("#journey-dialog"),
+  areaSessionDialog: $("#area-session-dialog"),
   inventoryDialog: $("#inventory-dialog"),
   gardenDialog: $("#garden-dialog"),
   inventoryGrid: $("#inventory-grid"),
@@ -234,6 +236,7 @@ let lastQuestNotice = "";
 let weatherData = initializeValue("weather-data", () => localAmbience(Date.now(), state.language));
 let inventoryFilter = "all";
 let packCardsDifficulty = "switch";
+let pendingAreaSessionArea = null;
 
 function awardChanges(changes, now = Date.now()) {
   const before = levelInfo(state.xp);
@@ -582,15 +585,16 @@ function syncWorldState(now = Date.now(), traveling = isTraveling(state.travel, 
   const previousArea = state.world?.area || state.landscapeArea || "home";
   const settled = settleWorldActivity(state.world, now, worldSeed());
   state.world = settled.world;
+  if (settled.completion && elements.areaSessionDialog.open) elements.areaSessionDialog.close();
   if (settled.completion?.area === "meadow") {
-    state = awardChanges({ satiety: -35, fun: 18, social: 100, energy: -10, xp: 20 }, now);
+    state = awardChanges(activityChanges("meadow"), now);
     currentPhrase = state.language === "de"
       ? "Kennel Club war intensiv. Nähe voll, Bauch leer – und dieses Glitzern bleibt noch eine Weile."
       : "The Kennel Club was intense. Bond full, belly empty — and that sparkle will linger.";
     remember(state.language === "de" ? `${state.name} kam nach 40 Minuten sehr glücklich, sehr hungrig und voller besonderer Nähe aus dem Kennel Club.` : `${state.name} returned from 40 minutes at the Kennel Club delighted, hungry and glowing with closeness.`, "♣");
     showToast(state.language === "de" ? "KENNEL CLUB · NÄHE GLITZERT 2 STUNDEN" : "KENNEL CLUB · BOND SPARKLES FOR 2 HOURS", 5200);
   } else if (settled.completion?.area === "garden") {
-    state = awardChanges({ satiety: -15, fun: 22, curiosity: 12, clean: -35, energy: -35, xp: 18 }, now);
+    state = awardChanges(activityChanges("garden"), now);
     currentPhrase = state.language === "de"
       ? "Play Area war rough. Sehr glücklich, sehr dreckig, komplett ausgepowert."
       : "The Play Area was rough. Very happy, very messy, completely spent.";
@@ -703,11 +707,80 @@ function renderAnimalVisitor(traveling = false) {
   elements.animalVisitor.setAttribute("aria-label", state.language === "de" ? `${friend.label} begrüßen` : `Greet ${friend.label}`);
 }
 
-function startAreaStay(area = state.landscapeArea) {
-  if (state.world.activity) {
-    showToast(worldActivityTimeLabel(state.world, Date.now(), state.language, worldSeed()));
-    return;
+function areaSessionDetails(area) {
+  const kennel = area === "meadow";
+  const de = state.language === "de";
+  return {
+    title: kennel ? "Kennel Club" : "Play Area",
+    icon: kennel ? "♣" : "▰",
+    copy: de
+      ? (kennel
+        ? `${state.name} bleibt 40 Minuten im Kennel Club. Nähe wird vollständig gefüllt und glitzert danach zwei Stunden; Hunger steigt deutlich.`
+        : `${state.name} bleibt 40 Minuten in der Play Area. Rough Play bringt Spaß und Neugier, kostet aber viel Energie und Frische.`)
+      : (kennel
+        ? `${state.name} stays at the Kennel Club for 40 minutes. Bond fills completely and sparkles for two hours; hunger rises sharply.`
+        : `${state.name} stays in the Play Area for 40 minutes. Rough play brings fun and curiosity, but costs plenty of energy and freshness.`),
+    effects: kennel
+      ? (de ? [["NÄHE", "VOLL + 2 H GLITZERN"], ["SPASS", "+18"], ["SATT", "−35"], ["ENERGIE", "−10"]] : [["BOND", "FULL + 2 H SPARKLE"], ["FUN", "+18"], ["FULL", "−35"], ["ENERGY", "−10"]])
+      : (de ? [["SPASS", "+22"], ["NEUGIER", "+12"], ["FRISCH", "−35"], ["ENERGIE", "−35"]] : [["FUN", "+22"], ["CURIOUS", "+12"], ["FRESH", "−35"], ["ENERGY", "−35"]]),
+  };
+}
+
+function renderAreaSessionDialog(now = Date.now()) {
+  const active = state.world.activity;
+  const area = active?.area || pendingAreaSessionArea;
+  if (!area || !["meadow", "garden"].includes(area)) return;
+  const details = areaSessionDetails(area);
+  const running = Boolean(active);
+  $("#area-session-kicker").textContent = state.language === "de" ? (running ? "SESSION LÄUFT" : "40-MINUTEN-SESSION") : (running ? "SESSION IN PROGRESS" : "40-MINUTE SESSION");
+  $("#area-session-title").textContent = details.title;
+  $("#area-session-hero").dataset.area = area;
+  $("#area-session-icon").textContent = details.icon;
+  $("#area-session-copy").textContent = details.copy;
+  const effects = $("#area-session-effects");
+  effects.replaceChildren();
+  details.effects.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    const key = document.createElement("small");
+    const output = document.createElement("strong");
+    key.textContent = label;
+    output.textContent = value;
+    row.append(key, output);
+    effects.append(row);
+  });
+  $("#area-session-running").hidden = !running;
+  if (running) {
+    const duration = Math.max(1, active.returnsAt - active.startedAt);
+    const progress = Math.max(0, Math.min(100, ((now - active.startedAt) / duration) * 100));
+    $("#area-session-countdown").textContent = worldActivityTimeLabel(state.world, now, state.language, worldSeed());
+    $("#area-session-progress").style.setProperty("--value", `${progress}%`);
+    $("#area-session-return-copy").textContent = state.language === "de"
+      ? `Du kannst ${state.name} jederzeit zurückholen. Bei früher Rückkehr wirken die Veränderungen anteilig.`
+      : `You can bring ${state.name} home at any time. Effects are proportional when returning early.`;
   }
+  $("#area-session-primary").textContent = state.language === "de"
+    ? (running ? "JETZT ZURÜCKHOLEN" : "40 MIN STARTEN")
+    : (running ? "BRING HOME NOW" : "START 40 MIN");
+  $("#area-session-primary").classList.toggle("is-recall", running);
+  $("#area-session-dialog .secondary-button").textContent = state.language === "de" ? "NOCH NICHT" : "NOT NOW";
+}
+
+function openAreaSessionDialog(area = state.landscapeArea) {
+  if (isTraveling(state.travel) || state.sleeping || interactionBusy) return;
+  pendingAreaSessionArea = state.world.activity?.area || area;
+  renderAreaSessionDialog();
+  openDialog(elements.areaSessionDialog);
+}
+
+function activityChanges(area, progress = 1) {
+  const scale = (value) => Math.round(value * Math.max(0, Math.min(1, progress)));
+  return area === "meadow"
+    ? { satiety: scale(-35), fun: scale(18), social: scale(100), energy: scale(-10), xp: scale(20) }
+    : { satiety: scale(-15), fun: scale(22), curiosity: scale(12), clean: scale(-35), energy: scale(-35), xp: scale(18) };
+}
+
+function startAreaStay(area = pendingAreaSessionArea || state.landscapeArea) {
+  if (state.world.activity) return;
   if (isTraveling(state.travel) || state.sleeping || interactionBusy) return;
   const now = Date.now();
   const result = startWorldActivity(state.world, area, now, worldSeed());
@@ -720,20 +793,43 @@ function startAreaStay(area = state.landscapeArea) {
     : (kennel ? "Forty minutes at the Kennel Club. I’ll return on my own — probably hungry and very pleased." : "Forty minutes in the Play Area. Afterward I’ll probably need a shower, snack and sleep."), { speak: false });
   remember(state.language === "de" ? `${state.name} startet eine 40-Minuten-Session im ${kennel ? "Kennel Club" : "Play Area"}.` : `${state.name} starts a 40-minute ${kennel ? "Kennel Club" : "Play Area"} session.`, kennel ? "♣" : "▰");
   showToast(state.language === "de" ? "40-MINUTEN-SESSION GESTARTET" : "40-MINUTE SESSION STARTED", 3200);
+  if (elements.areaSessionDialog.open) elements.areaSessionDialog.close();
+  render(now);
+}
+
+function recallAreaStay() {
+  if (!state.world.activity) return;
+  const now = Date.now();
+  const recalled = recallWorldActivity(state.world, now, worldSeed());
+  if (!recalled.completion) return;
+  const { area, progress } = recalled.completion;
+  state.world = recalled.world;
+  if (progress > 0) state = awardChanges(activityChanges(area, progress), now);
+  state.landscapeArea = "home";
+  const minutes = Math.max(0, Math.round((now - recalled.completion.startedAt) / 60_000));
+  const place = area === "meadow" ? "Kennel Club" : "Play Area";
+  currentPhrase = state.language === "de"
+    ? `Da bin ich wieder. ${minutes} Minuten ${place} waren fürs Erste genug.`
+    : `I am back. ${minutes} minutes at the ${place} was enough for now.`;
+  remember(state.language === "de" ? `${state.name} wurde nach ${minutes} Minuten vorzeitig aus dem ${place} zurückgeholt.` : `${state.name} was brought home early after ${minutes} minutes at the ${place}.`, area === "meadow" ? "♣" : "▰");
+  showToast(state.language === "de" ? `${state.name.toUpperCase()} IST WIEDER ZU HAUSE` : `${state.name.toUpperCase()} IS HOME AGAIN`, 3600);
+  if (elements.areaSessionDialog.open) elements.areaSessionDialog.close();
   render(now);
 }
 
 function renderLandscape(now = Date.now(), traveling = isTraveling(state.travel, now)) {
   const growth = growthFor(state);
+  const sessionAway = Boolean(state.world.activity);
   elements.habitat.dataset.area = state.landscapeArea;
   elements.habitat.classList.toggle("is-away", traveling);
+  elements.habitat.classList.toggle("is-session-away", sessionAway);
   elements.petButton.dataset.growth = growth.id;
   elements.petButton.setAttribute("aria-label", state.language === "de" ? `${state.name} streicheln oder einen ausgewählten Gegenstand geben` : `Pet ${state.name} or give the selected item`);
   $('.cabin[data-landmark="cabin"]').setAttribute("aria-label", state.language === "de" ? `${state.name}s kleine Schlafhütte ansehen` : `Look at ${state.name}'s little sleeping den`);
   const petX = `${wanderPosition(now)}%`;
   elements.petButton.style.setProperty("--pet-x", petX);
   elements.hoodToggle.style.setProperty("--pet-x", petX);
-  elements.hoodToggle.hidden = traveling || state.sleeping || !state.inventory.equipped.hood;
+  elements.hoodToggle.hidden = traveling || sessionAway || state.sleeping || !state.inventory.equipped.hood;
   elements.hoodToggle.setAttribute("aria-label", state.language === "de" ? "Hood abnehmen" : "Take off hood");
   elements.hoodToggle.title = state.language === "de" ? "Hood abnehmen" : "Take off hood";
   $$("button[data-area]", $("#world-navigation")).forEach((item) => {
@@ -743,7 +839,7 @@ function renderLandscape(now = Date.now(), traveling = isTraveling(state.travel,
   });
   renderOutfit();
   renderPlacedItems(traveling, now);
-  renderAnimalVisitor(traveling);
+  renderAnimalVisitor(traveling || sessionAway);
   elements.travelPostcard.hidden = !traveling;
   if (!traveling) {
     if (elements.travelDialog.open) elements.travelDialog.close();
@@ -1520,6 +1616,7 @@ function render(now = Date.now()) {
   renderQuestIndicator(now);
   if (elements.inventoryDialog.open) renderInventory();
   if (elements.gardenDialog.open) renderGarden(now);
+  if (elements.areaSessionDialog.open) renderAreaSessionDialog(now);
   saveState();
 }
 
@@ -2490,6 +2587,10 @@ $("#pack-difficulty").addEventListener("click", (event) => {
   $$("button[data-pack-difficulty]", $("#pack-difficulty")).forEach((item) => item.classList.toggle("is-active", item === button));
 });
 $("#pack-cards-start").addEventListener("click", beginPackCards);
+$("#area-session-primary").addEventListener("click", () => {
+  if (state.world.activity) recallAreaStay();
+  else startAreaStay();
+});
 elements.packCardsDialog.addEventListener("cancel", (event) => {
   event.preventDefault();
   closePackCards();
@@ -2569,7 +2670,7 @@ elements.placedItemsLayer.addEventListener("click", (event) => {
   const item = itemCopy(ITEM_DEFINITIONS[button?.dataset.itemId]);
   if (!item) return;
   if (button.dataset.worldActivity) {
-    startAreaStay(button.dataset.worldActivity);
+    openAreaSessionDialog(button.dataset.worldActivity);
     return;
   }
   if (item.id === "card_table") {

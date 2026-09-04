@@ -480,6 +480,7 @@ dialog::backdrop { background: rgb(32 26 23 / 58%); backdrop-filter: blur(2px); 
 .habitat.is-away .pet-button, .habitat.is-away .landscape-scenery, .habitat.is-away .drop-hint, .habitat.is-away .quest-alert { opacity: 0; pointer-events: none; }
 .habitat.is-away .world-navigation { display: none; }
 .habitat.is-away .ground { height: 110px; background: repeating-linear-gradient(45deg, #6e8464 0 16px, #80966f 16px 32px); }
+.habitat.is-session-away .pet-button, .habitat.is-session-away .hood-toggle, .habitat.is-session-away .animal-visitor { display: none; }
 .travel-postcard { position: absolute; z-index: 34; left: 50%; top: 145px; width: min(88%, 380px); min-height: 220px; display: grid; grid-template-columns: 72px 1fr; align-content: center; gap: 13px; padding: 22px 18px; transform: translateX(-50%) rotate(-1deg); border: 4px solid var(--ink); background: repeating-linear-gradient(0deg, #fff8e9 0 28px, #f2e4ca 28px 30px); box-shadow: 9px 9px var(--ink); text-align: left; }
 .travel-postcard::before { content: attr(data-stamp); position: absolute; right: 14px; top: 13px; padding: 5px; border: 2px dashed #a45e54; color: #a45e54; font-size: 7px; font-weight: 900; transform: rotate(3deg); }
 .travel-stamp { width: 68px; height: 68px; display: grid; place-items: center; border: 4px double var(--ink); background: #ddd1f1; font-size: 31px; text-shadow: 3px 3px #fff; }
@@ -1188,6 +1189,24 @@ dialog.sheet[open] { animation: modal-in .18s steps(3, end); }
 .inventory-card-icon[data-slot="paws"]::after, .locker-gear-icon[data-slot="paws"]::after { left: 4px; top: 34px; width: 16px; height: 4px; background: #251c27; box-shadow: 20px 0 #251c27; }
 .auto-travel-status { display: grid; gap: 4px; margin: 10px 0; padding: 9px; border: 2px solid #251c27; background: #e8eddf; color: #251c27; }
 .auto-travel-status strong { font-size: 8px; }.auto-travel-status span { color: #51464d; font: 600 8px/1.4 ui-rounded, system-ui, sans-serif; }
+
+/* A world sign opens this focused briefing; it never consumes habitat space. */
+.area-session-hero { height: 142px; display: grid; grid-template-columns: 1fr 1fr 1fr; place-items: center; margin-bottom: 14px; border: 4px solid #251c27; background: linear-gradient(#6f8b72 0 62%, #91bb66 62%); box-shadow: 6px 6px #251c27; overflow: hidden; }
+.area-session-hero[data-area="garden"] { background: linear-gradient(#8bb3bf 0 58%, #d5bf77 58%); }
+.area-session-hero > span { width: 66px; height: 66px; display: grid; place-items: center; border: 3px solid #251c27; background: #302235; color: #fff; font-size: 32px; box-shadow: 5px 5px #251c27; }
+.area-session-hero > i { width: 82px; height: 58px; border: 4px solid #251c27; background: repeating-linear-gradient(90deg, #c18f52 0 15px, #d6a563 15px 30px); transform: skewX(-8deg); }
+.area-session-hero[data-area="garden"] > i { background: repeating-linear-gradient(45deg, #6c9959 0 13px, #86b86c 13px 26px); }
+.area-session-hero > b { width: 55px; height: 55px; display: grid; place-items: center; border: 4px solid #251c27; border-radius: 50%; background: #fff2be; color: #251c27; font-size: 18px; box-shadow: 4px 4px #251c27; }
+.area-session-sheet > p { color: #554950; font: 600 11px/1.45 ui-rounded, system-ui, sans-serif; }
+.area-session-effects { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 13px 0; }
+.area-session-effects > div { min-height: 55px; display: grid; align-content: center; gap: 5px; padding: 8px; border: 2px solid #251c27; background: #fff; color: #251c27; text-align: center; }
+.area-session-effects small, .area-session-effects strong { display: block; }.area-session-effects small { color: #5c5057; font-size: 7px; }.area-session-effects strong { font-size: 9px; }
+.area-session-running { display: grid; gap: 7px; margin: 13px 0; padding: 10px; border: 3px solid #251c27; background: #e8eddf; color: #251c27; }
+.area-session-running > strong { font-size: 12px; text-align: center; }
+.area-session-running > div { height: 13px; border: 3px solid #251c27; background: #d9d1d5; }
+.area-session-running > div span { display: block; width: var(--value, 0%); height: 100%; background: #302235; transition: width .3s; }
+.area-session-running > small { color: #51464d; font: 600 8px/1.4 ui-rounded, system-ui, sans-serif; text-align: center; }
+#area-session-primary.is-recall { background: #f4edf1; color: #251c27; box-shadow: inset 0 -5px #e45a6e, 5px 5px #251c27; }
 
 /* Pack Cards: choose the heat before dealing, then read special rules. */
 .pack-difficulty { display: grid; gap: 10px; margin: 12px 0; }

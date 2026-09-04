@@ -228,6 +228,21 @@
       <button class="secondary-button" type="button" data-close data-i18n="journey.stay">STAY HOME FOR NOW</button>
     </dialog>
 
+    <dialog class="sheet area-session-sheet" id="area-session-dialog">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-title"><div><p class="sheet-kicker" id="area-session-kicker">40-MINUTE SESSION</p><h2 id="area-session-title">Kennel Club</h2></div><button type="button" data-close data-i18n-aria="common.close" aria-label="Close">×</button></div>
+      <div class="area-session-hero" id="area-session-hero" data-area="meadow" aria-hidden="true"><span id="area-session-icon">♣</span><i></i><b>40</b></div>
+      <p id="area-session-copy">A focused outing with clear effects and an automatic return.</p>
+      <div class="area-session-effects" id="area-session-effects"></div>
+      <div class="area-session-running" id="area-session-running" hidden>
+        <strong id="area-session-countdown">40 MIN LEFT</strong>
+        <div><span id="area-session-progress"></span></div>
+        <small id="area-session-return-copy">You can bring your Kinkybara home at any time.</small>
+      </div>
+      <button class="primary-button" id="area-session-primary" type="button">START 40 MIN</button>
+      <button class="secondary-button" type="button" data-close>NOT NOW</button>
+    </dialog>
+
     <dialog class="sheet inventory-sheet" id="inventory-dialog">
       <div class="sheet-handle" aria-hidden="true"></div>
       <div class="sheet-title"><div><p class="sheet-kicker" data-i18n="inventory.kicker">PARTY FINDS & WARDROBE</p><h2 data-i18n="inventory.title">Kinkybara collection</h2></div><button type="button" data-close data-i18n-aria="common.close" aria-label="Close">×</button></div>
