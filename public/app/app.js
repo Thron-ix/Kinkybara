@@ -417,6 +417,20 @@ function itemCopy(item) {
   return localizedItem(item, state.language);
 }
 
+function activityItemForArea(area) {
+  if (area === "meadow") return ITEM_DEFINITIONS.kennel_sign;
+  if (area !== "garden") return null;
+  return {
+    id: "play_area_sign",
+    type: "landmark",
+    area: "garden",
+    label: state.language === "de" ? "Play-Area-Schild" : "Play Area sign",
+    icon: "▰",
+    asset: "./assets/kennel-fruit-pair.png",
+    detail: state.language === "de" ? "Pfirsich und Aubergine laden zum roughen Spiel ein." : "Peach and aubergine invite some rough play.",
+  };
+}
+
 function createItemArtwork(item, className, fallback = "?") {
   if (item?.asset) {
     const image = document.createElement("img");
@@ -661,11 +675,12 @@ function renderPlacedItems(traveling = false, now = Date.now()) {
     .map((id) => ITEM_DEFINITIONS[id])
     .filter((item) => item?.area === state.landscapeArea);
   const activityArea = ["meadow", "garden"].includes(state.landscapeArea) ? state.landscapeArea : null;
-  const activityItemId = activityArea === "meadow" ? "kennel_sign" : activityArea === "garden" ? "play_mat" : null;
+  const activityItem = activityItemForArea(activityArea);
+  const activityItemId = activityItem?.id || null;
   const hasActivityItem = activityItemId && areaItems.some((item) => item.id === activityItemId);
-  const visibleItems = hasActivityItem || !activityItemId
+  const visibleItems = hasActivityItem || !activityItem
     ? areaItems
-    : [ITEM_DEFINITIONS[activityItemId], ...areaItems];
+    : [activityItem, ...areaItems];
 
   visibleItems.forEach((item, index) => {
     const button = document.createElement("button");
@@ -677,8 +692,9 @@ function renderPlacedItems(traveling = false, now = Date.now()) {
       button.classList.add("is-activity-sign");
       button.dataset.worldActivity = activityArea;
     }
-    button.style.setProperty("--left", `${19 + ((index * 31) % 66)}%`);
-    button.style.setProperty("--bottom", `${105 + ((index % 2) * 48)}px`);
+    const isHomePlayMat = item.id === "play_mat" && state.landscapeArea === "home";
+    button.style.setProperty("--left", isHomePlayMat ? "40%" : `${19 + ((index * 31) % 66)}%`);
+    button.style.setProperty("--bottom", isHomePlayMat ? "101px" : `${105 + ((index % 2) * 48)}px`);
     const copy = itemCopy(item);
     const active = state.world.activity?.area === activityArea;
     const activityLabel = active

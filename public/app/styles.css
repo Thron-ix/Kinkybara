@@ -583,6 +583,18 @@ dialog::backdrop { background: rgb(32 26 23 / 58%); backdrop-filter: blur(2px); 
 .placed-world-item[data-item-id="card_table"] { background: #302235; }
 .placed-world-icon { width: 54px; height: 54px; display: block; object-fit: contain; image-rendering: pixelated; }
 
+/* The Kennel Club reads as cuddling; the Play Area keeps the cheekier fruit motif. */
+.placed-world-icon[data-item="kennel_sign"], .inventory-card-icon[data-item="kennel_sign"] { position: relative; border: 0; background: transparent; color: transparent; overflow: visible; }
+.placed-world-icon[data-item="kennel_sign"] { width: 54px; height: 42px; }
+.inventory-card-icon[data-item="kennel_sign"] { width: 43px; height: 38px; }
+.placed-world-icon[data-item="kennel_sign"]::before, .inventory-card-icon[data-item="kennel_sign"]::before { content: "♥"; position: absolute; left: 9%; right: 9%; top: 0; height: 24px; display: grid; place-items: center; border: 3px solid #251c27; background: color-mix(in srgb, var(--accent-secondary) 74%, #efe3e9); color: #fff8e9; font-size: 12px; text-shadow: 2px 2px #251c27; }
+.placed-world-icon[data-item="kennel_sign"]::after, .inventory-card-icon[data-item="kennel_sign"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 2px; height: 18px; border: 3px solid #251c27; background: color-mix(in srgb, var(--accent-primary) 62%, #6f5872); box-shadow: inset 7px 0 #251c27, inset -7px 0 #251c27, 4px 5px 0 -2px #251c27; }
+
+/* A found play mat belongs beside the den and lies flat like a real rug. */
+.placed-world-item[data-item-id="play_mat"] { z-index: 5; width: 126px; height: 42px; padding: 3px; border: 0; background: transparent; box-shadow: none; transform: translateX(-50%) perspective(100px) rotateX(48deg); transform-origin: 50% 100%; }
+.placed-world-item[data-item-id="play_mat"] .placed-world-icon, .inventory-card-icon[data-item="play_mat"] { width: 100%; height: 100%; border: 3px solid #251c27; background: repeating-linear-gradient(90deg, var(--accent-primary) 0 19px, var(--accent-secondary) 19px 38px); color: transparent; box-shadow: inset 0 0 0 4px rgb(255 255 255 / 24%), 5px 5px rgb(43 33 39 / 42%); }
+.placed-world-item[data-item-id="play_mat"] .placed-world-icon::after, .inventory-card-icon[data-item="play_mat"]::after { content: ""; display: block; width: calc(100% - 12px); height: calc(100% - 12px); margin: 4px; border: 2px dashed #fff8e9; opacity: .82; }
+
 .journey-hero { height: 145px; display: grid; grid-template-columns: repeat(3, 1fr); place-items: center; margin-bottom: 18px; border: 4px solid var(--ink); background: linear-gradient(#8bd0dc 0 60%, #83af5d 60%); box-shadow: 6px 6px var(--ink); }
 .journey-hero span, .journey-hero i, .journey-hero b { width: 62px; height: 62px; display: grid; place-items: center; border: 3px solid var(--ink); background: #fff4ca; font-size: 28px; font-style: normal; box-shadow: 4px 4px var(--ink); }.journey-hero i { background: #e5d0ef; }.journey-hero b { background: #e7c28e; }
 .journey-rules { display: grid; grid-template-columns: 40px 1fr 55px; align-items: center; gap: 7px; margin: 16px 0; padding: 9px; border: 2px solid var(--ink); background: #e2efd6; font-size: 8px; text-align: center; }.journey-rules span { padding: 7px 3px; background: #fff; font-weight: 900; }

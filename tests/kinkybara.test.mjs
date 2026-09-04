@@ -326,6 +326,8 @@ test("the collection has exclusive clothing slots and placeable finds", () => {
   assert.ok(Object.values(ITEM_DEFINITIONS).filter((item) => item.type === "wearable").every((item) => EQUIPMENT_SLOTS[item.slot]));
   assert.equal(ITEM_DEFINITIONS.gear_locker.type, "container");
   assert.equal(ITEM_DEFINITIONS.friend_book.type, "container");
+  assert.equal(ITEM_DEFINITIONS.play_mat.area, "home");
+  assert.equal(ITEM_DEFINITIONS.kennel_sign.asset, undefined);
   assert.equal(inventory.ownedItemIds.includes("gear_locker"), true);
   assert.equal(inventory.ownedItemIds.includes("friend_book"), false);
   assert.equal(togglePlacedItem(addInventoryItem(placed.inventory, "gear_locker").inventory, "gear_locker").placed, false);
@@ -549,6 +551,8 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(html, /area-stay-panel/);
   assert.match(html, /data-filter="container"/);
   assert.match(app, /activity-sign-badge/);
+  assert.match(app, /id: "play_area_sign"/);
+  assert.match(app, /asset: "\.\/assets\/kennel-fruit-pair\.png"/);
   assert.match(html, /gear-locker-dialog/);
   assert.match(html, /friend-book-dialog/);
   assert.match(html, /pack-difficulty/);
@@ -597,7 +601,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v26/);
+  assert.match(serviceWorker, /kinkybara-shell-v30/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);
