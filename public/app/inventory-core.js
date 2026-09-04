@@ -22,7 +22,8 @@ export const ITEM_DEFINITIONS = Object.freeze({
   card_table: { id: "card_table", type: "placeable", area: "wintergarden", label: "Pack Cards table", icon: "▦", asset: "./assets/pack-cards-joker.png", detail: "Five shameless draws are always ready here." },
   karaoke_mic: { id: "karaoke_mic", type: "placeable", area: "wintergarden", label: "Karaoke mic", icon: "♪", detail: "For brave solos and louder group choruses." },
   juice_bar: { id: "juice_bar", type: "placeable", area: "wintergarden", label: "Juice bar", icon: "▥", detail: "Orange and pineapple juice for the whole pack." },
-  gear_locker: { id: "gear_locker", type: "placeable", area: "home", label: "Gear locker", icon: "▣", detail: "Keeps every carefully designed look together." },
+  gear_locker: { id: "gear_locker", type: "container", label: "Gear locker", icon: "▣", asset: "./assets/gear-locker.png", detail: "Open it to browse every hood, collar, harness and paw piece you have found." },
+  friend_book: { id: "friend_book", type: "container", label: "Friend book", icon: "♥", asset: "./assets/friend-book.png", detail: "A local scrapbook for every animal friend your Kinkybara has actually met." },
   kennel_sign: { id: "kennel_sign", type: "placeable", area: "meadow", label: "Kennel sign", icon: "K", asset: "./assets/kennel-fruit-pair.png", detail: "Warm welcome. Sharp attitude." },
   play_mat: { id: "play_mat", type: "placeable", area: "garden", label: "Play mat", icon: "▤", detail: "Ask first. Then play rough." },
   neon_lamp: { id: "neon_lamp", type: "placeable", area: "garden", label: "Neon lamp", icon: "✦", detail: "Paints the Play Area in your signature colors." },
@@ -46,7 +47,8 @@ const ITEM_COPY_DE = Object.freeze({
   card_table: ["Pack-Cards-Tisch", "Fünf schamlose Züge sind hier jederzeit bereit."],
   karaoke_mic: ["Karaoke-Mikro", "Für mutige Soli und noch lautere Gruppenrefrains."],
   juice_bar: ["Saftbar", "Orangen- und Ananassaft für das ganze Pack."],
-  gear_locker: ["Gear-Schrank", "Hält jeden sorgfältig gestalteten Look zusammen."],
+  gear_locker: ["Gear-Schrank", "Öffne ihn und stöbere durch alle gefundenen Hoods, Halsbänder, Harnesses und Pfotenteile."],
+  friend_book: ["Freundebuch", "Ein lokales Album für alle Tierfreunde, die dein Kinkybara wirklich getroffen hat."],
   kennel_sign: ["Kennel-Schild", "Warmer Empfang. Scharfe Attitude."],
   play_mat: ["Spielmatte", "Erst fragen. Dann rough spielen."],
   neon_lamp: ["Neonlampe", "Taucht die Play Area in deine Signaturfarben."],
@@ -67,13 +69,13 @@ export function localizedSlot(slot, language = "en") {
 }
 
 export const DESTINATION_REWARDS = Object.freeze({
-  folsom: ["signature_hood", "soft_collar", "memory_camera"],
+  folsom: ["signature_hood", "soft_collar", "friend_book"],
   laboratory: ["night_hood", "reflective_harness", "neon_lamp"],
   berghain: ["neon_visors", "cross_harness", "tiny_speaker"],
   ruhr_pack: ["sturdy_boots", "kennel_sign", "gear_locker"],
-  mannheim: ["pack_bandana", "karaoke_mic", "juice_bar"],
+  mannheim: ["pack_bandana", "karaoke_mic", "juice_bar", "friend_book"],
   csd_berlin: ["prism_hood", "card_table", "memory_camera"],
-  csd_cologne: ["paw_warmers", "play_mat", "juice_bar"],
+  csd_cologne: ["paw_warmers", "play_mat", "juice_bar", "friend_book"],
   csd_hamburg: ["round_glasses", "tiny_speaker", "neon_lamp"],
 });
 

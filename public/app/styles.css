@@ -1106,3 +1106,113 @@ dialog.sheet[open] { animation: modal-in .18s steps(3, end); }
   .collection-button small { display: none; }
   dialog.sheet { width: calc(100% - 14px); padding-inline: 14px; }
 }
+
+/* Progress is a visible game reward, not an anonymous stripe. */
+.xp-caption { display: block; margin-top: 4px; color: #d8cdd5; font-size: 6px; font-weight: 900; letter-spacing: .05em; }
+.floating-xp { position: absolute; z-index: 50; left: 50%; top: 35%; padding: 5px 7px; border: 2px solid #251c27; background: #fff3b7; color: #251c27; box-shadow: 3px 3px #251c27; font-size: 9px; font-weight: 900; animation: xp-rise 1.6s ease-out forwards; }
+@keyframes xp-rise { 0% { opacity: 0; transform: translate(-50%, 12px) scale(.8); } 18% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -48px) scale(1.08); } }
+
+/* The facial pixels change with mood and interaction state. */
+.pixel-capy .pixel-e, .pixel-capy .pixel-g, .pixel-capy .pixel-k { transition: transform .18s steps(2, end), filter .18s; }
+.pixel-capy[data-mood="happy"] .pixel-e,
+.pixel-capy[data-mood="great"] .pixel-e,
+.pixel-capy.is-loved .pixel-e,
+.pixel-capy.is-cuddling .pixel-e { transform: translateY(1px) scaleY(.62); }
+.pixel-capy[data-mood="urgent"] .pixel-e { transform: translateY(-1px) scale(1.12); }
+.pixel-capy[data-mood="happy"] .pixel-k.pixel-x-49,
+.pixel-capy[data-mood="happy"] .pixel-k.pixel-x-53,
+.pixel-capy[data-mood="great"] .pixel-k.pixel-x-49,
+.pixel-capy[data-mood="great"] .pixel-k.pixel-x-53 { transform: translateY(-2px); }
+.pixel-capy[data-mood="happy"] .pixel-k.pixel-x-51,
+.pixel-capy[data-mood="great"] .pixel-k.pixel-x-51 { transform: translateY(2px); }
+.pixel-capy[data-mood="sad"] .pixel-k.pixel-x-49,
+.pixel-capy[data-mood="sad"] .pixel-k.pixel-x-53,
+.pixel-capy[data-mood="urgent"] .pixel-k.pixel-x-49,
+.pixel-capy[data-mood="urgent"] .pixel-k.pixel-x-53 { transform: translateY(2px); }
+.pixel-capy[data-mood="sad"] .pixel-k.pixel-x-51,
+.pixel-capy[data-mood="urgent"] .pixel-k.pixel-x-51 { transform: translateY(-2px); }
+.pixel-capy.is-eating .pixel-k, .pixel-capy.is-talking .pixel-k { transform: scaleY(2.1); }
+
+/* Berlin-inspired local sun path and color temperature. */
+.sun { left: var(--sun-x, 82%); right: auto; top: var(--sun-y, 27px); transform: translateX(-50%); transition: left 50s linear, top 50s linear; }
+.moon { left: var(--moon-x, 72%); right: auto; transform: translateX(-50%); }
+.sky-pixels::before { content: ""; position: absolute; inset: 0 0 24%; pointer-events: none; transition: background 1s, opacity 1s; }
+.habitat[data-solar="dawn"] .sky-pixels::before { background: linear-gradient(#55627a33, #f3a27c66); }
+.habitat[data-solar="sunset"] .sky-pixels::before { background: linear-gradient(#513f6738, #ef7b706b); }
+.habitat[data-solar="night"] .sky-pixels::before { background: #11172766; }
+.habitat[data-solar="night"] .sun { display: none; }
+.habitat[data-solar="night"] .moon, .habitat[data-solar="night"] .star { display: block; }
+
+/* Long area sessions have one compact, explicit control. */
+.area-stay-panel { position: absolute; z-index: 39; left: 50%; bottom: 57px; width: min(92%, 410px); min-height: 52px; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 7px 8px; transform: translateX(-50%); border: 3px solid #251c27; background: #f4edf1; color: #251c27; box-shadow: 4px 4px #251c27; }
+.area-stay-panel > span { display: grid; place-items: center; width: 29px; height: 29px; background: #302235; color: #fff; font-size: 16px; }
+.area-stay-panel strong, .area-stay-panel small { display: block; }
+.area-stay-panel strong { font-size: 8px; }
+.area-stay-panel small { margin-top: 3px; color: #594c54; font: 700 6px/1.25 ui-rounded, system-ui, sans-serif; }
+.area-stay-panel button { min-height: 34px; padding: 5px 7px; border: 2px solid #251c27; background: #302235; color: #fff; font-size: 6px; font-weight: 900; box-shadow: 2px 2px #251c27; }
+.area-stay-panel button:disabled { background: #dad2d6; color: #3d343a; box-shadow: none; }
+.meter.is-boosted { position: relative; overflow: visible; box-shadow: 0 0 0 2px #fff3b7, 0 0 12px #ffe568; }
+.meter.is-boosted::after { content: "✦"; position: absolute; right: -8px; top: -12px; color: #fff3a6; font-size: 12px; animation: bond-sparkle .8s steps(2, end) infinite alternate; }
+@keyframes bond-sparkle { to { transform: translateY(-4px) rotate(25deg) scale(1.2); } }
+
+/* Collection containers are opened, never placed in the landscape. */
+.container-hero { width: 118px; height: 118px; display: block; margin: -5px auto 10px; background-position: center; background-size: contain; background-repeat: no-repeat; image-rendering: auto; filter: drop-shadow(4px 4px 0 #251c2733); }
+.container-hero.is-gear-locker { background-image: url("./assets/gear-locker.png"); }
+.container-hero.is-friend-book { background-image: url("./assets/friend-book.png"); }
+.collection-container-sheet > p { color: #5b4e56; font: 600 10px/1.45 ui-rounded, system-ui, sans-serif; }
+.gear-locker-grid, .friend-book-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.gear-locker-grid button, .friend-book-grid article { min-width: 0; min-height: 104px; display: grid; grid-template-columns: 34px minmax(0, 1fr); align-content: center; gap: 4px 8px; padding: 9px; border: 2px solid #251c27; background: #fff; color: #251c27; text-align: left; box-shadow: 3px 3px #251c27; }
+.gear-locker-grid button > span, .friend-book-grid article > span { grid-row: 1 / span 2; display: grid; place-items: center; width: 34px; height: 34px; background: #e6d7ed; font-size: 18px; font-weight: 900; }
+.gear-locker-grid strong, .friend-book-grid strong { align-self: end; overflow: hidden; font-size: 8px; text-overflow: ellipsis; }
+.gear-locker-grid small, .friend-book-grid small { color: #5a4d55; font: 600 7px/1.25 ui-rounded, system-ui, sans-serif; }
+.gear-locker-grid button.is-equipped { background: #e8eddf; box-shadow: inset 0 -5px #302235, 3px 3px #251c27; }
+.gear-locker-grid button:disabled, .friend-book-grid article.is-unknown { background: #e5e0e3; color: #4b4247; opacity: 1; }
+.friend-book-grid article { display: grid; grid-template-rows: auto auto 1fr auto; }
+.friend-book-grid article > span { grid-row: 1 / span 3; }
+.friend-book-grid time { color: #695c64; font-size: 6px; }
+.inventory-card-icon[src*="gear-locker"], .inventory-card-icon[src*="friend-book"] { width: 68px; height: 68px; border: 0; background: transparent; }
+
+/* Slot artwork reads as gear even before the label is read. */
+.inventory-card-icon[data-slot], .locker-gear-icon[data-slot] { position: relative; overflow: visible; color: transparent; background: #f4edf1; }
+.locker-gear-icon[data-slot] { grid-row: 1 / span 2; width: 34px; height: 34px; display: block; border: 2px solid #251c27; }
+.inventory-card-icon[data-slot]::before, .inventory-card-icon[data-slot]::after,
+.locker-gear-icon[data-slot]::before, .locker-gear-icon[data-slot]::after { content: ""; position: absolute; box-sizing: border-box; }
+.inventory-card-icon[data-slot="hood"]::before, .locker-gear-icon[data-slot="hood"]::before { left: 9px; top: 9px; width: 25px; height: 27px; border: 3px solid #251c27; border-radius: 45% 48% 42% 44%; background: #1c1820; }
+.inventory-card-icon[data-slot="hood"]::after, .locker-gear-icon[data-slot="hood"]::after { left: 20px; top: 14px; width: 21px; height: 14px; border: 3px solid #251c27; border-radius: 50% 60% 60% 50%; background: #f7f1ee; transform: rotate(8deg); box-shadow: -11px -14px 0 -4px #f7f1ee; }
+.inventory-card-icon[data-slot="eyes"]::before, .locker-gear-icon[data-slot="eyes"]::before { left: 5px; top: 15px; width: 14px; height: 14px; border: 4px solid #302235; border-radius: 50%; box-shadow: 18px 0 0 -4px #f4edf1, 18px 0 0 0 #302235; }
+.inventory-card-icon[data-slot="eyes"]::after, .locker-gear-icon[data-slot="eyes"]::after { left: 17px; top: 20px; width: 10px; height: 4px; background: #302235; }
+.inventory-card-icon[data-slot="neck"]::before, .locker-gear-icon[data-slot="neck"]::before { left: 5px; top: 16px; width: 33px; height: 12px; border: 3px solid #251c27; border-radius: 7px; background: var(--accent-secondary); }
+.inventory-card-icon[data-slot="neck"]::after, .locker-gear-icon[data-slot="neck"]::after { left: 18px; top: 24px; width: 10px; height: 10px; border: 3px solid #251c27; border-radius: 50%; background: var(--accent-primary); }
+.inventory-card-icon[data-slot="harness"]::before, .locker-gear-icon[data-slot="harness"]::before { left: 18px; top: 3px; width: 9px; height: 37px; border: 2px solid #251c27; background: var(--accent-primary); transform: rotate(29deg); }
+.inventory-card-icon[data-slot="harness"]::after, .locker-gear-icon[data-slot="harness"]::after { left: 18px; top: 3px; width: 9px; height: 37px; border: 2px solid #251c27; background: var(--accent-secondary); transform: rotate(-29deg); }
+.inventory-card-icon[data-slot="paws"]::before, .locker-gear-icon[data-slot="paws"]::before { left: 5px; top: 18px; width: 14px; height: 17px; border: 3px solid #251c27; border-radius: 6px 6px 2px 2px; background: var(--accent-secondary); box-shadow: 20px 0 0 -3px var(--accent-secondary), 20px 0 0 0 #251c27; }
+.inventory-card-icon[data-slot="paws"]::after, .locker-gear-icon[data-slot="paws"]::after { left: 4px; top: 34px; width: 16px; height: 4px; background: #251c27; box-shadow: 20px 0 #251c27; }
+.auto-travel-status { display: grid; gap: 4px; margin: 10px 0; padding: 9px; border: 2px solid #251c27; background: #e8eddf; color: #251c27; }
+.auto-travel-status strong { font-size: 8px; }.auto-travel-status span { color: #51464d; font: 600 8px/1.4 ui-rounded, system-ui, sans-serif; }
+
+/* Pack Cards: choose the heat before dealing, then read special rules. */
+.pack-difficulty { display: grid; gap: 10px; margin: 12px 0; }
+.pack-difficulty > p { margin: 0; color: #584a54; font-size: 8px; font-weight: 900; letter-spacing: .12em; }
+.pack-difficulty > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.pack-difficulty > div button { min-height: 54px; padding: 6px 3px; border: 2px solid #251c27; background: #e5dcdf; color: #251c27; font-size: 8px; font-weight: 900; box-shadow: 2px 2px #251c27; }
+.pack-difficulty > div button small { color: #5d5057; font-size: 5px; }
+.pack-difficulty > div button.is-active { background: #302235; color: #fff; box-shadow: inset 0 -5px var(--accent-secondary), 2px 2px #251c27; }
+.pack-difficulty > div button.is-active small { color: #eee4ed; }
+.pack-card-title { min-height: 78px; }
+.pack-card-special { margin-top: 6px; padding: 5px; border: 1px solid #251c27; background: #fff3b7; color: #251c27; }
+.pack-card-special b, .pack-card-special small { display: block; }
+.pack-card-special b { font-size: 6px; }.pack-card-special small { min-height: 0; margin-top: 2px; color: #51464d; font-size: 6px; }
+
+/* Clearer silhouettes for non-hood accessories. */
+.outfit-piece[data-slot="eyes"] { right: 10px; top: 47px; width: 58px; height: 21px; border: 0; border-radius: 0; background: radial-gradient(circle at 25% 50%, transparent 0 8px, var(--accent-secondary) 8px 12px, transparent 12px), radial-gradient(circle at 75% 50%, transparent 0 8px, var(--accent-secondary) 8px 12px, transparent 12px); filter: drop-shadow(2px 2px 0 var(--ink)); }
+.outfit-piece[data-slot="eyes"]::after { content: ""; position: absolute; left: 22px; top: 8px; width: 14px; height: 4px; background: var(--accent-secondary); }
+.outfit-piece[data-slot="neck"] { z-index: 3; right: 60px; top: 91px; width: 56px; height: 14px; border: 3px solid var(--ink); border-radius: 8px; background: var(--accent-secondary); transform: rotate(-2deg); }
+.outfit-piece[data-slot="neck"]::after { left: 50%; top: 8px; width: 13px; height: 13px; background: var(--accent-primary); }
+.outfit-piece[data-slot="paws"] { left: 68px; bottom: -5px; width: 120px; height: 22px; border: 0; background: linear-gradient(90deg, var(--accent-secondary) 0 31px, transparent 31px 76px, var(--accent-secondary) 76px 112px, transparent 112px); filter: drop-shadow(2px 2px 0 var(--ink)); }
+.outfit-piece[data-slot="paws"]::after { content: ""; position: absolute; left: 0; right: 8px; bottom: -3px; height: 5px; background: linear-gradient(90deg, var(--ink) 0 31px, transparent 31px 76px, var(--ink) 76px 112px, transparent 112px); }
+
+@media (max-width: 360px) {
+  .area-stay-panel { bottom: 54px; }
+  .gear-locker-grid, .friend-book-grid { grid-template-columns: 1fr; }
+  .pack-card-title { min-height: 72px; }
+}

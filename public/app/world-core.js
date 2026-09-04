@@ -59,13 +59,17 @@ function nextMoveDelay(seed, at, visits) {
 
 export function createWorld(now = Date.now(), area = "home", seed = "capy") {
   return {
-    version: 1,
+    version: 2,
     area: WORLD_AREAS[area] ? area : "home",
     movedAt: now,
     nextMoveAt: now + nextMoveDelay(seed, now, 0),
     friendId: null,
     friendUntil: 0,
     visits: 0,
+    metFriendIds: [],
+    friendMetAt: {},
+    activity: null,
+    socialGlowUntil: 0,
   };
 }
 
@@ -74,17 +78,23 @@ export function normalizeWorld(candidate, now = Date.now(), seed = "capy") {
   const world = candidate && typeof candidate === "object" ? {
     ...base,
     ...candidate,
-    version: 1,
+    version: 2,
     area: WORLD_AREAS[candidate.area] ? candidate.area : "home",
     movedAt: Math.max(0, Number(candidate.movedAt) || now),
     nextMoveAt: Math.max(now - 24 * 60 * MINUTE, Number(candidate.nextMoveAt) || base.nextMoveAt),
     friendId: ANIMAL_FRIENDS[candidate.friendId] ? candidate.friendId : null,
     friendUntil: Math.max(0, Number(candidate.friendUntil) || 0),
     visits: Math.max(0, Number(candidate.visits) || 0),
+    metFriendIds: [...new Set(Array.isArray(candidate.metFriendIds) ? candidate.metFriendIds.filter((id) => ANIMAL_FRIENDS[id]) : [])],
+    friendMetAt: candidate.friendMetAt && typeof candidate.friendMetAt === "object" ? Object.fromEntries(Object.entries(candidate.friendMetAt).filter(([id]) => ANIMAL_FRIENDS[id])) : {},
+    activity: candidate.activity && ["meadow", "garden"].includes(candidate.activity.area)
+      ? { area: candidate.activity.area, startedAt: Math.max(0, Number(candidate.activity.startedAt) || now), returnsAt: Math.max(now - 24 * 60 * MINUTE, Number(candidate.activity.returnsAt) || now) }
+      : null,
+    socialGlowUntil: Math.max(0, Number(candidate.socialGlowUntil) || 0),
   } : base;
 
   let loops = 0;
-  while (now >= world.nextMoveAt && loops < 96) {
+  while (!world.activity && now >= world.nextMoveAt && loops < 96) {
     const movedAt = world.nextMoveAt;
     const areaIds = Object.keys(WORLD_AREAS).filter((id) => id !== world.area);
     const value = seedNumber(`${seed}:area:${movedAt}:${world.visits}`);
@@ -110,7 +120,7 @@ export function normalizeWorld(candidate, now = Date.now(), seed = "capy") {
 
 export function selectWorldArea(candidate, area, now = Date.now(), seed = "capy") {
   const world = normalizeWorld(candidate, now, seed);
-  if (!WORLD_AREAS[area] || area === world.area) return world;
+  if (world.activity || !WORLD_AREAS[area] || area === world.area) return world;
   return {
     ...world,
     area,
@@ -119,6 +129,57 @@ export function selectWorldArea(candidate, area, now = Date.now(), seed = "capy"
     friendId: null,
     friendUntil: 0,
   };
+}
+
+export function recordFriendMeeting(candidate, friendId, now = Date.now(), seed = "capy") {
+  const world = normalizeWorld(candidate, now, seed);
+  if (!ANIMAL_FRIENDS[friendId]) return world;
+  return {
+    ...world,
+    metFriendIds: [...new Set([...world.metFriendIds, friendId])],
+    friendMetAt: { ...world.friendMetAt, [friendId]: now },
+  };
+}
+
+export function startWorldActivity(candidate, area, now = Date.now(), seed = "capy") {
+  const world = normalizeWorld(candidate, now, seed);
+  if (world.activity || !["meadow", "garden"].includes(area)) return { world, started: false };
+  return {
+    started: true,
+    world: {
+      ...world,
+      area,
+      movedAt: now,
+      friendId: null,
+      friendUntil: 0,
+      activity: { area, startedAt: now, returnsAt: now + 40 * MINUTE },
+      nextMoveAt: Math.max(world.nextMoveAt, now + 45 * MINUTE),
+    },
+  };
+}
+
+export function settleWorldActivity(candidate, now = Date.now(), seed = "capy") {
+  const world = normalizeWorld(candidate, now, seed);
+  if (!world.activity || now < world.activity.returnsAt) return { world, completion: null };
+  const completion = { ...world.activity };
+  return {
+    completion,
+    world: {
+      ...world,
+      area: "home",
+      movedAt: now,
+      nextMoveAt: now + nextMoveDelay(seed, now, world.visits),
+      activity: null,
+      socialGlowUntil: completion.area === "meadow" ? now + 2 * 60 * MINUTE : world.socialGlowUntil,
+    },
+  };
+}
+
+export function worldActivityTimeLabel(candidate, now = Date.now(), language = "de", seed = "capy") {
+  const activity = normalizeWorld(candidate, now, seed).activity;
+  if (!activity) return "";
+  const minutes = Math.max(1, Math.ceil((activity.returnsAt - now) / MINUTE));
+  return language === "de" ? `NOCH ${minutes} MIN.` : `${minutes} MIN LEFT`;
 }
 
 export function createGarden() {

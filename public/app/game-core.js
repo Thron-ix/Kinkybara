@@ -253,12 +253,18 @@ export function addMemory(input, text, icon = "♥", now = Date.now()) {
 }
 
 export function levelInfo(xp) {
-  const level = Math.floor(Math.sqrt(Math.max(0, xp) / 22)) + 1;
+  const safeXp = Math.max(0, Number(xp) || 0);
+  const level = Math.floor(Math.sqrt(safeXp / 22)) + 1;
   const levelStart = 22 * (level - 1) ** 2;
   const levelEnd = 22 * level ** 2;
   return {
     level,
-    progress: clamp(((xp - levelStart) / (levelEnd - levelStart)) * 100),
+    xp: safeXp,
+    levelStart,
+    levelEnd,
+    nextLevelXp: levelEnd,
+    toNext: Math.max(0, levelEnd - safeXp),
+    progress: clamp(((safeXp - levelStart) / (levelEnd - levelStart)) * 100),
   };
 }
 

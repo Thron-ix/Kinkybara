@@ -67,14 +67,17 @@ import {
   createWorld,
   harvestCrop,
   normalizeWorld,
+  recordFriendMeeting,
   selectWorldArea,
+  settleWorldActivity,
+  startWorldActivity,
   plantCrop,
   selectCrop,
   travelCompanion,
   waterCrop,
 } from "../public/app/world-core.js";
 import { localAmbience } from "../public/app/weather.js";
-import { PACK_CARD_DECK } from "../public/app/pack-cards.js";
+import { PACK_CARD_DECK, PACK_CARD_DIFFICULTIES, resolvePackCardRound } from "../public/app/pack-cards.js";
 
 function contrastRatio(foreground, background) {
   const luminance = (hex) => {
@@ -320,6 +323,9 @@ test("the collection has exclusive clothing slots and placeable finds", () => {
   assert.equal(togglePlacedItem(placed.inventory, "neon_lamp").placed, false);
   assert.ok(Object.keys(ITEM_DEFINITIONS).length >= 20);
   assert.ok(Object.values(ITEM_DEFINITIONS).filter((item) => item.type === "wearable").every((item) => EQUIPMENT_SLOTS[item.slot]));
+  assert.equal(ITEM_DEFINITIONS.gear_locker.type, "container");
+  assert.equal(ITEM_DEFINITIONS.friend_book.type, "container");
+  assert.equal(togglePlacedItem(addInventoryItem(placed.inventory, "gear_locker").inventory, "gear_locker").placed, false);
 
   const migratedStarter = normalizeInventory({
     ownedItemIds: ["soft_harness", "card_table"],
@@ -354,6 +360,34 @@ test("the Capy changes between four living areas and can meet travel companions"
   assert.ok(!moved.friendId || ANIMAL_FRIENDS[moved.friendId]);
   const companion = travelCompanion({ ...moved, friendId: "duck" }, "nox");
   assert.equal(companion, "duck");
+});
+
+test("friends are recorded and 40-minute area sessions settle exactly once", () => {
+  const now = Date.UTC(2026, 7, 29, 10);
+  let world = recordFriendMeeting(createWorld(now, "home", "nox"), "duck", now + 10, "nox");
+  assert.deepEqual(world.metFriendIds, ["duck"]);
+  assert.equal(world.friendMetAt.duck, now + 10);
+  const started = startWorldActivity(world, "meadow", now + 20, "nox");
+  assert.equal(started.started, true);
+  assert.equal(started.world.activity.returnsAt - started.world.activity.startedAt, 40 * 60_000);
+  assert.equal(selectWorldArea(started.world, "garden", now + 30, "nox").area, "meadow");
+  assert.equal(settleWorldActivity(started.world, started.world.activity.returnsAt - 1, "nox").completion, null);
+  const finished = settleWorldActivity(started.world, started.world.activity.returnsAt + 1, "nox");
+  assert.equal(finished.completion.area, "meadow");
+  assert.equal(finished.world.area, "home");
+  assert.ok(finished.world.socialGlowUntil > started.world.activity.returnsAt);
+  assert.equal(settleWorldActivity(finished.world, started.world.activity.returnsAt + 2, "nox").completion, null);
+});
+
+test("Pack Cards avoids automatic 99s and adds meaningful difficulty and specials", () => {
+  assert.equal(Math.max(...PACK_CARD_DECK.flatMap((card) => Object.values(card.stats))), 94);
+  assert.ok(PACK_CARD_DECK.filter((card) => card.special).length >= 6);
+  assert.equal(PACK_CARD_DIFFICULTIES.soft.rounds, 5);
+  assert.equal(PACK_CARD_DIFFICULTIES.alpha.rounds, 7);
+  const playerCard = { stats: { trust: 80, style: 80, energy: 80, pack: 80 } };
+  const rivalCard = { stats: { trust: 80, style: 80, energy: 80, pack: 80 } };
+  assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "soft" }).winner, "tie");
+  assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "alpha" }).winner, "rival");
 });
 
 test("vegetables grow offline, watering helps, and harvest becomes food", () => {
@@ -500,6 +534,10 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(html, /weather-dialog/);
   assert.match(html, /world-navigation/);
   assert.match(html, /hood-toggle/);
+  assert.match(html, /area-stay-panel/);
+  assert.match(html, /gear-locker-dialog/);
+  assert.match(html, /friend-book-dialog/);
+  assert.match(html, /pack-difficulty/);
   assert.doesNotMatch(html, /id="area-name"|id="area-choice"|id="growth-label"|FRIENDS' YARD/);
   assert.match(html, /id="weather-icon"[^>]*>BERLIN</);
   assert.match(html, /value="golden"/);
@@ -545,13 +583,15 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v22/);
+  assert.match(serviceWorker, /kinkybara-shell-v24/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);
   assert.match(serviceWorker, /pup-hood-base\.png/);
   assert.match(serviceWorker, /pack-cards-joker\.png/);
   assert.match(serviceWorker, /kennel-fruit-pair\.png/);
+  assert.match(serviceWorker, /gear-locker\.png/);
+  assert.match(serviceWorker, /friend-book\.png/);
   assert.match(serviceWorker, /dialogues\.js/);
   assert.match(serviceWorker, /pet-library\.js/);
   assert.match(serviceWorker, /quest-core\.js/);
