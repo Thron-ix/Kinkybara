@@ -67,6 +67,7 @@ import {
   createWorld,
   harvestCrop,
   normalizeWorld,
+  prepareWorldActivity,
   recordFriendMeeting,
   recallWorldActivity,
   selectWorldArea,
@@ -391,6 +392,24 @@ test("friends are recorded and 40-minute area sessions settle exactly once", () 
   assert.equal(recalled.world.activity, null);
 });
 
+test("secret session preparations are captured quietly and revealed only on return", () => {
+  const now = Date.UTC(2026, 8, 4, 18);
+  const prepared = prepareWorldActivity(createWorld(now, "garden", "nox"), "pineapple", now, "nox");
+  const juicy = startWorldActivity(prepared, "garden", now + 20 * 60_000, "nox", { clean: 42 });
+  assert.equal(juicy.world.activity.secretBonus, "pineapple");
+  assert.equal(juicy.world.pineappleUntil, 0);
+  assert.equal(settleWorldActivity(juicy.world, juicy.world.activity.returnsAt, "nox").completion.secretBonus, "pineapple");
+
+  const expired = startWorldActivity(prepareWorldActivity(createWorld(now, "garden", "nox"), "pineapple", now, "nox"), "garden", now + 91 * 60_000, "nox", { clean: 100 });
+  assert.equal(expired.world.activity.secretBonus, null);
+
+  const spotless = startWorldActivity(createWorld(now, "meadow", "nox"), "meadow", now, "nox", { clean: 100 });
+  assert.equal(spotless.world.activity.secretBonus, "spotless");
+  const spotlessReturn = settleWorldActivity(spotless.world, spotless.world.activity.returnsAt, "nox");
+  assert.equal(spotlessReturn.completion.secretBonus, "spotless");
+  assert.equal(spotlessReturn.world.socialGlowUntil, spotless.world.activity.returnsAt + 4 * 60 * 60_000);
+});
+
 test("Pack Cards avoids automatic 99s and adds meaningful difficulty and specials", () => {
   assert.equal(Math.max(...PACK_CARD_DECK.flatMap((card) => Object.values(card.stats))), 94);
   assert.ok(PACK_CARD_DECK.filter((card) => card.special).length >= 6);
@@ -553,6 +572,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(app, /activity-sign-badge/);
   assert.match(app, /id: "play_area_sign"/);
   assert.match(app, /asset: "\.\/assets\/kennel-fruit-pair\.png"/);
+  assert.ok(app.indexOf("if (button.dataset.worldActivity)") < app.indexOf("const item = itemCopy(ITEM_DEFINITIONS[button.dataset.itemId])"));
   assert.match(html, /gear-locker-dialog/);
   assert.match(html, /friend-book-dialog/);
   assert.match(html, /pack-difficulty/);
@@ -601,7 +621,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v30/);
+  assert.match(serviceWorker, /kinkybara-shell-v33/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);

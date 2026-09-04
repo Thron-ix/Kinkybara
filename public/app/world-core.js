@@ -1,4 +1,6 @@
 const MINUTE = 60_000;
+const PINEAPPLE_PREP_WINDOW = 90 * MINUTE;
+const SECRET_BONUSES = new Set(["pineapple", "spotless"]);
 
 export const WORLD_AREAS = Object.freeze({
   home: { id: "home", label: "THE DEN", short: "DEN", icon: "⌂" },
@@ -59,7 +61,7 @@ function nextMoveDelay(seed, at, visits) {
 
 export function createWorld(now = Date.now(), area = "home", seed = "capy") {
   return {
-    version: 2,
+    version: 3,
     area: WORLD_AREAS[area] ? area : "home",
     movedAt: now,
     nextMoveAt: now + nextMoveDelay(seed, now, 0),
@@ -70,6 +72,7 @@ export function createWorld(now = Date.now(), area = "home", seed = "capy") {
     friendMetAt: {},
     activity: null,
     socialGlowUntil: 0,
+    pineappleUntil: 0,
   };
 }
 
@@ -78,7 +81,7 @@ export function normalizeWorld(candidate, now = Date.now(), seed = "capy") {
   const world = candidate && typeof candidate === "object" ? {
     ...base,
     ...candidate,
-    version: 2,
+    version: 3,
     area: WORLD_AREAS[candidate.area] ? candidate.area : "home",
     movedAt: Math.max(0, Number(candidate.movedAt) || now),
     nextMoveAt: Math.max(now - 24 * 60 * MINUTE, Number(candidate.nextMoveAt) || base.nextMoveAt),
@@ -88,9 +91,15 @@ export function normalizeWorld(candidate, now = Date.now(), seed = "capy") {
     metFriendIds: [...new Set(Array.isArray(candidate.metFriendIds) ? candidate.metFriendIds.filter((id) => ANIMAL_FRIENDS[id]) : [])],
     friendMetAt: candidate.friendMetAt && typeof candidate.friendMetAt === "object" ? Object.fromEntries(Object.entries(candidate.friendMetAt).filter(([id]) => ANIMAL_FRIENDS[id])) : {},
     activity: candidate.activity && ["meadow", "garden"].includes(candidate.activity.area)
-      ? { area: candidate.activity.area, startedAt: Math.max(0, Number(candidate.activity.startedAt) || now), returnsAt: Math.max(now - 24 * 60 * MINUTE, Number(candidate.activity.returnsAt) || now) }
+      ? {
+          area: candidate.activity.area,
+          startedAt: Math.max(0, Number(candidate.activity.startedAt) || now),
+          returnsAt: Math.max(now - 24 * 60 * MINUTE, Number(candidate.activity.returnsAt) || now),
+          secretBonus: SECRET_BONUSES.has(candidate.activity.secretBonus) ? candidate.activity.secretBonus : null,
+        }
       : null,
     socialGlowUntil: Math.max(0, Number(candidate.socialGlowUntil) || 0),
+    pineappleUntil: Math.max(0, Number(candidate.pineappleUntil) || 0),
   } : base;
 
   let loops = 0;
@@ -141,9 +150,18 @@ export function recordFriendMeeting(candidate, friendId, now = Date.now(), seed 
   };
 }
 
-export function startWorldActivity(candidate, area, now = Date.now(), seed = "capy") {
+export function prepareWorldActivity(candidate, preparation, now = Date.now(), seed = "capy") {
+  const world = normalizeWorld(candidate, now, seed);
+  if (preparation !== "pineapple") return world;
+  return { ...world, pineappleUntil: now + PINEAPPLE_PREP_WINDOW };
+}
+
+export function startWorldActivity(candidate, area, now = Date.now(), seed = "capy", context = {}) {
   const world = normalizeWorld(candidate, now, seed);
   if (world.activity || !["meadow", "garden"].includes(area)) return { world, started: false };
+  const secretBonus = area === "garden" && world.pineappleUntil > now
+    ? "pineapple"
+    : area === "meadow" && Number(context.clean) >= 99.5 ? "spotless" : null;
   return {
     started: true,
     world: {
@@ -152,8 +170,9 @@ export function startWorldActivity(candidate, area, now = Date.now(), seed = "ca
       movedAt: now,
       friendId: null,
       friendUntil: 0,
-      activity: { area, startedAt: now, returnsAt: now + 40 * MINUTE },
+      activity: { area, startedAt: now, returnsAt: now + 40 * MINUTE, secretBonus },
       nextMoveAt: Math.max(world.nextMoveAt, now + 45 * MINUTE),
+      pineappleUntil: secretBonus === "pineapple" ? 0 : world.pineappleUntil,
     },
   };
 }
@@ -170,7 +189,7 @@ export function settleWorldActivity(candidate, now = Date.now(), seed = "capy") 
       movedAt: now,
       nextMoveAt: now + nextMoveDelay(seed, now, world.visits),
       activity: null,
-      socialGlowUntil: completion.area === "meadow" ? now + 2 * 60 * MINUTE : world.socialGlowUntil,
+      socialGlowUntil: completion.area === "meadow" ? now + (completion.secretBonus === "spotless" ? 4 : 2) * 60 * MINUTE : world.socialGlowUntil,
     },
   };
 }

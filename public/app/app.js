@@ -78,6 +78,7 @@ import {
   normalizeGarden,
   normalizeWorld,
   plantCrop,
+  prepareWorldActivity,
   recordFriendMeeting,
   recallWorldActivity,
   selectCrop,
@@ -601,18 +602,20 @@ function syncWorldState(now = Date.now(), traveling = isTraveling(state.travel, 
   state.world = settled.world;
   if (settled.completion && elements.areaSessionDialog.open) elements.areaSessionDialog.close();
   if (settled.completion?.area === "meadow") {
-    state = awardChanges(activityChanges("meadow"), now);
+    const secretBonus = settled.completion.secretBonus;
+    state = awardChanges(activityChanges("meadow", 1, secretBonus), now);
     currentPhrase = state.language === "de"
-      ? "Kennel Club war intensiv. Nähe voll, Bauch leer – und dieses Glitzern bleibt noch eine Weile."
-      : "The Kennel Club was intense. Bond full, belly empty — and that sparkle will linger.";
-    remember(state.language === "de" ? `${state.name} kam nach 40 Minuten sehr glücklich, sehr hungrig und voller besonderer Nähe aus dem Kennel Club.` : `${state.name} returned from 40 minutes at the Kennel Club delighted, hungry and glowing with closeness.`, "♣");
-    showToast(state.language === "de" ? "KENNEL CLUB · NÄHE GLITZERT 2 STUNDEN" : "KENNEL CLUB · BOND SPARKLES FOR 2 HOURS", 5200);
+      ? `Kennel Club war intensiv. Nähe voll, Bauch leer – und dieses Glitzern bleibt noch eine Weile.${secretBonus === "spotless" ? " Blitzblank reinzugehen hat offenbar bleibenden Eindruck gemacht: Das Nähe-Glitzern hält diesmal extra lang." : ""}`
+      : `The Kennel Club was intense. Bond full, belly empty — and that sparkle will linger.${secretBonus === "spotless" ? " Going in spotless apparently made a lasting impression: the bond sparkle sticks around extra long." : ""}`;
+    remember(state.language === "de" ? `${state.name} kam nach 40 Minuten sehr glücklich, sehr hungrig und voller besonderer Nähe aus dem Kennel Club.${secretBonus === "spotless" ? " Weil es blitzblank hineinging, hält das Nähe-Glitzern vier statt zwei Stunden." : ""}` : `${state.name} returned from 40 minutes at the Kennel Club delighted, hungry and glowing with closeness.${secretBonus === "spotless" ? " Going in spotless made the bond sparkle last four hours instead of two." : ""}`, "♣");
+    showToast(state.language === "de" ? `KENNEL CLUB · NÄHE GLITZERT ${secretBonus === "spotless" ? 4 : 2} STUNDEN` : `KENNEL CLUB · BOND SPARKLES FOR ${secretBonus === "spotless" ? 4 : 2} HOURS`, 5200);
   } else if (settled.completion?.area === "garden") {
-    state = awardChanges(activityChanges("garden"), now);
+    const secretBonus = settled.completion.secretBonus;
+    state = awardChanges(activityChanges("garden", 1, secretBonus), now);
     currentPhrase = state.language === "de"
-      ? "Play Area war rough. Sehr glücklich, sehr dreckig, komplett ausgepowert."
-      : "The Play Area was rough. Very happy, very messy, completely spent.";
-    remember(state.language === "de" ? `${state.name} kam nach 40 Minuten rougher Play Area dreckig, müde und sehr zufrieden zurück.` : `${state.name} returned from 40 rough minutes in the Play Area messy, tired and deeply satisfied.`, "▰");
+      ? `Play Area war rough. Sehr glücklich, sehr dreckig, komplett ausgepowert.${secretBonus === "pineapple" ? " Der Ananassaft vorher hat die Sache verdächtig saftig gehalten – mehr Ausdauer, breiteres Grinsen." : ""}`
+      : `The Play Area was rough. Very happy, very messy, completely spent.${secretBonus === "pineapple" ? " That pineapple juice beforehand kept things suspiciously juicy — more stamina, bigger grin." : ""}`;
+    remember(state.language === "de" ? `${state.name} kam nach 40 Minuten rougher Play Area dreckig, müde und sehr zufrieden zurück.${secretBonus === "pineapple" ? " Weil es vorher Ananassaft getrunken hatte, gab es mehr Spaß und deutlich weniger Energie-Crash." : ""}` : `${state.name} returned from 40 rough minutes in the Play Area messy, tired and deeply satisfied.${secretBonus === "pineapple" ? " Pineapple juice beforehand meant more fun and much less of an energy crash." : ""}`, "▰");
     showToast(state.language === "de" ? "PLAY AREA · FRISCH & ENERGIE STARK GESUNKEN" : "PLAY AREA · FRESH & ENERGY DROPPED HARD", 5200);
   }
   state.world = normalizeWorld(state.world, now, worldSeed());
@@ -788,18 +791,30 @@ function openAreaSessionDialog(area = state.landscapeArea) {
   openDialog(elements.areaSessionDialog);
 }
 
-function activityChanges(area, progress = 1) {
+function activityChanges(area, progress = 1, secretBonus = null) {
   const scale = (value) => Math.round(value * Math.max(0, Math.min(1, progress)));
-  return area === "meadow"
-    ? { satiety: scale(-35), fun: scale(18), social: scale(100), energy: scale(-10), xp: scale(20) }
-    : { satiety: scale(-15), fun: scale(22), curiosity: scale(12), clean: scale(-35), energy: scale(-35), xp: scale(18) };
+  if (area === "meadow") return {
+    satiety: scale(-35),
+    fun: scale(18 + (secretBonus === "spotless" ? 6 : 0)),
+    social: scale(100),
+    energy: scale(-10),
+    xp: scale(20 + (secretBonus === "spotless" ? 8 : 0)),
+  };
+  return {
+    satiety: scale(-15),
+    fun: scale(22 + (secretBonus === "pineapple" ? 8 : 0)),
+    curiosity: scale(12 + (secretBonus === "pineapple" ? 3 : 0)),
+    clean: scale(-35),
+    energy: scale(-35 + (secretBonus === "pineapple" ? 10 : 0)),
+    xp: scale(18 + (secretBonus === "pineapple" ? 6 : 0)),
+  };
 }
 
 function startAreaStay(area = pendingAreaSessionArea || state.landscapeArea) {
   if (state.world.activity) return;
   if (isTraveling(state.travel) || state.sleeping || interactionBusy) return;
   const now = Date.now();
-  const result = startWorldActivity(state.world, area, now, worldSeed());
+  const result = startWorldActivity(state.world, area, now, worldSeed(), { clean: state.clean });
   if (!result.started) return;
   state.world = result.world;
   state = awardChanges({ curiosity: 2, xp: 2 }, now);
@@ -818,16 +833,17 @@ function recallAreaStay() {
   const now = Date.now();
   const recalled = recallWorldActivity(state.world, now, worldSeed());
   if (!recalled.completion) return;
-  const { area, progress } = recalled.completion;
+  const { area, progress, secretBonus: capturedSecretBonus } = recalled.completion;
+  const secretBonus = progress >= 0.25 ? capturedSecretBonus : null;
   state.world = recalled.world;
-  if (progress > 0) state = awardChanges(activityChanges(area, progress), now);
+  if (progress > 0) state = awardChanges(activityChanges(area, progress, secretBonus), now);
   state.landscapeArea = "home";
   const minutes = Math.max(0, Math.round((now - recalled.completion.startedAt) / 60_000));
   const place = area === "meadow" ? "Kennel Club" : "Play Area";
   currentPhrase = state.language === "de"
-    ? `Da bin ich wieder. ${minutes} Minuten ${place} waren fürs Erste genug.`
-    : `I am back. ${minutes} minutes at the ${place} was enough for now.`;
-  remember(state.language === "de" ? `${state.name} wurde nach ${minutes} Minuten vorzeitig aus dem ${place} zurückgeholt.` : `${state.name} was brought home early after ${minutes} minutes at the ${place}.`, area === "meadow" ? "♣" : "▰");
+    ? `Da bin ich wieder. ${minutes} Minuten ${place} waren fürs Erste genug.${secretBonus === "pineapple" ? " Der Ananassaft vorher hat trotzdem für verdächtig gute Ausdauer gesorgt." : secretBonus === "spotless" ? " Blitzblank reinzugehen ist dort übrigens nicht unbemerkt geblieben." : ""}`
+    : `I am back. ${minutes} minutes at the ${place} was enough for now.${secretBonus === "pineapple" ? " That pineapple juice still made for suspiciously good stamina." : secretBonus === "spotless" ? " Going in spotless did not go unnoticed, by the way." : ""}`;
+  remember(state.language === "de" ? `${state.name} wurde nach ${minutes} Minuten vorzeitig aus dem ${place} zurückgeholt.${secretBonus ? ` Verdeckter ${secretBonus === "pineapple" ? "Ananassaft" : "Blitzblank"}-Bonus ausgelöst.` : ""}` : `${state.name} was brought home early after ${minutes} minutes at the ${place}.${secretBonus ? ` Hidden ${secretBonus} bonus triggered.` : ""}`, area === "meadow" ? "♣" : "▰");
   showToast(state.language === "de" ? `${state.name.toUpperCase()} IST WIEDER ZU HAUSE` : `${state.name.toUpperCase()} IS HOME AGAIN`, 3600);
   if (elements.areaSessionDialog.open) elements.areaSessionDialog.close();
   render(now);
@@ -2020,6 +2036,7 @@ async function feedAnimation(key, item) {
     ? (item.reaction === "hate" ? `${state.name} hat mutig an einer Zwiebel probiert und sehr deutlich gezeigt, dass es sie hasst.` : `${state.name} hat ${item.label} aus deiner Hand gefuttert.`)
     : (item.reaction === "hate" ? `${state.name} bravely tried an onion and made its dislike very clear.` : `${state.name} ate ${item.label} from your hand.`);
   const icon = key === "melon" ? "🍉" : key === "pickle" ? "▰" : key === "onion" ? "◉" : "●";
+  if (key === "pineappleJuice") state.world = prepareWorldActivity(state.world, "pineapple", Date.now(), worldSeed());
   finishInteraction(
     item,
     item.reaction === "hate" ? item.phrase : state.satiety + item.satiety > 112 ? (state.language === "de" ? "Puh, mein Bauch ist jetzt kugelrund!" : "Phew, my belly is perfectly round now!") : item.phrase,
@@ -2683,12 +2700,13 @@ elements.animalVisitor.addEventListener("click", () => {
 
 elements.placedItemsLayer.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-item-id]");
-  const item = itemCopy(ITEM_DEFINITIONS[button?.dataset.itemId]);
-  if (!item) return;
+  if (!button) return;
   if (button.dataset.worldActivity) {
     openAreaSessionDialog(button.dataset.worldActivity);
     return;
   }
+  const item = itemCopy(ITEM_DEFINITIONS[button.dataset.itemId]);
+  if (!item) return;
   if (item.id === "card_table") {
     openPackCards();
     return;
