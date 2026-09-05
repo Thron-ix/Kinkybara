@@ -59,12 +59,20 @@ export const FOODS = Object.freeze({
   pineappleJuice: { label: "Pineapple juice", detail: "+12 fun · tropical", satiety: 5, fun: 12, curiosity: 4, clean: -1, xp: 5, phrase: "Sweet, sharp and suspiciously popular.", de: { label: "Ananassaft", detail: "+12 Spaß · tropisch", phrase: "Süß, scharf und verdächtig beliebt." } },
 });
 
+export const FOOD_MARKET_GROUPS = Object.freeze({
+  standards: Object.freeze(["carrot", "apple", "melon", "pumpkin", "peach", "eggplant"]),
+  juices: Object.freeze(["orangeJuice", "pineappleJuice"]),
+  specials: Object.freeze(["pickle", "onion"]),
+});
+
+export const FOOD_MARKET_WINDOW_MS = 90 * 60_000;
+
 export const TOYS = Object.freeze({
   ball: { label: "Ball", detail: "Toss it into the world", fun: 18, social: 5, energy: -5, satiety: -2, xp: 7, phrase: "Throw it. I do enjoy a clear command.", de: { label: "Ball", detail: "Wirf ihn in die Welt", phrase: "Wirf. Ich mag klare Kommandos." } },
   frisbee: { label: "Flying disc", detail: "Toss far and fetch", fun: 22, curiosity: 4, energy: -7, satiety: -3, xp: 9, phrase: "Harder next time. I nearly had to try.", de: { label: "Wurfscheibe", detail: "Weit werfen und apportieren", phrase: "Nächstes Mal fester. Fast hätte ich mich anstrengen müssen." } },
   bubbles: { label: "Bubbles", detail: "Pop every bubble", fun: 20, curiosity: 8, energy: -4, xp: 8, phrase: "Blow … bubbles. What did you think I meant?", de: { label: "Seifenblasen", detail: "Lass alle Blasen platzen", phrase: "Blow … bubbles. Was dachtest du denn?" } },
   rope: { label: "Tug rope", detail: "Move it over Kinkybara", fun: 17, social: 8, energy: -5, xp: 7, phrase: "Pull harder. I can take it.", de: { label: "Zerrseil", detail: "Zieh es über Kinkybara", phrase: "Zieh fester. Ich halte das aus." } },
-  packCards: { label: "Pack Cards", detail: "Two rivals. Three rules. Special cards.", fun: 18, social: 8, curiosity: 7, xp: 9, phrase: "Top pup wins. Want another go?", de: { label: "Pack Cards", detail: "Zwei Rivalen. Drei Regeln. Sonderkarten.", phrase: "Top-Pup gewinnt. Lust auf noch eine Runde?" } },
+  packCards: { label: "Pack Cards", detail: "Quartett. Two rules. Rare twists.", fun: 18, social: 8, curiosity: 7, xp: 9, phrase: "Top pup wins. Want another go?", de: { label: "Pack Cards", detail: "Quartett. Zwei Regeln. Seltene Wendungen.", phrase: "Top-Pup gewinnt. Lust auf noch eine Runde?" } },
 });
 
 export const CARE = Object.freeze({
@@ -181,23 +189,50 @@ export function normalizeState(candidate, now = Date.now()) {
 }
 
 function foodSeed(state) {
-  return [...String(state?.name || "capy")].reduce((sum, character) => sum + character.charCodeAt(0), 0);
+  return [...`${state?.name || "capy"}:${Number(state?.adoptedAt) || 0}`]
+    .reduce((sum, character) => ((sum * 33) ^ character.charCodeAt(0)) >>> 0, 2_166_136_261);
+}
+
+function positiveModulo(value, divisor) {
+  return ((value % divisor) + divisor) % divisor;
+}
+
+function rotatingSelection(keys, start, count) {
+  return Array.from({ length: Math.min(count, keys.length) }, (_, index) => keys[positiveModulo(start + index, keys.length)]);
+}
+
+export function foodMarketRotation(state, now = Date.now(), questId = "") {
+  const timestamp = Number.isFinite(Number(now)) ? Math.max(0, Number(now)) : 0;
+  const bucket = Math.floor(timestamp / FOOD_MARKET_WINDOW_MS);
+  const rotation = bucket + foodSeed(state);
+  const standardKeys = rotatingSelection(FOOD_MARKET_GROUPS.standards, rotation, 3);
+  const juiceKey = FOOD_MARKET_GROUPS.juices[positiveModulo(rotation, FOOD_MARKET_GROUPS.juices.length)];
+  const scheduledSpecial = positiveModulo(rotation, 3) === 0
+    ? FOOD_MARKET_GROUPS.specials[positiveModulo(Math.floor(rotation / 3), FOOD_MARKET_GROUPS.specials.length)]
+    : null;
+  const specialKey = questId === "pickle-picnic" ? "pickle" : scheduledSpecial;
+  return {
+    standardKeys,
+    juiceKey,
+    specialKey,
+    availableKeys: [...standardKeys, juiceKey, ...(specialKey ? [specialKey] : [])],
+    nextChangeAt: (bucket + 1) * FOOD_MARKET_WINDOW_MS,
+  };
 }
 
 export function foodAvailability(key, state, now = Date.now(), questId = "") {
   const item = FOODS[key];
-  if (!item?.temporary) return { available: true, limited: false };
-  if (key === "pickle" && questId === "pickle-picnic") return { available: true, limited: true, reason: "QUEST FIND" };
-  const seed = foodSeed(state);
-  const windowSize = key === "pickle" ? 2 * 3_600_000 : 90 * 60_000;
-  const every = key === "pickle" ? 4 : 8;
-  const bucket = Math.floor(now / windowSize);
-  const available = (bucket + seed + (key === "onion" ? 3 : 0)) % every === 0;
+  const rotation = foodMarketRotation(state, now, questId);
+  if (!item) return { available: false, limited: false, reason: "UNKNOWN FOOD", nextChangeAt: rotation.nextChangeAt };
+  const available = rotation.availableKeys.includes(key);
+  const limited = FOOD_MARKET_GROUPS.specials.includes(key);
   return {
     available,
-    limited: true,
-    reason: available ? "LIMITED TIME" : "NOT AT THE MARKET",
-    nextChangeAt: (bucket + 1) * windowSize,
+    limited,
+    reason: available
+      ? (limited ? (key === "pickle" && questId === "pickle-picnic" ? "QUEST FIND" : "LIMITED TIME") : "IN ROTATION")
+      : (limited ? "NOT AT THE MARKET" : "ROTATES LATER"),
+    nextChangeAt: rotation.nextChangeAt,
   };
 }
 

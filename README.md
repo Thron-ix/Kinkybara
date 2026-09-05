@@ -14,7 +14,7 @@ The interface starts in English and can switch to German. On first launch, the o
 - A wardrobe with hoods, harnesses, collars and color-linked accessories
 - The Den, Kennel Club, Play Area and Pack Lounge
 - Party and Pride outings, including Folsom Weekend and CSD destinations
-- Pack Cards, a fictional five-round stat-card game
+- Pack Cards, a quick Quartett-style game with two simple rules, two rivals and rare twists
 - Peaches, eggplants, orange juice and pineapple juice
 - Offline-ready Progressive Web App, optimized for small portrait screens
 

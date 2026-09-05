@@ -1734,8 +1734,8 @@ function openPackCards() {
   $("#pack-difficulty").hidden = false;
   $("#pack-difficulty-label").textContent = state.language === "de" ? "SCHWIERIGKEIT" : "DIFFICULTY";
   const difficultyCopy = state.language === "de"
-    ? { soft: "SOFT<br><small>5 · WARM-UP</small>", switch: "SWITCH<br><small>7 · REGELMIX</small>", alpha: "ALPHA<br><small>7 · HARTE READS</small>" }
-    : { soft: "SOFT<br><small>5 · WARM-UP</small>", switch: "SWITCH<br><small>7 · RULE MIX</small>", alpha: "ALPHA<br><small>7 · HARD READS</small>" };
+    ? { soft: "SOFT<br><small>5 · OHNE SPECIALS</small>", switch: "SWITCH<br><small>7 · SELTENE TWISTS</small>", alpha: "ALPHA<br><small>7 · SCHLAUE RIVALEN</small>" }
+    : { soft: "SOFT<br><small>5 · NO SPECIALS</small>", switch: "SWITCH<br><small>7 · RARE TWISTS</small>", alpha: "ALPHA<br><small>7 · SMART RIVALS</small>" };
   $$("button[data-pack-difficulty]", $("#pack-difficulty")).forEach((button) => { button.innerHTML = difficultyCopy[button.dataset.packDifficulty]; });
   $("#pack-cards-start").textContent = state.language === "de" ? "KARTEN GEBEN" : "DEAL THE CARDS";
   const stage = $("#pack-cards-stage");
@@ -1769,23 +1769,22 @@ function beginPackCards() {
     language: state.language,
     difficulty: packCardsDifficulty,
     seed: `${state.name}:${state.interactions}:${Date.now()}`,
-    onFinish: ({ playerWins, rivals = [], score, xp }) => {
+    onFinish: ({ playerWins, rivalPackWins = 0, rivals = [], score, xp }) => {
       packCardsCleanup = null;
       const rivalScore = rivals.map((rival) => `${rival.name} ${rival.wins}`).join(" · ");
-      const strongestRival = Math.max(0, ...rivals.map((rival) => rival.wins));
-      const result = playerWins > strongestRival ? "win" : playerWins < strongestRival ? "loss" : "tie";
+      const result = playerWins > rivalPackWins ? "win" : playerWins < rivalPackWins ? "loss" : "tie";
       const earnedXp = Math.max(2, Math.round(xp * (result === "win" ? 1 : result === "tie" ? 0.6 : 0.35)));
       state = awardChanges({ fun: 10, social: 6, curiosity: 4, xp: earnedXp });
       remember(state.language === "de"
-        ? `${state.name} hat mit dir gegen Roxy und Jinx Pack Cards gespielt (DU ${playerWins} · ${rivalScore} · ${score} Punkte · +${earnedXp} XP).`
-        : `${state.name} played Pack Cards with you against Roxy and Jinx (YOU ${playerWins} · ${rivalScore} · ${score} points · +${earnedXp} XP).`, "▦");
+        ? `${state.name} hat mit dir gegen Roxy und Jinx Pack Cards gespielt (DU ${playerWins} · PACK ${rivalPackWins} · ${rivalScore} · ${score} Punkte · +${earnedXp} XP).`
+        : `${state.name} played Pack Cards with you against Roxy and Jinx (YOU ${playerWins} · PACK ${rivalPackWins} · ${rivalScore} · ${score} points · +${earnedXp} XP).`, "▦");
       status.textContent = state.language === "de"
-        ? `FERTIG · DU ${playerWins} · ${rivalScore} · ${score} PUNKTE · +${earnedXp} XP`
-        : `FINISHED · YOU ${playerWins} · ${rivalScore} · ${score} POINTS · +${earnedXp} XP`;
-      message.textContent = playerWins > strongestRival
+        ? `FERTIG · DU ${playerWins} · PACK ${rivalPackWins} · ${score} PUNKTE · +${earnedXp} XP`
+        : `FINISHED · YOU ${playerWins} · PACK ${rivalPackWins} · ${score} POINTS · +${earnedXp} XP`;
+      message.textContent = playerWins > rivalPackWins
         ? (state.language === "de" ? "Oh. Du liegst oben. Genieß es, solange es hält." : "Oh. You’re on top. Enjoy it while it lasts.")
-        : playerWins < strongestRival
-          ? (state.language === "de" ? "Roxy oder Jinx liegt oben. Lust auf noch eine Runde?" : "Roxy or Jinx is on top. Want another go?")
+        : playerWins < rivalPackWins
+          ? (state.language === "de" ? "Das Rivalen-Pack liegt oben. Lust auf noch eine Runde?" : "The rival pack is on top. Want another go?")
           : (state.language === "de" ? "Gleich heiß. Das verlangt nach einer Revanche." : "Same heat. That calls for a rematch.");
       const again = document.createElement("button");
       again.type = "button";
@@ -2050,7 +2049,7 @@ function openTray(category) {
   elements.trayKicker.textContent = group.kicker;
   elements.trayTitle.textContent = group.title.replace("{name}", state.name);
   elements.trayInstruction.textContent = category === "feed"
-    ? `${group.instruction} ${state.language === "de" ? "Seltene Markt-Snacks zeigen sich nur manchmal." : "Rare market treats only show up sometimes."}`
+    ? `${group.instruction} ${state.language === "de" ? "Drei Snacks und ein Saft wechseln regelmäßig; selten taucht ein Markt-Special auf." : "Three staples and one juice rotate regularly; a rare market special sometimes joins them."}`
     : group.instruction;
   elements.trayProgress.hidden = true;
   elements.trayProgress.querySelector("span").style.width = "0%";
@@ -2073,7 +2072,9 @@ function openTray(category) {
     if (item.temporary) {
       const badge = document.createElement("em");
       badge.className = "tray-item-badge";
-      badge.textContent = availability.reason || (state.language === "de" ? "NUR KURZ DA" : "LIMITED");
+      badge.textContent = availability.reason === "QUEST FIND"
+        ? (state.language === "de" ? "QUEST-FUND" : "QUEST FIND")
+        : (state.language === "de" ? "NUR KURZ DA" : "LIMITED TIME");
       button.append(badge);
     }
     elements.trayItems.append(button);

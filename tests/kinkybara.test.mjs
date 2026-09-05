@@ -3,12 +3,16 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   ACCENT_COLORS,
+  FOODS,
   absenceReport,
   addMemory,
   advanceState,
   applyChanges,
   cleanName,
+  FOOD_MARKET_GROUPS,
+  FOOD_MARKET_WINDOW_MS,
   foodAvailability,
+  foodMarketRotation,
   growthFor,
   levelInfo,
   makeState,
@@ -276,6 +280,45 @@ test("pickles and onions are temporary foods with opposite emotional effects", (
   const onion = applyChanges(state, { satiety: 2, fun: -18 }, state.updatedAt);
   assert.ok(pickle.fun > state.fun);
   assert.ok(onion.fun < state.fun);
+});
+
+test("the food market always offers three staples and one juice per rotation", () => {
+  const state = makeState(Date.UTC(2026, 7, 22, 12), "Nox");
+  const seenStandards = new Set();
+  const seenJuices = new Set();
+
+  for (let index = 0; index < 18; index += 1) {
+    const now = state.adoptedAt + index * FOOD_MARKET_WINDOW_MS;
+    const rotation = foodMarketRotation(state, now);
+    const available = Object.keys(FOODS).filter((key) => foodAvailability(key, state, now).available);
+    const standards = available.filter((key) => FOOD_MARKET_GROUPS.standards.includes(key));
+    const juices = available.filter((key) => FOOD_MARKET_GROUPS.juices.includes(key));
+    const specials = available.filter((key) => FOOD_MARKET_GROUPS.specials.includes(key));
+
+    assert.equal(standards.length, 3);
+    assert.equal(new Set(standards).size, 3);
+    assert.equal(juices.length, 1);
+    assert.ok(specials.length <= 1);
+    assert.deepEqual(new Set(available), new Set(rotation.availableKeys));
+    standards.forEach((key) => seenStandards.add(key));
+    juices.forEach((key) => seenJuices.add(key));
+  }
+
+  assert.deepEqual(seenStandards, new Set(FOOD_MARKET_GROUPS.standards));
+  assert.deepEqual(seenJuices, new Set(FOOD_MARKET_GROUPS.juices));
+});
+
+test("temporary food highlights recur one at a time and quests reserve the pickle slot", () => {
+  const state = makeState(Date.UTC(2026, 7, 22, 12), "Nox");
+  const highlights = Array.from({ length: 24 }, (_, index) => foodMarketRotation(state, state.adoptedAt + index * FOOD_MARKET_WINDOW_MS).specialKey);
+  assert.ok(highlights.includes(null));
+  assert.ok(highlights.includes("pickle"));
+  assert.ok(highlights.includes("onion"));
+
+  const questRotation = foodMarketRotation(state, state.adoptedAt, "pickle-picnic");
+  assert.equal(questRotation.specialKey, "pickle");
+  assert.equal(foodAvailability("pickle", state, state.adoptedAt, "pickle-picnic").reason, "QUEST FIND");
+  assert.equal(foodAvailability("onion", state, state.adoptedAt, "pickle-picnic").available, false);
 });
 
 test("autonomous trips are deterministic, visible for three to four hours, and return with a souvenir", () => {
@@ -553,21 +596,21 @@ test("secret session preparations are captured quietly and revealed only on retu
   assert.equal(spotlessReturn.world.socialGlowUntil, spotless.world.activity.returnsAt + 4 * 60 * 60_000);
 });
 
-test("Pack Cards keeps elite values rare and makes hidden rival hands meaningfully harder", () => {
+test("Pack Cards keeps elite values and specials rare while rival hands stay challenging and transparent", () => {
   const values = PACK_CARD_DECK.flatMap((card) => Object.values(card.stats));
   assert.equal(Math.max(...values), 89);
   assert.equal(values.filter((value) => value > 90).length, 0);
   assert.ok(values.filter((value) => value >= 85).length / values.length <= 0.25);
   assert.ok(PACK_CARD_DECK.every((card) => Math.max(...Object.values(card.stats)) - Math.min(...Object.values(card.stats)) >= 15));
-  assert.ok(PACK_CARD_DECK.filter((card) => card.special).length >= 10);
+  assert.equal(PACK_CARD_DECK.filter((card) => card.special).length, 3);
   assert.equal(PACK_CARD_DIFFICULTIES.soft.rounds, 5);
   assert.equal(PACK_CARD_DIFFICULTIES.alpha.rounds, 7);
-  assert.equal(PACK_CARD_DIFFICULTIES.switch.rivalChoices, 2);
-  assert.equal(PACK_CARD_DIFFICULTIES.alpha.rivalChoices, 3);
+  assert.equal(PACK_CARD_DIFFICULTIES.switch.rivalChoices, 3);
+  assert.equal(PACK_CARD_DIFFICULTIES.alpha.rivalChoices, 4);
   const playerCard = { stats: { trust: 80, style: 80, energy: 80, pack: 80 } };
   const rivalCard = { stats: { trust: 80, style: 80, energy: 80, pack: 80 } };
-  assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "soft" }).winner, "rival");
-  assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "alpha" }).winner, "rival");
+  assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "soft" }).winner, "tie");
+  assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "alpha" }).winner, "tie");
   assert.equal(resolvePackCardRound({ playerCard, rivalCard: { stats: { trust: 72, style: 72, energy: 72, pack: 72 } }, stat: "trust", previousStat: "trust", difficulty: "alpha" }).winner, "rival");
   const counter = choosePackCardRival({
     playerCard,
@@ -788,7 +831,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v37/);
+  assert.match(serviceWorker, /kinkybara-shell-v41/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);
