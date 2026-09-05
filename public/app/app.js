@@ -71,14 +71,18 @@ import {
   ANIMAL_FRIENDS,
   CROPS,
   WORLD_AREAS,
+  availableCompanions,
+  companionActivityEffect,
   consumeHarvest,
   cropProgress,
   cropTimeLabel,
+  friendBookEntry,
   harvestCrop,
   normalizeGarden,
   normalizeWorld,
   plantCrop,
   prepareWorldActivity,
+  recordFriendCompanionActivity,
   recordFriendMeeting,
   recallWorldActivity,
   selectCrop,
@@ -226,6 +230,7 @@ let bubbleSession = null;
 let currentConversation = null;
 let toastTimer = 0;
 let lastPetAt = 0;
+let petTapCount = 0;
 let audioContext;
 let deferredInstallPrompt = null;
 let suppressClickUntil = 0;
@@ -239,6 +244,8 @@ let weatherData = initializeValue("weather-data", () => localAmbience(Date.now()
 let inventoryFilter = "all";
 let packCardsDifficulty = "switch";
 let pendingAreaSessionArea = null;
+let pendingAreaCompanionId = null;
+let pendingJourneyCompanionId = null;
 
 function awardChanges(changes, now = Date.now()) {
   const before = levelInfo(state.xp);
@@ -460,6 +467,89 @@ function friendCopy(friend) {
   return localizedFriend(friend, state.language);
 }
 
+function mergeChangeSets(...sets) {
+  const merged = {};
+  sets.filter(Boolean).forEach((changes) => {
+    Object.entries(changes).forEach(([key, value]) => {
+      if (Number.isFinite(value)) merged[key] = (merged[key] || 0) + value;
+    });
+  });
+  return merged;
+}
+
+function scaleChangeSet(changes, progress = 1) {
+  const scale = Math.max(0, Math.min(1, Number(progress) || 0));
+  return Object.fromEntries(Object.entries(changes || {})
+    .map(([key, value]) => [key, Math.round(value * scale)])
+    .filter(([, value]) => value !== 0));
+}
+
+function companionEffectText(friendId, activity, progress = 1) {
+  if (!friendId) {
+    return state.language === "de"
+      ? "Allein unterwegs. Freunde aus dem Freundebuch können hier bewusst mitkommen."
+      : "Going solo. Friends from the friend book can be invited here.";
+  }
+  const effect = companionActivityEffect(friendId, activity, progress, state.language);
+  if (!effect) return "";
+  const friend = friendCopy(ANIMAL_FRIENDS[friendId]);
+  const labels = state.language === "de"
+    ? { satiety: "Satt", fun: "Spaß", clean: "Frisch", energy: "Energie", social: "Nähe", curiosity: "Neugier", xp: "XP" }
+    : { satiety: "Full", fun: "Fun", clean: "Fresh", energy: "Energy", social: "Bond", curiosity: "Curious", xp: "XP" };
+  const changes = Object.entries(effect.changes).map(([key, value]) => `${labels[key] || key} ${value > 0 ? "+" : ""}${value}`).join(" · ");
+  return `${friend?.label || ""} · ${effect.trait.label}: ${effect.trait.detail}${changes ? ` (${changes})` : ""}`;
+}
+
+function renderCompanionPicker({ options, effect, selectedId, activity, disabled = false, onSelect }) {
+  const entries = availableCompanions(state.world, state.language, Date.now(), worldSeed());
+  const validSelectedId = entries.some((entry) => entry.friend.id === selectedId) ? selectedId : null;
+  options.replaceChildren();
+  options.setAttribute("aria-label", state.language === "de" ? "Begleitung wählen" : "Choose a companion");
+  const choices = [
+    { id: null, icon: "•", label: state.language === "de" ? "ALLEIN" : "SOLO", detail: state.language === "de" ? "Nur Kinkybara" : "Just Kinkybara" },
+    ...entries.map((entry) => ({ id: entry.friend.id, icon: entry.friend.icon, label: entry.friend.label, detail: entry.friend.trait.label })),
+  ];
+  choices.forEach((choice) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.companionId = choice.id || "solo";
+    button.classList.toggle("is-selected", choice.id === validSelectedId);
+    button.setAttribute("aria-pressed", String(choice.id === validSelectedId));
+    button.disabled = disabled;
+    const icon = document.createElement("span");
+    icon.textContent = choice.icon;
+    const copy = document.createElement("span");
+    const name = document.createElement("strong");
+    const detail = document.createElement("small");
+    name.textContent = choice.label;
+    detail.textContent = choice.detail;
+    copy.append(name, detail);
+    button.append(icon, copy);
+    button.addEventListener("click", () => {
+      onSelect(choice.id);
+      window.requestAnimationFrame(() => options.querySelector(`[data-companion-id="${choice.id || "solo"}"]`)?.focus());
+    });
+    options.append(button);
+  });
+  effect.textContent = entries.length
+    ? companionEffectText(validSelectedId, activity)
+    : (state.language === "de" ? "Noch allein – lerne Besucher kennen, damit sie dich begleiten können." : "Solo for now — meet visitors before inviting them along.");
+  return validSelectedId;
+}
+
+function friendOriginText(entry) {
+  const origin = entry.record?.origin;
+  if (origin?.kind === "travel") return destinationCopy(destinationById(origin.destinationId))?.title || origin.label || (state.language === "de" ? "auf einer Reise" : "on a trip");
+  if (origin?.kind === "world" && WORLD_AREAS[origin.area]) {
+    const labels = state.language === "de"
+      ? { home: "Die Höhle", meadow: "Kennel Club", garden: "Play Area", wintergarden: "Pack Lounge" }
+      : { home: "The Den", meadow: "Kennel Club", garden: "Play Area", wintergarden: "Pack Lounge" };
+    return labels[origin.area];
+  }
+  if (origin?.label) return origin.label;
+  return state.language === "de" ? "Ort beim alten Spielstand nicht gespeichert" : "Place not recorded in the earlier save";
+}
+
 function questCopy(quest) {
   return localizedQuest(quest, state.language);
 }
@@ -542,7 +632,9 @@ function prepareTravelCargo() {
   if (!state.travel.rewardId) {
     state.travel.rewardId = rewardForDestination(state.inventory, state.travel.destinationId, `${travelSeed()}:${state.travel.departedAt}`);
   }
-  if (state.travel.companionId === null || state.travel.companionId === undefined) {
+  if (state.travel.companionChoice === "solo") {
+    state.travel.companionId = null;
+  } else if (state.travel.companionChoice === "auto" && (state.travel.companionId === null || state.travel.companionId === undefined)) {
     state.travel.companionId = travelCompanion(state.world, `${travelSeed()}:${state.travel.destinationId}:${state.travel.departedAt}`);
   }
 }
@@ -558,31 +650,55 @@ function syncTravelState(now = Date.now()) {
   if (traveling) prepareTravelCargo();
   if (state.travel?.returnPending && !traveling) {
     const destination = destinationCopy(destinationById(state.travel.lastDestinationId));
-    const rewardId = state.travel.lastRewardId || rewardForDestination(state.inventory, state.travel.lastDestinationId, `${travelSeed()}:return:${state.travel.completedTrips}`);
+    const tripProgress = state.travel.lastRecalled ? Math.max(0, Math.min(1, Number(state.travel.lastTripProgress) || 0)) : 1;
+    const qualifiesForReturn = !state.travel.lastRecalled || tripProgress >= 0.25;
+    const rewardId = qualifiesForReturn
+      ? state.travel.lastRewardId || rewardForDestination(state.inventory, state.travel.lastDestinationId, `${travelSeed()}:return:${state.travel.completedTrips}`)
+      : null;
     const reward = rewardId ? itemCopy(ITEM_DEFINITIONS[rewardId]) : null;
     const companion = friendCopy(ANIMAL_FRIENDS[state.travel.lastCompanionId]);
-    if (companion) state.world = recordFriendMeeting(state.world, companion.id, now, worldSeed());
+    if (companion && qualifiesForReturn) {
+      state.world = recordFriendMeeting(state.world, companion.id, now, worldSeed(), {
+        kind: "travel",
+        destinationId: state.travel.lastDestinationId,
+        label: destination?.title,
+      });
+      state.world = recordFriendCompanionActivity(state.world, companion.id, "travel", now, worldSeed());
+    }
     const inventoryResult = rewardId ? addInventoryItem(state.inventory, rewardId, now) : { inventory: state.inventory, added: false };
     state.inventory = inventoryResult.inventory;
-    if (!reward) {
+    if (qualifiesForReturn && !reward) {
       state.garden = normalizeGarden(state.garden);
       state.garden.seeds = Object.fromEntries(Object.entries(state.garden.seeds).map(([key, amount]) => [key, amount + 1]));
     }
     state.travel = { ...state.travel, returnPending: false, lastRewardId: rewardId };
-    state = awardChanges({ curiosity: 9, fun: 5, social: -2, energy: -4, xp: 12 });
+    const companionEffect = qualifiesForReturn ? companionActivityEffect(companion?.id, "travel", tripProgress, state.language) : null;
+    if (tripProgress > 0) state = awardChanges(mergeChangeSets(scaleChangeSet({ curiosity: 9, fun: 5, social: -2, energy: -4, xp: 12 }, tripProgress), companionEffect?.changes), now);
     const findText = reward
       ? (state.language === "de" ? `${reward.label} für unsere Sammlung` : `${reward.label} for our collection`)
       : (state.language === "de" ? "ein buntes Samentütchen für den Garten" : "a colorful seed packet for the garden");
-    const companionText = companion ? (state.language === "de" ? ` Zusammen mit ${companion.label}.` : ` Together with ${companion.label}.`) : "";
-    remember(state.language === "de"
-      ? `${state.name} ist aus ${destination?.title || "einem Abenteuer"} zurück und brachte ${findText} mit.${companionText}`
-      : `${state.name} returned from ${destination?.title || "an adventure"} and brought back ${findText}.${companionText}`, reward?.icon || "⌁");
-    currentPhrase = state.language === "de"
-      ? `Da bin ich wieder! Ich war in ${destination?.title || "der Ferne"} und habe ${findText} mitgebracht.${companion ? ` ${companion.label} war dabei!` : ""}`
-      : `I am back! I went to ${destination?.title || "somewhere new"} and brought back ${findText}.${companion ? ` ${companion.label} came along!` : ""}`;
+    const companionText = companion && qualifiesForReturn
+      ? (state.language === "de" ? ` Zusammen mit ${companion.label}; ${companionEffect?.trait.label || "die Begleitung"} wirkte nach.` : ` Together with ${companion.label}; ${companionEffect?.trait.label || "their company"} left its mark.`)
+      : "";
+    const place = destination?.title || (state.language === "de" ? "einem Abenteuer" : "an adventure");
+    const memoryText = !qualifiesForReturn
+      ? (state.language === "de"
+        ? `${state.name} ist früh aus ${place} zurückgekommen. Die Reise war zu kurz für einen Fund.`
+        : `${state.name} returned early from ${place}. The trip was too short for a find.`)
+      : (state.language === "de"
+        ? `${state.name} ist aus ${place} zurück und brachte ${findText} mit.${companionText}`
+        : `${state.name} returned from ${place} and brought back ${findText}.${companionText}`);
+    remember(memoryText, reward?.icon || "⌁");
+    currentPhrase = !qualifiesForReturn
+      ? (state.language === "de"
+        ? "Da bin ich wieder! Die Reise war noch zu kurz für einen Fund."
+        : "I am back! The trip was still too short for a find.")
+      : (state.language === "de"
+        ? `Da bin ich wieder! Ich war in ${destination?.title || "der Ferne"} und habe ${findText} mitgebracht.${companion ? ` ${companion.label} war dabei!` : ""}`
+        : `I am back! I went to ${destination?.title || "somewhere new"} and brought back ${findText}.${companion ? ` ${companion.label} came along!` : ""}`);
     showToast(state.language === "de"
-      ? `${state.name.toUpperCase()} IST ZURÜCK · ${reward?.label?.toUpperCase() || "NEUE SAMEN"}!`
-      : `${state.name.toUpperCase()} IS BACK · ${reward?.label?.toUpperCase() || "NEW SEEDS"}!`, 5200);
+      ? `${state.name.toUpperCase()} IST ZURÜCK · ${qualifiesForReturn ? reward?.label?.toUpperCase() || "NEUE SAMEN" : "ZU KURZ FÜR EINEN FUND"}!`
+      : `${state.name.toUpperCase()} IS BACK · ${qualifiesForReturn ? reward?.label?.toUpperCase() || "NEW SEEDS" : "TOO SHORT FOR A FIND"}!`, 5200);
   } else if (traveling) {
     const destination = destinationCopy(destinationById(state.travel.destinationId));
     const companion = friendCopy(ANIMAL_FRIENDS[state.travel.companionId]);
@@ -592,7 +708,10 @@ function syncTravelState(now = Date.now()) {
   }
   if (previousStatus !== state.travel?.status && state.travel?.status === "away") {
     const destination = destinationCopy(destinationById(state.travel.destinationId));
-    showToast(state.language === "de" ? `${state.name} ist allein zu ${destination.title} gereist.` : `${state.name} headed to ${destination.title} on their own.`, 4200);
+    const companion = friendCopy(ANIMAL_FRIENDS[state.travel.companionId]);
+    showToast(state.language === "de"
+      ? `${state.name} ist ${companion ? `mit ${companion.label}` : "allein"} zu ${destination.title} gereist.`
+      : `${state.name} headed to ${destination.title} ${companion ? `with ${companion.label}` : "on their own"}.`, 4200);
   }
   return traveling;
 }
@@ -601,22 +720,25 @@ function syncWorldState(now = Date.now(), traveling = isTraveling(state.travel, 
   const previousArea = state.world?.area || state.landscapeArea || "home";
   const settled = settleWorldActivity(state.world, now, worldSeed());
   state.world = settled.world;
+  const settledCompanion = settled.completion
+    ? completedCompanion(settled.completion, 1, now)
+    : { companion: null, effect: null };
   if (settled.completion && elements.areaSessionDialog.open) elements.areaSessionDialog.close();
   if (settled.completion?.area === "meadow") {
     const secretBonus = settled.completion.secretBonus;
-    state = awardChanges(activityChanges("meadow", 1, secretBonus), now);
+    state = awardChanges(mergeChangeSets(activityChanges("meadow", 1, secretBonus), settledCompanion.effect?.changes), now);
     currentPhrase = state.language === "de"
-      ? `Kennel Club war intensiv. Nähe voll, Bauch leer – und dieses Glitzern bleibt noch eine Weile.${secretBonus === "spotless" ? " Blitzblank reinzugehen hat offenbar bleibenden Eindruck gemacht: Das Nähe-Glitzern hält diesmal extra lang." : ""}`
-      : `The Kennel Club was intense. Bond full, belly empty — and that sparkle will linger.${secretBonus === "spotless" ? " Going in spotless apparently made a lasting impression: the bond sparkle sticks around extra long." : ""}`;
-    remember(state.language === "de" ? `${state.name} kam nach 40 Minuten sehr glücklich, sehr hungrig und voller besonderer Nähe aus dem Kennel Club.${secretBonus === "spotless" ? " Weil es blitzblank hineinging, hält das Nähe-Glitzern vier statt zwei Stunden." : ""}` : `${state.name} returned from 40 minutes at the Kennel Club delighted, hungry and glowing with closeness.${secretBonus === "spotless" ? " Going in spotless made the bond sparkle last four hours instead of two." : ""}`, "♣");
+      ? `Kennel Club war intensiv. Nähe voll, Bauch leer – und dieses Glitzern bleibt noch eine Weile.${secretBonus === "spotless" ? " Blitzblank reinzugehen hat offenbar bleibenden Eindruck gemacht: Das Nähe-Glitzern hält diesmal extra lang." : ""}${settledCompanion.companion ? ` ${settledCompanion.companion.label}s ${settledCompanion.effect.trait.label} hat die Session verändert.` : ""}`
+      : `The Kennel Club was intense. Bond full, belly empty — and that sparkle will linger.${secretBonus === "spotless" ? " Going in spotless apparently made a lasting impression: the bond sparkle sticks around extra long." : ""}${settledCompanion.companion ? ` ${settledCompanion.companion.label}'s ${settledCompanion.effect.trait.label} changed the session.` : ""}`;
+    remember(state.language === "de" ? `${state.name} kam nach 40 Minuten sehr glücklich, sehr hungrig und voller besonderer Nähe aus dem Kennel Club.${secretBonus === "spotless" ? " Weil es blitzblank hineinging, hält das Nähe-Glitzern vier statt zwei Stunden." : ""}${settledCompanion.companion ? ` Begleitung: ${settledCompanion.companion.label} (${settledCompanion.effect.trait.label}).` : ""}` : `${state.name} returned from 40 minutes at the Kennel Club delighted, hungry and glowing with closeness.${secretBonus === "spotless" ? " Going in spotless made the bond sparkle last four hours instead of two." : ""}${settledCompanion.companion ? ` Companion: ${settledCompanion.companion.label} (${settledCompanion.effect.trait.label}).` : ""}`, "♣");
     showToast(state.language === "de" ? `KENNEL CLUB · NÄHE GLITZERT ${secretBonus === "spotless" ? 4 : 2} STUNDEN` : `KENNEL CLUB · BOND SPARKLES FOR ${secretBonus === "spotless" ? 4 : 2} HOURS`, 5200);
   } else if (settled.completion?.area === "garden") {
     const secretBonus = settled.completion.secretBonus;
-    state = awardChanges(activityChanges("garden", 1, secretBonus), now);
+    state = awardChanges(mergeChangeSets(activityChanges("garden", 1, secretBonus), settledCompanion.effect?.changes), now);
     currentPhrase = state.language === "de"
-      ? `Play Area war rough. Sehr glücklich, sehr dreckig, komplett ausgepowert.${secretBonus === "pineapple" ? " Der Ananassaft vorher hat die Sache verdächtig saftig gehalten – mehr Ausdauer, breiteres Grinsen." : ""}`
-      : `The Play Area was rough. Very happy, very messy, completely spent.${secretBonus === "pineapple" ? " That pineapple juice beforehand kept things suspiciously juicy — more stamina, bigger grin." : ""}`;
-    remember(state.language === "de" ? `${state.name} kam nach 40 Minuten rougher Play Area dreckig, müde und sehr zufrieden zurück.${secretBonus === "pineapple" ? " Weil es vorher Ananassaft getrunken hatte, gab es mehr Spaß und deutlich weniger Energie-Crash." : ""}` : `${state.name} returned from 40 rough minutes in the Play Area messy, tired and deeply satisfied.${secretBonus === "pineapple" ? " Pineapple juice beforehand meant more fun and much less of an energy crash." : ""}`, "▰");
+      ? `Play Area war rough. Sehr glücklich, sehr dreckig, komplett ausgepowert.${secretBonus === "pineapple" ? " Der Ananassaft vorher hat die Sache verdächtig saftig gehalten – mehr Ausdauer, breiteres Grinsen." : ""}${settledCompanion.companion ? ` ${settledCompanion.companion.label}s ${settledCompanion.effect.trait.label} hat die Session verändert.` : ""}`
+      : `The Play Area was rough. Very happy, very messy, completely spent.${secretBonus === "pineapple" ? " That pineapple juice beforehand kept things suspiciously juicy — more stamina, bigger grin." : ""}${settledCompanion.companion ? ` ${settledCompanion.companion.label}'s ${settledCompanion.effect.trait.label} changed the session.` : ""}`;
+    remember(state.language === "de" ? `${state.name} kam nach 40 Minuten rougher Play Area dreckig, müde und sehr zufrieden zurück.${secretBonus === "pineapple" ? " Weil es vorher Ananassaft getrunken hatte, gab es mehr Spaß und deutlich weniger Energie-Crash." : ""}${settledCompanion.companion ? ` Begleitung: ${settledCompanion.companion.label} (${settledCompanion.effect.trait.label}).` : ""}` : `${state.name} returned from 40 rough minutes in the Play Area messy, tired and deeply satisfied.${secretBonus === "pineapple" ? " Pineapple juice beforehand meant more fun and much less of an energy crash." : ""}${settledCompanion.companion ? ` Companion: ${settledCompanion.companion.label} (${settledCompanion.effect.trait.label}).` : ""}`, "▰");
     showToast(state.language === "de" ? "PLAY AREA · FRISCH & ENERGIE STARK GESUNKEN" : "PLAY AREA · FRESH & ENERGY DROPPED HARD", 5200);
   }
   state.world = normalizeWorld(state.world, now, worldSeed());
@@ -668,6 +790,12 @@ function renderOutfit() {
     piece.dataset.slot = slot;
     piece.dataset.item = itemId;
     piece.textContent = item.icon;
+    if (slot === "hood") {
+      const expression = document.createElement("span");
+      expression.className = "hood-expression";
+      expression.setAttribute("aria-hidden", "true");
+      piece.append(expression);
+    }
     elements.outfitLayer.append(piece);
   }
 }
@@ -771,6 +899,19 @@ function renderAreaSessionDialog(now = Date.now()) {
     row.append(key, output);
     effects.append(row);
   });
+  $("#area-companion-heading").textContent = state.language === "de" ? "WER KOMMT MIT?" : "WHO COMES ALONG?";
+  const displayedCompanionId = running ? active.companionId : pendingAreaCompanionId;
+  pendingAreaCompanionId = renderCompanionPicker({
+    options: $("#area-companion-options"),
+    effect: $("#area-companion-effect"),
+    selectedId: displayedCompanionId,
+    activity: area,
+    disabled: running,
+    onSelect: (friendId) => {
+      pendingAreaCompanionId = friendId;
+      renderAreaSessionDialog();
+    },
+  });
   $("#area-session-running").hidden = !running;
   if (running) {
     const duration = Math.max(1, active.returnsAt - active.startedAt);
@@ -791,6 +932,9 @@ function renderAreaSessionDialog(now = Date.now()) {
 function openAreaSessionDialog(area = state.landscapeArea) {
   if (isTraveling(state.travel) || state.sleeping || interactionBusy) return;
   pendingAreaSessionArea = state.world.activity?.area || area;
+  const activeCompanionId = state.world.activity?.companionId;
+  const companionIsUnlocked = availableCompanions(state.world, state.language, Date.now(), worldSeed()).some((entry) => entry.friend.id === pendingAreaCompanionId);
+  pendingAreaCompanionId = activeCompanionId || (companionIsUnlocked ? pendingAreaCompanionId : null);
   renderAreaSessionDialog();
   openDialog(elements.areaSessionDialog);
 }
@@ -814,19 +958,27 @@ function activityChanges(area, progress = 1, secretBonus = null) {
   };
 }
 
+function completedCompanion(completion, progress = 1, now = Date.now()) {
+  const companion = friendCopy(ANIMAL_FRIENDS[completion?.companionId]);
+  if (!companion) return { companion: null, effect: null };
+  const effect = companionActivityEffect(companion.id, completion.area, progress, state.language);
+  if (progress >= 0.25) state.world = recordFriendCompanionActivity(state.world, companion.id, completion.area, now, worldSeed());
+  return { companion, effect };
+}
+
 function startAreaStay(area = pendingAreaSessionArea || state.landscapeArea) {
   if (state.world.activity) return;
   if (isTraveling(state.travel) || state.sleeping || interactionBusy) return;
   const now = Date.now();
-  const result = startWorldActivity(state.world, area, now, worldSeed(), { clean: state.clean });
+  const result = startWorldActivity(state.world, area, now, worldSeed(), { clean: state.clean, companionId: pendingAreaCompanionId });
   if (!result.started) return;
   state.world = result.world;
-  state = awardChanges({ curiosity: 2, xp: 2 }, now);
   const kennel = result.world.activity.area === "meadow";
+  const companion = friendCopy(ANIMAL_FRIENDS[result.world.activity.companionId]);
   talk(state.language === "de"
-    ? (kennel ? "Vierzig Minuten Kennel Club. Ich komme von allein zurück – wahrscheinlich hungrig und sehr zufrieden." : "Vierzig Minuten Play Area. Danach brauche ich vermutlich Dusche, Snack und Schlaf.")
-    : (kennel ? "Forty minutes at the Kennel Club. I’ll return on my own — probably hungry and very pleased." : "Forty minutes in the Play Area. Afterward I’ll probably need a shower, snack and sleep."), { speak: false });
-  remember(state.language === "de" ? `${state.name} startet eine 40-Minuten-Session im ${kennel ? "Kennel Club" : "Play Area"}.` : `${state.name} starts a 40-minute ${kennel ? "Kennel Club" : "Play Area"} session.`, kennel ? "♣" : "▰");
+    ? `${kennel ? "Vierzig Minuten Kennel Club. Ich komme von allein zurück – wahrscheinlich hungrig und sehr zufrieden." : "Vierzig Minuten Play Area. Danach brauche ich vermutlich Dusche, Snack und Schlaf."}${companion ? ` ${companion.label} kommt mit.` : ""}`
+    : `${kennel ? "Forty minutes at the Kennel Club. I’ll return on my own — probably hungry and very pleased." : "Forty minutes in the Play Area. Afterward I’ll probably need a shower, snack and sleep."}${companion ? ` ${companion.label} is coming along.` : ""}`, { speak: false });
+  remember(state.language === "de" ? `${state.name} startet eine 40-Minuten-Session im ${kennel ? "Kennel Club" : "Play Area"}.${companion ? ` ${companion.label} ist dabei.` : ""}` : `${state.name} starts a 40-minute ${kennel ? "Kennel Club" : "Play Area"} session.${companion ? ` ${companion.label} is joining.` : ""}`, kennel ? "♣" : "▰");
   showToast(state.language === "de" ? "40-MINUTEN-SESSION GESTARTET" : "40-MINUTE SESSION STARTED", 3200);
   if (elements.areaSessionDialog.open) elements.areaSessionDialog.close();
   render(now);
@@ -840,14 +992,15 @@ function recallAreaStay() {
   const { area, progress, secretBonus: capturedSecretBonus } = recalled.completion;
   const secretBonus = progress >= 0.25 ? capturedSecretBonus : null;
   state.world = recalled.world;
-  if (progress > 0) state = awardChanges(activityChanges(area, progress, secretBonus), now);
+  const { companion, effect: companionEffect } = completedCompanion(recalled.completion, progress, now);
+  if (progress > 0) state = awardChanges(mergeChangeSets(activityChanges(area, progress, secretBonus), companionEffect?.changes), now);
   state.landscapeArea = "home";
   const minutes = Math.max(0, Math.round((now - recalled.completion.startedAt) / 60_000));
   const place = area === "meadow" ? "Kennel Club" : "Play Area";
   currentPhrase = state.language === "de"
-    ? `Da bin ich wieder. ${minutes} Minuten ${place} waren fürs Erste genug.${secretBonus === "pineapple" ? " Der Ananassaft vorher hat trotzdem für verdächtig gute Ausdauer gesorgt." : secretBonus === "spotless" ? " Blitzblank reinzugehen ist dort übrigens nicht unbemerkt geblieben." : ""}`
-    : `I am back. ${minutes} minutes at the ${place} was enough for now.${secretBonus === "pineapple" ? " That pineapple juice still made for suspiciously good stamina." : secretBonus === "spotless" ? " Going in spotless did not go unnoticed, by the way." : ""}`;
-  remember(state.language === "de" ? `${state.name} wurde nach ${minutes} Minuten vorzeitig aus dem ${place} zurückgeholt.${secretBonus ? ` Verdeckter ${secretBonus === "pineapple" ? "Ananassaft" : "Blitzblank"}-Bonus ausgelöst.` : ""}` : `${state.name} was brought home early after ${minutes} minutes at the ${place}.${secretBonus ? ` Hidden ${secretBonus} bonus triggered.` : ""}`, area === "meadow" ? "♣" : "▰");
+    ? `Da bin ich wieder. ${minutes} Minuten ${place} waren fürs Erste genug.${secretBonus === "pineapple" ? " Der Ananassaft vorher hat trotzdem für verdächtig gute Ausdauer gesorgt." : secretBonus === "spotless" ? " Blitzblank reinzugehen ist dort übrigens nicht unbemerkt geblieben." : ""}${companion ? ` ${companion.label}s ${companionEffect.trait.label} hat die Session verändert.` : ""}`
+    : `I am back. ${minutes} minutes at the ${place} was enough for now.${secretBonus === "pineapple" ? " That pineapple juice still made for suspiciously good stamina." : secretBonus === "spotless" ? " Going in spotless did not go unnoticed, by the way." : ""}${companion ? ` ${companion.label}'s ${companionEffect.trait.label} changed the session.` : ""}`;
+  remember(state.language === "de" ? `${state.name} wurde nach ${minutes} Minuten vorzeitig aus dem ${place} zurückgeholt.${secretBonus ? ` Verdeckter ${secretBonus === "pineapple" ? "Ananassaft" : "Blitzblank"}-Bonus ausgelöst.` : ""}${companion ? ` Begleitung: ${companion.label}.` : ""}` : `${state.name} was brought home early after ${minutes} minutes at the ${place}.${secretBonus ? ` Hidden ${secretBonus} bonus triggered.` : ""}${companion ? ` Companion: ${companion.label}.` : ""}`, area === "meadow" ? "♣" : "▰");
   showToast(state.language === "de" ? `${state.name.toUpperCase()} IST WIEDER ZU HAUSE` : `${state.name.toUpperCase()} IS HOME AGAIN`, 3600);
   if (elements.areaSessionDialog.open) elements.areaSessionDialog.close();
   render(now);
@@ -932,15 +1085,16 @@ function openTravelDetails() {
   const companion = friendCopy(ANIMAL_FRIENDS[state.travel.companionId]);
   $("#travel-companion").hidden = !companion;
   if (companion) {
+    const effect = companionActivityEffect(companion.id, "travel", 1, state.language);
     $("#travel-companion-icon").textContent = companion.icon;
-    $("#travel-companion-name").textContent = companion.label;
+    $("#travel-companion-name").textContent = `${companion.label} · ${effect?.trait.label || companion.trait.label}`;
   }
   $("#travel-reward-label").textContent = state.language === "de"
     ? (state.travel.rewardId ? "Ein geheimnisvoller neuer Fund" : "Eine Überraschung aus der Ferne")
     : (state.travel.rewardId ? "A mysterious new find" : "A surprise from afar");
   $("#travel-history").textContent = state.language === "de"
-    ? `${state.name} hat bereits ${state.travel.completedTrips} ${state.travel.completedTrips === 1 ? "Solo-Reise" : "Solo-Reisen"} beendet und ${state.travel.visitedIds.length} verschiedene Orte entdeckt.`
-    : `${state.name} has completed ${state.travel.completedTrips} solo ${state.travel.completedTrips === 1 ? "outing" : "outings"} and discovered ${state.travel.visitedIds.length} different places.`;
+    ? `${state.name} hat bereits ${state.travel.completedTrips} ${state.travel.completedTrips === 1 ? "Reise" : "Reisen"} beendet und ${state.travel.visitedIds.length} verschiedene Orte entdeckt.`
+    : `${state.name} has completed ${state.travel.completedTrips} ${state.travel.completedTrips === 1 ? "outing" : "outings"} and discovered ${state.travel.visitedIds.length} different places.`;
   openDialog(elements.travelDialog);
 }
 
@@ -963,26 +1117,50 @@ function openJourneyDialog() {
     return;
   }
   closeTray();
+  state.world = normalizeWorld(state.world, Date.now(), worldSeed());
+  const companions = availableCompanions(state.world, state.language, Date.now(), worldSeed());
+  if (!companions.some((entry) => entry.friend.id === pendingJourneyCompanionId)) pendingJourneyCompanionId = null;
   $("#journey-capy-name").textContent = state.name;
   $("#journey-title").textContent = state.language === "de" ? `${state.name}, wohin geht es wohl?` : `Where will ${state.name} go?`;
   const until = Math.max(0, (Number(state.travel?.nextDepartureAt) || Date.now()) - Date.now());
-  const hours = Math.floor(until / 3_600_000);
-  const minutes = Math.max(1, Math.ceil((until % 3_600_000) / 60_000));
+  const totalMinutes = Math.max(1, Math.ceil(until / 60_000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  $("#journey-companion-heading").textContent = state.language === "de" ? "WER KOMMT MIT?" : "WHO COMES ALONG?";
+  pendingJourneyCompanionId = renderCompanionPicker({
+    options: $("#journey-companion-options"),
+    effect: $("#journey-companion-effect"),
+    selectedId: pendingJourneyCompanionId,
+    activity: "travel",
+    onSelect: (friendId) => {
+      pendingJourneyCompanionId = friendId;
+      openJourneyDialog();
+    },
+  });
   $("#auto-travel-heading").textContent = state.language === "de" ? "EIGENSTÄNDIGE REISEN SIND AKTIV" : "INDEPENDENT TRAVEL IS ACTIVE";
   $("#auto-travel-status").textContent = state.language === "de"
-    ? `${state.name} zieht weiterhin von allein los – nach 8–18 Stunden zu Hause. Nächste mögliche Abreise ungefähr in ${hours ? `${hours} Std. ` : ""}${minutes} Min.`
-    : `${state.name} still leaves independently after 8–18 hours at home. Next possible departure in about ${hours ? `${hours} hr ` : ""}${minutes} min.`;
+    ? `${state.name} zieht auch von allein los und bleibt dann drei bis vier Stunden unterwegs. Nächste mögliche Abreise ungefähr in ${hours ? `${hours} Std.${minutes ? " " : ""}` : ""}${minutes ? `${minutes} Min.` : ""}`
+    : `${state.name} also heads out independently and then stays away for three to four hours. Next possible departure in about ${hours ? `${hours} hr${minutes ? " " : ""}` : ""}${minutes ? `${minutes} min` : ""}.`;
   openDialog(elements.journeyDialog);
 }
 
 function startManualJourney() {
   if (isTraveling(state.travel) || state.sleeping || interactionBusy) return;
   const now = Date.now();
-  state.travel = departNow(state.travel, state.adoptedAt, now, travelSeed());
+  const companionIsUnlocked = availableCompanions(state.world, state.language, now, worldSeed()).some((entry) => entry.friend.id === pendingJourneyCompanionId);
+  const chosenCompanionId = companionIsUnlocked ? pendingJourneyCompanionId : null;
+  const nextTravel = departNow(state.travel, state.adoptedAt, now, travelSeed(), { companionId: chosenCompanionId });
+  if (nextTravel.returnPending) {
+    state.travel = nextTravel;
+    if (elements.journeyDialog.open) elements.journeyDialog.close();
+    syncTravelState(now);
+    render(now);
+    return;
+  }
+  state.travel = nextTravel;
   prepareTravelCargo();
   const destination = destinationCopy(destinationById(state.travel.destinationId));
   const companion = friendCopy(ANIMAL_FRIENDS[state.travel.companionId]);
-  state = awardChanges({ curiosity: 5, fun: 3, energy: -2, social: companion ? 2 : -1, xp: 4 }, now);
   remember(state.language === "de"
     ? `${state.name} wurde von dir auf eine Überraschungsreise geschickt. Das Ziel: ${destination.title}.${companion ? ` ${companion.label} reist mit.` : ""}`
     : `You sent ${state.name} on a surprise outing. The destination: ${destination.title}.${companion ? ` ${companion.label} is joining.` : ""}`, "⌁");
@@ -1116,19 +1294,85 @@ function openGearLocker() {
 }
 
 function openFriendBook() {
-  state.world = normalizeWorld(state.world, Date.now(), worldSeed());
+  const now = Date.now();
+  state.world = normalizeWorld(state.world, now, worldSeed());
   $("#friend-book-title").textContent = state.language === "de" ? `${state.world.metFriendIds.length} von ${Object.keys(ANIMAL_FRIENDS).length} Freunden` : `${state.world.metFriendIds.length} of ${Object.keys(ANIMAL_FRIENDS).length} friends`;
-  $("#friend-book-copy").textContent = state.language === "de" ? "Begrüße Besucher in der Welt oder triff Reisebegleiter – jede echte Begegnung füllt eine Seite." : "Greet visitors in the world or meet travel companions — every real encounter fills a page.";
+  $("#friend-book-copy").textContent = state.language === "de" ? "Tippe auf einen Freund für Fundort, Beziehung, gemeinsame Erlebnisse und die besondere Begleiter-Eigenschaft." : "Tap a friend for where you met, your relationship, shared history and their companion trait.";
   const grid = $("#friend-book-grid");
   grid.replaceChildren();
   Object.values(ANIMAL_FRIENDS).forEach((baseFriend) => {
-    const friend = friendCopy(baseFriend);
-    const met = state.world.metFriendIds.includes(friend.id);
-    const article = document.createElement("article");
-    article.className = met ? "is-met" : "is-unknown";
-    const metAt = state.world.friendMetAt[friend.id];
-    article.innerHTML = `<span>${met ? friend.icon : "?"}</span><strong>${met ? friend.label : (state.language === "de" ? "Noch unbekannt" : "Not met yet")}</strong><small>${met ? friend.phrase : (state.language === "de" ? "Vielleicht beim nächsten Besuch oder auf einer Reise." : "Maybe on the next visit or trip.")}</small>${metAt ? `<time>${new Intl.DateTimeFormat(state.language === "de" ? "de-DE" : "en-GB", { dateStyle: "medium" }).format(metAt)}</time>` : ""}`;
-    grid.append(article);
+    const entry = friendBookEntry(state.world, baseFriend.id, state.language, now, worldSeed());
+    if (!entry) return;
+    const { friend, met, record, relationship } = entry;
+    const card = document.createElement("article");
+    card.className = `friend-book-card ${met ? "is-met" : "is-unknown"}`;
+    const icon = document.createElement("span");
+    icon.textContent = met ? friend.icon : "?";
+    const name = document.createElement("strong");
+    name.textContent = met ? `${friend.label} · ${friend.species}` : (state.language === "de" ? "Noch unbekannt" : "Not met yet");
+    const teaser = document.createElement("small");
+    teaser.textContent = met ? `${relationship.label} · ${friend.personality}` : (state.language === "de" ? "Vielleicht beim nächsten Besuch oder auf einer Reise." : "Maybe on the next visit or trip.");
+    if (met) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "friend-book-toggle";
+      button.setAttribute("aria-expanded", "false");
+      const summary = document.createElement("span");
+      summary.className = "friend-book-summary";
+      summary.append(name, teaser);
+      const chevron = document.createElement("b");
+      chevron.setAttribute("aria-hidden", "true");
+      chevron.textContent = "+";
+      button.append(icon, summary, chevron);
+      const firstMetAt = Number(record.firstMetAt) || 0;
+      const date = document.createElement("time");
+      date.dateTime = firstMetAt ? new Date(firstMetAt).toISOString() : "";
+      date.textContent = firstMetAt
+        ? new Intl.DateTimeFormat(state.language === "de" ? "de-DE" : "en-GB", { dateStyle: "medium" }).format(firstMetAt)
+        : (state.language === "de" ? "Datum unbekannt" : "Date unknown");
+      const details = document.createElement("div");
+      details.className = "friend-book-details";
+      details.id = `friend-details-${friend.id}`;
+      details.hidden = true;
+      button.setAttribute("aria-controls", details.id);
+      const firstMet = document.createElement("p");
+      firstMet.innerHTML = state.language === "de" ? "<b>KENNENGELERNT</b>" : "<b>FIRST MET</b>";
+      firstMet.append(` · ${friendOriginText(entry)} · ${date.textContent}`);
+      const history = document.createElement("p");
+      history.innerHTML = state.language === "de" ? "<b>GEMEINSAM</b>" : "<b>TOGETHER</b>";
+      history.append(state.language === "de"
+        ? ` · ${record.meetings} Begegnungen · ${record.tripsTogether} Reisen · ${record.sessionsTogether.meadow}× Kennel Club · ${record.sessionsTogether.garden}× Play Area`
+        : ` · ${record.meetings} meetings · ${record.tripsTogether} trips · ${record.sessionsTogether.meadow}× Kennel Club · ${record.sessionsTogether.garden}× Play Area`);
+      const trait = document.createElement("p");
+      const traitName = document.createElement("b");
+      traitName.textContent = friend.trait.label.toUpperCase();
+      trait.append(traitName);
+      trait.append(` · ${friend.trait.detail}`);
+      details.append(date, firstMet, history, trait);
+      card.append(button, details);
+      button.addEventListener("click", () => {
+        const opening = !card.classList.contains("is-open");
+        grid.querySelectorAll(".friend-book-card.is-open").forEach((openCard) => {
+          openCard.classList.remove("is-open");
+          const openButton = openCard.querySelector(".friend-book-toggle");
+          openButton?.setAttribute("aria-expanded", "false");
+          const openChevron = openButton?.querySelector("b");
+          if (openChevron) openChevron.textContent = "+";
+          const openDetails = openCard.querySelector(".friend-book-details");
+          if (openDetails) openDetails.hidden = true;
+        });
+        card.classList.toggle("is-open", opening);
+        button.setAttribute("aria-expanded", String(opening));
+        chevron.textContent = opening ? "−" : "+";
+        details.hidden = !opening;
+      });
+    } else {
+      const summary = document.createElement("div");
+      summary.className = "friend-book-summary";
+      summary.append(name, teaser);
+      card.append(icon, summary);
+    }
+    grid.append(card);
   });
   if (elements.inventoryDialog.open) elements.inventoryDialog.close();
   if (!elements.friendBookDialog.open) openDialog(elements.friendBookDialog);
@@ -1490,8 +1734,8 @@ function openPackCards() {
   $("#pack-difficulty").hidden = false;
   $("#pack-difficulty-label").textContent = state.language === "de" ? "SCHWIERIGKEIT" : "DIFFICULTY";
   const difficultyCopy = state.language === "de"
-    ? { soft: "SOFT<br><small>5 · 1 KARTE</small>", switch: "SWITCH<br><small>7 · 2 VERDECKTE</small>", alpha: "ALPHA<br><small>7 · 3 VERDECKTE</small>" }
-    : { soft: "SOFT<br><small>5 · 1 CARD</small>", switch: "SWITCH<br><small>7 · 2 HIDDEN</small>", alpha: "ALPHA<br><small>7 · 3 HIDDEN</small>" };
+    ? { soft: "SOFT<br><small>5 · WARM-UP</small>", switch: "SWITCH<br><small>7 · REGELMIX</small>", alpha: "ALPHA<br><small>7 · HARTE READS</small>" }
+    : { soft: "SOFT<br><small>5 · WARM-UP</small>", switch: "SWITCH<br><small>7 · RULE MIX</small>", alpha: "ALPHA<br><small>7 · HARD READS</small>" };
   $$("button[data-pack-difficulty]", $("#pack-difficulty")).forEach((button) => { button.innerHTML = difficultyCopy[button.dataset.packDifficulty]; });
   $("#pack-cards-start").textContent = state.language === "de" ? "KARTEN GEBEN" : "DEAL THE CARDS";
   const stage = $("#pack-cards-stage");
@@ -1501,7 +1745,11 @@ function openPackCards() {
   message.hidden = true;
   stage.hidden = true;
   stage.replaceChildren();
-  $$("button[data-pack-difficulty]", $("#pack-difficulty")).forEach((button) => button.classList.toggle("is-active", button.dataset.packDifficulty === packCardsDifficulty));
+  $$("button[data-pack-difficulty]", $("#pack-difficulty")).forEach((button) => {
+    const active = button.dataset.packDifficulty === packCardsDifficulty;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
   openDialog(elements.packCardsDialog);
 }
 
@@ -1521,19 +1769,23 @@ function beginPackCards() {
     language: state.language,
     difficulty: packCardsDifficulty,
     seed: `${state.name}:${state.interactions}:${Date.now()}`,
-    onFinish: ({ playerWins, kinkybaraWins, score, xp }) => {
+    onFinish: ({ playerWins, rivals = [], score, xp }) => {
       packCardsCleanup = null;
-      state = awardChanges({ fun: 10, social: 6, curiosity: 4, xp });
+      const rivalScore = rivals.map((rival) => `${rival.name} ${rival.wins}`).join(" · ");
+      const strongestRival = Math.max(0, ...rivals.map((rival) => rival.wins));
+      const result = playerWins > strongestRival ? "win" : playerWins < strongestRival ? "loss" : "tie";
+      const earnedXp = Math.max(2, Math.round(xp * (result === "win" ? 1 : result === "tie" ? 0.6 : 0.35)));
+      state = awardChanges({ fun: 10, social: 6, curiosity: 4, xp: earnedXp });
       remember(state.language === "de"
-        ? `${state.name} hat mit dir Pack Cards gespielt (${playerWins}:${kinkybaraWins}).`
-        : `${state.name} played Pack Cards with you (${playerWins}:${kinkybaraWins}).`, "▦");
+        ? `${state.name} hat mit dir gegen Roxy und Jinx Pack Cards gespielt (DU ${playerWins} · ${rivalScore} · ${score} Punkte · +${earnedXp} XP).`
+        : `${state.name} played Pack Cards with you against Roxy and Jinx (YOU ${playerWins} · ${rivalScore} · ${score} points · +${earnedXp} XP).`, "▦");
       status.textContent = state.language === "de"
-        ? `FERTIG · DU ${playerWins} · KINKYBARA ${kinkybaraWins}`
-        : `FINISHED · YOU ${playerWins} · KINKYBARA ${kinkybaraWins}`;
-      message.textContent = playerWins > kinkybaraWins
+        ? `FERTIG · DU ${playerWins} · ${rivalScore} · ${score} PUNKTE · +${earnedXp} XP`
+        : `FINISHED · YOU ${playerWins} · ${rivalScore} · ${score} POINTS · +${earnedXp} XP`;
+      message.textContent = playerWins > strongestRival
         ? (state.language === "de" ? "Oh. Du liegst oben. Genieß es, solange es hält." : "Oh. You’re on top. Enjoy it while it lasts.")
-        : playerWins < kinkybaraWins
-          ? (state.language === "de" ? "Kinkybara liegt oben. Lust auf noch eine Runde?" : "Kinkybara is on top. Want another go?")
+        : playerWins < strongestRival
+          ? (state.language === "de" ? "Roxy oder Jinx liegt oben. Lust auf noch eine Runde?" : "Roxy or Jinx is on top. Want another go?")
           : (state.language === "de" ? "Gleich heiß. Das verlangt nach einer Revanche." : "Same heat. That calls for a rematch.");
       const again = document.createElement("button");
       again.type = "button";
@@ -1541,6 +1793,7 @@ function beginPackCards() {
       again.textContent = state.language === "de" ? "NOCH EIN SPIEL" : "PLAY AGAIN";
       again.addEventListener("click", openPackCards, { once: true });
       stage.replaceChildren(again);
+      again.focus();
       playSound("happy");
       haptic([18, 25, 18]);
       render();
@@ -2284,15 +2537,13 @@ function petCapy(event) {
     talk(state.language === "de" ? "Mmmh … noch fünf Minuten. Selbst ein Dom braucht Schönheitsschlaf." : "Mmmh … five more minutes. Even a dom needs beauty sleep.", { speak: false });
     return;
   }
-  state = awardChanges({ fun: 1.2, social: 2.2, xp: 0.5 });
-  if (state.interactions % 8 === 0) remember(state.language === "de" ? `${state.name} wurde liebevoll hinter dem Ohr gekrault.` : `${state.name} got a loving scratch behind the ear.`, "♥");
+  petTapCount += 1;
   const petPhrases = PET_PHRASES[languageFor(state.language)];
-  talk(petPhrases[state.interactions % petPhrases.length], { speak: state.interactions % 5 === 0 });
+  talk(petPhrases[petTapCount % petPhrases.length], { speak: petTapCount % 5 === 0 });
   animateCapy("is-loved", 1050);
   playSound("tap");
   haptic(12);
   spawnHeart(event);
-  render();
 }
 
 function spawnHeart(event) {
@@ -2448,6 +2699,9 @@ function resetSceneForSwitch() {
   selectedItem = null;
   pendingQuestAction = null;
   lastQuestNotice = "";
+  pendingAreaSessionArea = null;
+  pendingAreaCompanionId = null;
+  pendingJourneyCompanionId = null;
   elements.sceneLayer.replaceChildren();
   elements.bubbleLayer.replaceChildren();
   elements.habitat.classList.remove("bath-time", "drop-ready");
@@ -2621,7 +2875,11 @@ $("#pack-difficulty").addEventListener("click", (event) => {
   const button = event.target.closest("button[data-pack-difficulty]");
   if (!button) return;
   packCardsDifficulty = button.dataset.packDifficulty;
-  $$("button[data-pack-difficulty]", $("#pack-difficulty")).forEach((item) => item.classList.toggle("is-active", item === button));
+  $$("button[data-pack-difficulty]", $("#pack-difficulty")).forEach((item) => {
+    const active = item === button;
+    item.classList.toggle("is-active", active);
+    item.setAttribute("aria-pressed", String(active));
+  });
 });
 $("#pack-cards-start").addEventListener("click", beginPackCards);
 $("#area-session-primary").addEventListener("click", () => {
@@ -2694,8 +2952,11 @@ elements.gardenPlots.addEventListener("click", (event) => {
 elements.animalVisitor.addEventListener("click", () => {
   const friend = friendCopy(ANIMAL_FRIENDS[state.world.friendId]);
   if (!friend) return;
-  state.world = recordFriendMeeting(state.world, friend.id, Date.now(), worldSeed());
-  state = awardChanges({ social: 3, fun: 2, xp: 1 });
+  const now = Date.now();
+  const previousMeetings = Number(state.world.friendRecords?.[friend.id]?.meetings) || 0;
+  state.world = recordFriendMeeting(state.world, friend.id, now, worldSeed(), { kind: "world", area: state.world.area });
+  const newEncounter = (Number(state.world.friendRecords?.[friend.id]?.meetings) || 0) > previousMeetings;
+  if (newEncounter) state = awardChanges({ social: 3, fun: 2, xp: 1 }, now);
   talk(friend.phrase);
   animateCapy("is-loved", 950);
   haptic(12);

@@ -62,12 +62,16 @@ import {
   ANIMAL_FRIENDS,
   CROPS,
   WORLD_AREAS,
+  availableCompanions,
+  companionActivityEffect,
   consumeHarvest,
   createGarden,
   createWorld,
+  friendBookEntry,
   harvestCrop,
   normalizeWorld,
   prepareWorldActivity,
+  recordFriendCompanionActivity,
   recordFriendMeeting,
   recallWorldActivity,
   selectWorldArea,
@@ -156,6 +160,27 @@ test("interactions stay within healthy stat limits", () => {
   assert.equal(changed.fun, 0);
   assert.equal(changed.social, 100);
   assert.equal(changed.xp, 5);
+});
+
+test("casual pet taps stay cosmetic and cannot farm saved progress", async () => {
+  const app = await readFile(new URL("../public/app/app.js", import.meta.url), "utf8");
+  const petTapHandler = app.match(/function petCapy\(event\) \{[\s\S]*?\n\}\n\nfunction spawnHeart/)?.[0] || "";
+
+  assert.match(petTapHandler, /petTapCount \+= 1/);
+  assert.match(petTapHandler, /animateCapy\("is-loved"/);
+  assert.match(petTapHandler, /spawnHeart\(event\)/);
+  assert.doesNotMatch(petTapHandler, /awardChanges|remember\(|addMemory|trackQuestAction|pendingQuestAction|render\(\)|state\.(?:xp|interactions)/);
+});
+
+test("departures and area-session starts do not grant repeatable start XP", async () => {
+  const app = await readFile(new URL("../public/app/app.js", import.meta.url), "utf8");
+  const journeyStart = app.match(/function startManualJourney\(\) \{[\s\S]*?\n\}\n\nfunction recallFromParty/)?.[0] || "";
+  const areaStart = app.match(/function startAreaStay\([^)]*\) \{[\s\S]*?\n\}\n\nfunction recallAreaStay/)?.[0] || "";
+
+  assert.match(journeyStart, /departNow/);
+  assert.match(areaStart, /startWorldActivity/);
+  assert.doesNotMatch(journeyStart, /awardChanges/);
+  assert.doesNotMatch(areaStart, /awardChanges/);
 });
 
 test("pet state remains valid, names stay compact, and Thron is the default", () => {
@@ -253,22 +278,43 @@ test("pickles and onions are temporary foods with opposite emotional effects", (
   assert.ok(onion.fun < state.fun);
 });
 
-test("solo trips are deterministic, last two to three hours, and return with a souvenir", () => {
+test("autonomous trips are deterministic, visible for three to four hours, and return with a souvenir", () => {
   const adoptedAt = Date.UTC(2026, 7, 1, 9);
   const seed = "nox:reise";
   let travel = normalizeTravel(null, adoptedAt, adoptedAt, seed);
   const departure = travel.nextDepartureAt;
   travel = normalizeTravel(travel, adoptedAt, departure + 1, seed);
   assert.equal(isTraveling(travel, departure + 1), true);
-  assert.ok(travel.returnsAt - travel.departedAt >= 120 * 60_000);
-  assert.ok(travel.returnsAt - travel.departedAt <= 180 * 60_000);
+  assert.ok(travel.returnsAt - travel.departedAt >= 180 * 60_000);
+  assert.ok(travel.returnsAt - travel.departedAt <= 240 * 60_000);
   assert.ok(destinationById(travel.destinationId));
   assert.ok(travelProgress(travel, departure + 1) < 1);
   travel = normalizeTravel(travel, adoptedAt, travel.returnsAt + 1, seed);
   assert.equal(isTraveling(travel, travel.returnsAt + 1), false);
   assert.equal(travel.completedTrips, 1);
   assert.ok(travel.lastSouvenir);
+  assert.ok(travel.nextDepartureAt - travel.lastReturnAt >= 6 * 60 * 60_000);
+  assert.ok(travel.nextDepartureAt - travel.lastReturnAt <= 10 * 60 * 60_000);
   assert.ok(TRAVEL_DESTINATIONS.length >= 8);
+});
+
+test("an autonomous trip missed while closed starts visibly on reopen without catch-up loops", () => {
+  const adoptedAt = Date.UTC(2026, 7, 1, 9);
+  const seed = "nox:offline-auto";
+  const initial = normalizeTravel(null, adoptedAt, adoptedAt, seed);
+  const reopenedAt = initial.nextDepartureAt + 3 * 24 * 60 * 60_000;
+  const reopened = normalizeTravel(initial, adoptedAt, reopenedAt, seed);
+
+  assert.equal(reopened.status, "away");
+  assert.equal(reopened.initiatedBy, "auto");
+  assert.equal(reopened.departedAt, reopenedAt);
+  assert.ok(reopened.returnsAt - reopenedAt >= 180 * 60_000);
+  assert.ok(reopened.returnsAt - reopenedAt <= 240 * 60_000);
+  assert.equal(reopened.completedTrips, 0);
+
+  const stable = normalizeTravel(reopened, adoptedAt, reopenedAt + 1000, seed);
+  assert.equal(stable.destinationId, reopened.destinationId);
+  assert.equal(stable.departedAt, reopenedAt);
 });
 
 test("a player can send the Capy on a destination-blind surprise trip", () => {
@@ -286,6 +332,48 @@ test("a player can send the Capy on a destination-blind surprise trip", () => {
   assert.equal(stillAway.returnsAt, travel.returnsAt);
 });
 
+test("a manual trip preserves a chosen friend or an explicit solo choice", () => {
+  const now = Date.UTC(2026, 7, 29, 10);
+  const chosen = departNow(null, now, now, "nox:chosen", { companionId: "hedgehog" });
+  assert.equal(chosen.companionChoice, "chosen");
+  assert.equal(chosen.companionId, "hedgehog");
+
+  const solo = departNow(null, now, now, "nox:solo", { companionId: null });
+  assert.equal(solo.companionChoice, "solo");
+  assert.equal(solo.companionId, null);
+});
+
+test("a manual departure wins a race with a due autonomous departure", () => {
+  const adoptedAt = Date.UTC(2026, 7, 29, 6);
+  const seed = "nox:due-manual";
+  const waiting = normalizeTravel(null, adoptedAt, adoptedAt, seed);
+  const now = waiting.nextDepartureAt + 1;
+  const travel = departNow(waiting, adoptedAt, now, seed, { companionId: "hedgehog" });
+
+  assert.equal(travel.status, "away");
+  assert.equal(travel.initiatedBy, "player");
+  assert.equal(travel.companionChoice, "chosen");
+  assert.equal(travel.companionId, "hedgehog");
+  assert.ok(travel.returnsAt - travel.departedAt >= 120 * 60_000);
+  assert.ok(travel.returnsAt - travel.departedAt <= 180 * 60_000);
+});
+
+test("an expired trip must settle before another manual departure", () => {
+  const adoptedAt = Date.UTC(2026, 7, 29, 6);
+  const seed = "nox:expired-manual";
+  const departedAt = Date.UTC(2026, 7, 29, 10);
+  const away = departNow(null, adoptedAt, departedAt, seed, { companionId: "hedgehog" });
+  const afterReturn = away.returnsAt + 1;
+  const pending = departNow(away, adoptedAt, afterReturn, seed, { companionId: null });
+
+  assert.equal(pending.status, "home");
+  assert.equal(pending.returnPending, true);
+  assert.equal(pending.completedTrips, 1);
+  assert.equal(pending.lastDestinationId, away.destinationId);
+  assert.equal(pending.lastCompanionId, "hedgehog");
+  assert.equal(pending.departedAt, 0);
+});
+
 test("a player can call the Kinkybara home from a party", () => {
   const now = Date.UTC(2026, 7, 29, 10);
   const adoptedAt = now - 86_400_000;
@@ -296,6 +384,10 @@ test("a player can call the Kinkybara home from a party", () => {
   assert.equal(recalled.returnPending, true);
   assert.equal(recalled.lastDestinationId, travel.destinationId);
   assert.equal(recalled.lastReturnAt, now + 1);
+  assert.equal(recalled.lastRecalled, true);
+  assert.ok(recalled.lastTripProgress < 0.001);
+  assert.equal(recalled.completedTrips, 0);
+  assert.equal(recalled.lastRewardId, null);
 });
 
 test("the collection has exclusive clothing slots and placeable finds", () => {
@@ -392,6 +484,57 @@ test("friends are recorded and 40-minute area sessions settle exactly once", () 
   assert.equal(recalled.world.activity, null);
 });
 
+test("friend-book entries migrate legacy meetings and grow into distinct companion histories", () => {
+  const now = Date.UTC(2026, 7, 29, 10);
+  const legacy = normalizeWorld({
+    version: 3,
+    area: "home",
+    metFriendIds: ["hedgehog"],
+    friendMetAt: { hedgehog: now - 86_400_000 },
+  }, now, "nox");
+  const migrated = friendBookEntry(legacy, "hedgehog", "de", now, "nox");
+  assert.equal(migrated.met, true);
+  assert.equal(migrated.friend.label, "Piek");
+  assert.equal(migrated.friend.species, "Igel");
+  assert.equal(migrated.record.firstMetAt, now - 86_400_000);
+  assert.equal(migrated.relationship.label, "Neue Bekanntschaft");
+
+  let world = recordFriendMeeting(createWorld(now, "garden", "nox"), "duck", now, "nox", { area: "garden" });
+  world = recordFriendMeeting(world, "duck", now + 1000, "nox", { area: "garden" });
+  assert.equal(world.friendRecords.duck.meetings, 1, "repeated taps during one visit must not farm friendship");
+  assert.equal(world.friendRecords.duck.origin.area, "garden");
+  world = recordFriendMeeting(world, "duck", now + 3 * 60 * 60_000, "nox", { area: "wintergarden" });
+  world = recordFriendCompanionActivity(world, "duck", "travel", now + 4 * 60 * 60_000, "nox");
+  world = recordFriendCompanionActivity(world, "duck", "meadow", now + 5 * 60 * 60_000, "nox");
+  const entry = friendBookEntry(world, "duck", "en", now + 5 * 60 * 60_000, "nox");
+  assert.equal(entry.record.meetings, 2);
+  assert.equal(entry.record.tripsTogether, 1);
+  assert.equal(entry.record.sessionsTogether.meadow, 1);
+  assert.equal(entry.relationship.label, "Pack mate");
+  assert.deepEqual(availableCompanions(world, "en", now, "nox").map(({ friend }) => friend.id), ["duck"]);
+});
+
+test("all six friends have localized, mechanically distinct companion traits", () => {
+  const friends = Object.values(ANIMAL_FRIENDS);
+  assert.equal(friends.length, 6);
+  assert.equal(new Set(friends.map((friend) => friend.trait.id)).size, 6);
+  assert.ok(friends.every((friend) => friend.personality && friend.trait.label && friend.trait.detail));
+  const travelEffects = friends.map((friend) => JSON.stringify(companionActivityEffect(friend.id, "travel")?.changes));
+  assert.equal(new Set(travelEffects).size, 6);
+  assert.equal(companionActivityEffect("chicken", "garden").changes.curiosity, 7);
+  assert.equal(companionActivityEffect("rabbit", "garden", 0.5).changes.fun, 4);
+  assert.equal(companionActivityEffect("missing", "travel"), null);
+});
+
+test("only unlocked friends can be captured as area-session companions", () => {
+  const now = Date.UTC(2026, 7, 29, 10);
+  const world = recordFriendMeeting(createWorld(now, "meadow", "nox"), "alpaca", now, "nox");
+  const chosen = startWorldActivity(world, "meadow", now + 10, "nox", { companionId: "alpaca", clean: 40 });
+  assert.equal(chosen.world.activity.companionId, "alpaca");
+  const locked = startWorldActivity(createWorld(now, "garden", "nox"), "garden", now + 10, "nox", { companionId: "alpaca" });
+  assert.equal(locked.world.activity.companionId, null);
+});
+
 test("secret session preparations are captured quietly and revealed only on return", () => {
   const now = Date.UTC(2026, 8, 4, 18);
   const prepared = prepareWorldActivity(createWorld(now, "garden", "nox"), "pineapple", now, "nox");
@@ -423,7 +566,7 @@ test("Pack Cards keeps elite values rare and makes hidden rival hands meaningful
   assert.equal(PACK_CARD_DIFFICULTIES.alpha.rivalChoices, 3);
   const playerCard = { stats: { trust: 80, style: 80, energy: 80, pack: 80 } };
   const rivalCard = { stats: { trust: 80, style: 80, energy: 80, pack: 80 } };
-  assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "soft" }).winner, "tie");
+  assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "soft" }).winner, "rival");
   assert.equal(resolvePackCardRound({ playerCard, rivalCard, stat: "trust", difficulty: "alpha" }).winner, "rival");
   assert.equal(resolvePackCardRound({ playerCard, rivalCard: { stats: { trust: 72, style: 72, energy: 72, pack: 72 } }, stat: "trust", previousStat: "trust", difficulty: "alpha" }).winner, "rival");
   const counter = choosePackCardRival({
@@ -645,7 +788,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v34/);
+  assert.match(serviceWorker, /kinkybara-shell-v37/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);

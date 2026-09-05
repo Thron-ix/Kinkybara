@@ -116,7 +116,7 @@
         </div>
 
         <button class="collection-button" id="inventory-button" type="button"><span aria-hidden="true">▣</span><strong data-i18n="pet.collection">WARDROBE & COLLECTION</strong><small id="inventory-count">1 / 22 ITEMS</small><b aria-hidden="true">›</b></button>
-        <button class="pack-cards-button" id="pack-cards-button" type="button"><strong data-i18n="packCards.play">PLAY PACK CARDS</strong><small data-i18n="packCards.hint">Five quick draws. Pick your best tease.</small><b aria-hidden="true">›</b></button>
+        <button class="pack-cards-button" id="pack-cards-button" type="button"><strong data-i18n="packCards.play">PLAY PACK CARDS</strong><small data-i18n="packCards.hint">Two rivals. Three rules. Special cards.</small><b aria-hidden="true">›</b></button>
 
         <div class="need-grid">
           <div class="need"><div><span data-i18n="need.satiety">FULL</span><strong data-value="satiety">82%</strong></div><div class="meter" data-meter="satiety" role="progressbar" aria-label="Full" aria-valuemin="0" aria-valuemax="100"><span></span></div></div>
@@ -218,23 +218,33 @@
       <p class="travel-history" id="travel-history"></p>
     </dialog>
 
-    <dialog class="sheet journey-sheet" id="journey-dialog">
+    <dialog class="sheet journey-sheet" id="journey-dialog" aria-labelledby="journey-title">
       <div class="sheet-handle" aria-hidden="true"></div>
       <div class="sheet-title"><div><p class="sheet-kicker" data-i18n="journey.kicker">SURPRISE PARTY</p><h2 id="journey-title">Pack a small bag?</h2></div><button type="button" data-close data-i18n-aria="common.close" aria-label="Close">×</button></div>
       <div class="journey-hero" aria-hidden="true"><span>⌁</span><i>?</i><b>▣</b></div>
       <p><strong id="journey-capy-name">Thron</strong> <span data-i18n="journey.copy">chooses the destination. The outing lasts two to three hours and may bring back a new find.</span></p>
       <div class="journey-rules"><span>?</span><strong data-i18n="journey.surprise">DESTINATION STAYS A SURPRISE</strong><span>2–3 H</span></div>
+      <section class="companion-picker" id="journey-companion-picker" aria-labelledby="journey-companion-heading">
+        <strong id="journey-companion-heading">WHO COMES ALONG?</strong>
+        <div id="journey-companion-options" role="group" aria-label="Choose a travel companion"></div>
+        <p id="journey-companion-effect" aria-live="polite"></p>
+      </section>
       <div class="auto-travel-status"><strong id="auto-travel-heading">SOLO TRAVEL IS ACTIVE</strong><span id="auto-travel-status">Kinkybara also leaves independently after enough time at home.</span></div>
       <button class="primary-button" id="start-journey-button" type="button" data-i18n="journey.start">HEAD TO A PARTY</button>
       <button class="secondary-button" type="button" data-close data-i18n="journey.stay">STAY HOME FOR NOW</button>
     </dialog>
 
-    <dialog class="sheet area-session-sheet" id="area-session-dialog">
+    <dialog class="sheet area-session-sheet" id="area-session-dialog" aria-labelledby="area-session-title">
       <div class="sheet-handle" aria-hidden="true"></div>
       <div class="sheet-title"><div><p class="sheet-kicker" id="area-session-kicker">40-MINUTE SESSION</p><h2 id="area-session-title">Kennel Club</h2></div><button type="button" data-close data-i18n-aria="common.close" aria-label="Close">×</button></div>
       <div class="area-session-hero" id="area-session-hero" data-area="meadow" aria-hidden="true"><span id="area-session-icon">♣</span><i></i><b>40</b></div>
       <p id="area-session-copy">A focused outing with clear effects and an automatic return.</p>
       <div class="area-session-effects" id="area-session-effects"></div>
+      <section class="companion-picker" id="area-companion-picker" aria-labelledby="area-companion-heading">
+        <strong id="area-companion-heading">WHO COMES ALONG?</strong>
+        <div id="area-companion-options" role="group" aria-label="Choose a companion"></div>
+        <p id="area-companion-effect" aria-live="polite"></p>
+      </section>
       <div class="area-session-running" id="area-session-running" hidden>
         <strong id="area-session-countdown">40 MIN LEFT</strong>
         <div><span id="area-session-progress"></span></div>
@@ -267,7 +277,7 @@
       <div class="gear-locker-grid" id="gear-locker-grid"></div>
     </dialog>
 
-    <dialog class="sheet collection-container-sheet" id="friend-book-dialog">
+    <dialog class="sheet collection-container-sheet" id="friend-book-dialog" aria-labelledby="friend-book-title">
       <div class="sheet-handle" aria-hidden="true"></div>
       <div class="sheet-title"><div><p class="sheet-kicker">FREUNDEBUCH</p><h2 id="friend-book-title">Getroffene Freunde</h2></div><button type="button" data-close data-i18n-aria="common.close" aria-label="Close">×</button></div>
       <div class="container-hero is-friend-book" aria-hidden="true"></div>
@@ -323,18 +333,18 @@
     <dialog class="sheet pack-cards-sheet" id="pack-cards-dialog">
       <div class="sheet-handle" aria-hidden="true"></div>
       <div class="sheet-title"><div><p class="sheet-kicker">PACK CARDS</p><h2 data-i18n="packCards.title">Who’s top pup?</h2></div><button type="button" id="pack-cards-close" data-i18n-aria="packCards.close" aria-label="Close Pack Cards">×</button></div>
-      <p class="pack-cards-intro" data-i18n="packCards.intro">Pick the number that hits hardest. Higher wins. Five quick draws — loser owes the winner a scratch behind the ears.</p>
+      <p class="pack-cards-intro" data-i18n="packCards.intro">Roxy and Jinx alternate. Each trick announces its rule: highest, lowest or closest to 60. Switch and Alpha hide two or three possible counters; repeats are read, specials bend the rules, and TURN AROUND keeps the same rival in play.</p>
       <div class="pack-difficulty" id="pack-difficulty">
         <p id="pack-difficulty-label">SCHWIERIGKEIT</p>
-        <div>
-          <button type="button" data-pack-difficulty="soft">SOFT<br><small>5 · KLASSISCH</small></button>
-          <button type="button" data-pack-difficulty="switch" class="is-active">SWITCH<br><small>7 · SPECIALS</small></button>
-          <button type="button" data-pack-difficulty="alpha">ALPHA<br><small>7 · +7 RIVALE</small></button>
+        <div role="group" aria-labelledby="pack-difficulty-label">
+          <button type="button" data-pack-difficulty="soft" aria-pressed="false">SOFT<br><small>5 · WARM-UP</small></button>
+          <button type="button" data-pack-difficulty="switch" class="is-active" aria-pressed="true">SWITCH<br><small>7 · RULE MIX</small></button>
+          <button type="button" data-pack-difficulty="alpha" aria-pressed="false">ALPHA<br><small>7 · HARD READS</small></button>
         </div>
         <button class="primary-button" id="pack-cards-start" type="button">KARTEN GEBEN</button>
       </div>
-      <div class="quest-game-status" id="pack-cards-status" role="status" aria-live="polite"></div>
-      <p class="pack-cards-message" id="pack-cards-message"></p>
+      <div class="quest-game-status" id="pack-cards-status"></div>
+      <p class="pack-cards-message" id="pack-cards-message" role="status" aria-live="polite" aria-atomic="true"></p>
       <div class="pack-cards-stage" id="pack-cards-stage"></div>
       <p class="pack-cards-credit" data-i18n="packCards.credit">Fictional pups. Suspiciously real attitude.</p>
     </dialog>

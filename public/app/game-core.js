@@ -64,7 +64,7 @@ export const TOYS = Object.freeze({
   frisbee: { label: "Flying disc", detail: "Toss far and fetch", fun: 22, curiosity: 4, energy: -7, satiety: -3, xp: 9, phrase: "Harder next time. I nearly had to try.", de: { label: "Wurfscheibe", detail: "Weit werfen und apportieren", phrase: "Nächstes Mal fester. Fast hätte ich mich anstrengen müssen." } },
   bubbles: { label: "Bubbles", detail: "Pop every bubble", fun: 20, curiosity: 8, energy: -4, xp: 8, phrase: "Blow … bubbles. What did you think I meant?", de: { label: "Seifenblasen", detail: "Lass alle Blasen platzen", phrase: "Blow … bubbles. Was dachtest du denn?" } },
   rope: { label: "Tug rope", detail: "Move it over Kinkybara", fun: 17, social: 8, energy: -5, xp: 7, phrase: "Pull harder. I can take it.", de: { label: "Zerrseil", detail: "Zieh es über Kinkybara", phrase: "Zieh fester. Ich halte das aus." } },
-  packCards: { label: "Pack Cards", detail: "Five quick draws. Pick your best tease.", fun: 18, social: 8, curiosity: 7, xp: 9, phrase: "Top pup wins. Want another go?", de: { label: "Pack Cards", detail: "Fünf schnelle Züge. Zeig deinen besten Tease.", phrase: "Top-Pup gewinnt. Lust auf noch eine Runde?" } },
+  packCards: { label: "Pack Cards", detail: "Two rivals. Three rules. Special cards.", fun: 18, social: 8, curiosity: 7, xp: 9, phrase: "Top pup wins. Want another go?", de: { label: "Pack Cards", detail: "Zwei Rivalen. Drei Regeln. Sonderkarten.", phrase: "Top-Pup gewinnt. Lust auf noch eine Runde?" } },
 });
 
 export const CARE = Object.freeze({

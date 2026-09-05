@@ -74,22 +74,23 @@ function seedNumber(value) {
   return [...String(value)].reduce((total, character) => ((total * 33) ^ character.charCodeAt(0)) >>> 0, 2_166_136_261);
 }
 
-function tripPlan(departedAt, seed, completedTrips = 0) {
+function tripPlan(departedAt, seed, completedTrips = 0, initiatedBy = "auto") {
   const value = seedNumber(`${seed}:${departedAt}:${completedTrips}`);
-  const duration = (120 + (value % 61)) * 60_000;
+  const durationMinutes = initiatedBy === "player" ? 120 + (value % 61) : 180 + (value % 61);
+  const duration = durationMinutes * 60_000;
   const destination = TRAVEL_DESTINATIONS[(value >>> 5) % TRAVEL_DESTINATIONS.length];
   return { destination, duration };
 }
 
 function homeDuration(returnedAt, seed, completedTrips) {
   const value = seedNumber(`${seed}:home:${returnedAt}:${completedTrips}`);
-  return (8 + (value % 11)) * HOUR;
+  return (6 + (value % 5)) * HOUR;
 }
 
 function initialTravel(adoptedAt, seed) {
-  const firstWait = (5 + (seedNumber(`${seed}:first-trip`) % 4)) * HOUR;
+  const firstWait = (3 + (seedNumber(`${seed}:first-trip`) % 4)) * HOUR;
   return {
-    version: 2,
+    version: 4,
     status: "home",
     destinationId: null,
     departedAt: 0,
@@ -104,8 +105,14 @@ function initialTravel(adoptedAt, seed) {
     lastRewardId: null,
     companionId: null,
     lastCompanionId: null,
+    companionChoice: "auto",
+    lastCompanionChoice: "auto",
+    lastTripProgress: 1,
+    lastRecalled: false,
     initiatedBy: "auto",
     returnPending: false,
+    recallPending: false,
+    recallProgress: 0,
   };
 }
 
@@ -113,13 +120,13 @@ export function destinationById(id) {
   return TRAVEL_DESTINATIONS.find((destination) => destination.id === id) || null;
 }
 
-export function normalizeTravel(candidate, adoptedAt, now = Date.now(), seed = "capy") {
+export function normalizeTravel(candidate, adoptedAt, now = Date.now(), seed = "capy", options = {}) {
   const base = initialTravel(adoptedAt, seed);
   const hadTravel = Boolean(candidate && typeof candidate === "object");
   const travel = hadTravel ? {
     ...base,
     ...candidate,
-    version: 2,
+    version: 4,
     status: candidate.status === "away" && destinationById(candidate.destinationId) ? "away" : "home",
     destinationId: destinationById(candidate.destinationId) ? candidate.destinationId : null,
     departedAt: Math.max(0, Number(candidate.departedAt) || 0),
@@ -131,85 +138,100 @@ export function normalizeTravel(candidate, adoptedAt, now = Date.now(), seed = "
     lastRewardId: typeof candidate.lastRewardId === "string" ? candidate.lastRewardId : null,
     companionId: typeof candidate.companionId === "string" ? candidate.companionId : null,
     lastCompanionId: typeof candidate.lastCompanionId === "string" ? candidate.lastCompanionId : null,
+    companionChoice: ["auto", "chosen", "solo"].includes(candidate.companionChoice) ? candidate.companionChoice : "auto",
+    lastCompanionChoice: ["auto", "chosen", "solo"].includes(candidate.lastCompanionChoice) ? candidate.lastCompanionChoice : "auto",
+    lastTripProgress: candidate.lastTripProgress === undefined ? 1 : Math.max(0, Math.min(1, Number(candidate.lastTripProgress) || 0)),
+    lastRecalled: Boolean(candidate.lastRecalled),
     initiatedBy: candidate.initiatedBy === "player" ? "player" : "auto",
     returnPending: Boolean(candidate.returnPending),
+    recallPending: Boolean(candidate.recallPending),
+    recallProgress: Math.max(0, Math.min(1, Number(candidate.recallProgress) || 0)),
   } : base;
 
   if (travel.status === "away" && now >= travel.returnsAt) {
     const destination = destinationById(travel.destinationId);
+    const completedProgress = travel.recallPending ? travel.recallProgress : 1;
+    const countsAsTrip = !travel.recallPending || completedProgress >= 0.25;
     travel.status = "home";
-    travel.completedTrips += 1;
-    travel.visitedIds = [...new Set([...travel.visitedIds, travel.destinationId])].slice(-20);
+    if (countsAsTrip) travel.completedTrips += 1;
+    if (countsAsTrip) travel.visitedIds = [...new Set([...travel.visitedIds, travel.destinationId])].slice(-20);
     travel.lastReturnAt = travel.returnsAt;
     travel.lastDestinationId = travel.destinationId;
     travel.lastSouvenir = destination?.souvenir || "a warm memory";
-    travel.lastRewardId = travel.rewardId;
+    travel.lastRewardId = countsAsTrip ? travel.rewardId : null;
     travel.lastCompanionId = travel.companionId;
+    travel.lastCompanionChoice = travel.companionChoice;
+    travel.lastTripProgress = travel.recallPending ? travel.recallProgress : 1;
+    travel.lastRecalled = travel.recallPending;
     travel.destinationId = null;
     travel.rewardId = null;
     travel.companionId = null;
+    travel.companionChoice = "auto";
     travel.departedAt = 0;
     travel.nextDepartureAt = travel.returnsAt + homeDuration(travel.returnsAt, seed, travel.completedTrips);
     travel.returnsAt = 0;
     travel.returnPending = hadTravel;
+    travel.recallPending = false;
+    travel.recallProgress = 0;
   }
 
-  let loops = 0;
-  while (travel.status === "home" && now >= travel.nextDepartureAt && loops < 180) {
-    const departedAt = travel.nextDepartureAt;
-    const plan = tripPlan(departedAt, seed, travel.completedTrips);
-    const returnsAt = departedAt + plan.duration;
-    if (now < returnsAt) {
-      travel.status = "away";
-      travel.destinationId = plan.destination.id;
-      travel.departedAt = departedAt;
-      travel.returnsAt = returnsAt;
-      travel.rewardId = null;
-      travel.companionId = null;
-      travel.initiatedBy = "auto";
-      travel.returnPending = false;
-      break;
-    }
-    travel.completedTrips += 1;
-    travel.visitedIds = [...new Set([...travel.visitedIds, plan.destination.id])].slice(-20);
-    travel.lastReturnAt = returnsAt;
-    travel.lastDestinationId = plan.destination.id;
-    travel.lastSouvenir = plan.destination.souvenir;
-    travel.lastRewardId = null;
-    travel.lastCompanionId = null;
-    travel.nextDepartureAt = returnsAt + homeDuration(returnsAt, seed, travel.completedTrips);
-    loops += 1;
+  // A trip that was entirely missed while the app was closed starts on reopen
+  // instead of being silently fast-forwarded. This guarantees a visible away
+  // period and avoids replaying an arbitrary number of catch-up trips.
+  if (!options.suppressAutoDeparture && travel.status === "home" && !travel.returnPending && now >= travel.nextDepartureAt) {
+    const scheduledAt = travel.nextDepartureAt || now;
+    const scheduledPlan = tripPlan(scheduledAt, seed, travel.completedTrips, "auto");
+    const departedAt = now >= scheduledAt + scheduledPlan.duration ? now : scheduledAt;
+    const plan = departedAt === scheduledAt ? scheduledPlan : tripPlan(departedAt, seed, travel.completedTrips, "auto");
+    travel.status = "away";
+    travel.destinationId = plan.destination.id;
+    travel.departedAt = departedAt;
+    travel.returnsAt = departedAt + plan.duration;
+    travel.nextDepartureAt = 0;
+    travel.rewardId = null;
+    travel.companionId = null;
+    travel.companionChoice = "auto";
+    travel.initiatedBy = "auto";
+    travel.returnPending = false;
+    travel.recallPending = false;
+    travel.recallProgress = 0;
   }
-
-  if (hadTravel && loops > 0 && travel.status === "home") travel.returnPending = true;
-
-  if (loops >= 180 && now >= travel.nextDepartureAt) travel.nextDepartureAt = now + 3 * HOUR;
   return travel;
 }
 
-export function departNow(candidate, adoptedAt, now = Date.now(), seed = "capy") {
-  const travel = normalizeTravel(candidate, adoptedAt, now, seed);
-  if (isTraveling(travel, now)) return travel;
-  const plan = tripPlan(now, `${seed}:player`, travel.completedTrips);
+export function departNow(candidate, adoptedAt, now = Date.now(), seed = "capy", options = {}) {
+  const travel = normalizeTravel(candidate, adoptedAt, now, seed, { suppressAutoDeparture: true });
+  // A finished trip must be settled by the app before another departure can
+  // begin, otherwise its return, find and XP could be overwritten here.
+  if (travel.returnPending || isTraveling(travel, now)) return travel;
+  const plan = tripPlan(now, `${seed}:player`, travel.completedTrips, "player");
+  const hasCompanionChoice = options && typeof options === "object" && Object.hasOwn(options, "companionId");
+  const companionId = hasCompanionChoice && typeof options.companionId === "string" ? options.companionId : null;
+  const companionChoice = hasCompanionChoice ? (companionId ? "chosen" : "solo") : "auto";
   return {
     ...travel,
-    version: 2,
+    version: 4,
     status: "away",
     destinationId: plan.destination.id,
     departedAt: now,
     returnsAt: now + plan.duration,
     nextDepartureAt: 0,
     rewardId: null,
-    companionId: null,
+    companionId,
+    companionChoice,
     initiatedBy: "player",
     returnPending: false,
+    recallPending: false,
+    recallProgress: 0,
   };
 }
 
 export function recallTravel(candidate, adoptedAt, now = Date.now(), seed = "capy") {
   const travel = normalizeTravel(candidate, adoptedAt, now, seed);
   if (!isTraveling(travel, now)) return travel;
-  return normalizeTravel({ ...travel, returnsAt: now }, adoptedAt, now, seed);
+  const duration = Math.max(1, travel.returnsAt - travel.departedAt);
+  const progress = Math.max(0, Math.min(1, (now - travel.departedAt) / duration));
+  return normalizeTravel({ ...travel, returnsAt: now, recallPending: true, recallProgress: progress }, adoptedAt, now, seed, { suppressAutoDeparture: true });
 }
 
 export function isTraveling(travel, now = Date.now()) {

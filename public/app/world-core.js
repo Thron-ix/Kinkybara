@@ -10,25 +10,63 @@ export const WORLD_AREAS = Object.freeze({
 });
 
 export const ANIMAL_FRIENDS = Object.freeze({
-  chicken: { id: "chicken", label: "Hilda", icon: "H", phrase: "Hilda checks every corner of the Play Area. Nothing escapes her." },
-  rabbit: { id: "rabbit", label: "Fips", icon: "F", phrase: "Fips came over for a bounce. I am doing my best to keep up." },
-  duck: { id: "duck", label: "Lotte", icon: "L", phrase: "Lotte tells the loudest and friendliest stories in the whole pack." },
-  hedgehog: { id: "hedgehog", label: "Piek", icon: "P", phrase: "Piek is visiting today. Hugs require particularly careful consent." },
-  alpaca: { id: "alpaca", label: "Wolke", icon: "W", phrase: "Wolke and I are comparing fluffiness. It remains a draw." },
-  goose: { id: "goose", label: "Greta", icon: "G", phrase: "Greta walks through the Kennel Club with very important little steps." },
+  chicken: {
+    id: "chicken", label: "Hilda", species: "Chicken", icon: "H",
+    phrase: "Hilda checks every corner of the Play Area. Nothing escapes her.",
+    personality: "Sharp-eyed, brisk and cheerfully nosy.",
+    trait: { id: "keen_eye", label: "Keen eye", detail: "Spots extra discoveries, especially in the Play Area.", effects: { travel: { curiosity: 5, xp: 2 }, meadow: { curiosity: 2 }, garden: { curiosity: 7 } } },
+  },
+  rabbit: {
+    id: "rabbit", label: "Fips", species: "Rabbit", icon: "F",
+    phrase: "Fips came over for a bounce. I am doing my best to keep up.",
+    personality: "Restless, playful and always ready for one more lap.",
+    trait: { id: "second_wind", label: "Second wind", detail: "Keeps the pace up and turns exertion into more fun.", effects: { travel: { energy: 4, fun: 2 }, meadow: { energy: 3 }, garden: { fun: 7, energy: -3 } } },
+  },
+  duck: {
+    id: "duck", label: "Lotte", species: "Duck", icon: "L",
+    phrase: "Lotte tells the loudest and friendliest stories in the whole pack.",
+    personality: "Talkative, warm and incapable of letting a room stay quiet.",
+    trait: { id: "social_spark", label: "Social spark", detail: "Makes every outing feel more connected and lively.", effects: { travel: { social: 7, fun: 2 }, meadow: { fun: 6, social: 5 }, garden: { social: 4 } } },
+  },
+  hedgehog: {
+    id: "hedgehog", label: "Piek", species: "Hedgehog", icon: "P",
+    phrase: "Piek is visiting today. Hugs require particularly careful consent.",
+    personality: "Dry-witted, observant and wonderfully clear about boundaries.",
+    trait: { id: "soft_boundaries", label: "Soft boundaries", detail: "Keeps intense plans grounded, cleaner and less draining.", effects: { travel: { social: 4, energy: 3 }, meadow: { energy: 5, clean: 2 }, garden: { clean: 6 } } },
+  },
+  alpaca: {
+    id: "alpaca", label: "Wolke", species: "Alpaca", icon: "W",
+    phrase: "Wolke and I are comparing fluffiness. It remains a draw.",
+    personality: "Unhurried, cuddly and gifted at finding the soft landing.",
+    trait: { id: "soft_landing", label: "Soft landing", detail: "Takes the hard edge off hunger and exhaustion.", effects: { travel: { energy: 6, satiety: 3 }, meadow: { satiety: 7, fun: 2 }, garden: { energy: 7 } } },
+  },
+  goose: {
+    id: "goose", label: "Greta", species: "Goose", icon: "G",
+    phrase: "Greta walks through the Kennel Club with very important little steps.",
+    personality: "Bold, bossy and absolutely certain she knows the way.",
+    trait: { id: "bold_lead", label: "Bold lead", detail: "Finds bolder routes and brings a little extra experience home.", effects: { travel: { curiosity: 4, xp: 3 }, meadow: { fun: 4, xp: 2 }, garden: { curiosity: 4, xp: 3 } } },
+  },
 });
 
 const FRIEND_COPY_DE = Object.freeze({
-  chicken: "Hilda prüft jede Ecke in der Play Area. Ihr entgeht nichts.",
-  rabbit: "Fips ist zum Herumhüpfen vorbeigekommen. Ich versuche mitzuhalten.",
-  duck: "Lotte erzählt die lautesten und freundlichsten Geschichten im ganzen Pack.",
-  hedgehog: "Piek ist heute zu Besuch. Umarmungen brauchen besonders vorsichtigen Konsens.",
-  alpaca: "Wolke und ich vergleichen unsere Flauschigkeit. Es bleibt unentschieden.",
-  goose: "Greta läuft mit sehr wichtigen kleinen Schritten durch den Kennel Club.",
+  chicken: { species: "Huhn", phrase: "Hilda prüft jede Ecke in der Play Area. Ihr entgeht nichts.", personality: "Scharfäugig, flott und auf sehr charmante Weise neugierig.", traitLabel: "Scharfer Blick", traitDetail: "Entdeckt mehr, besonders in der Play Area." },
+  rabbit: { species: "Hase", phrase: "Fips ist zum Herumhüpfen vorbeigekommen. Ich versuche mitzuhalten.", personality: "Rastlos, verspielt und jederzeit bereit für eine Extrarunde.", traitLabel: "Zweite Luft", traitDetail: "Hält das Tempo hoch und macht aus Anstrengung mehr Spaß." },
+  duck: { species: "Ente", phrase: "Lotte erzählt die lautesten und freundlichsten Geschichten im ganzen Pack.", personality: "Redselig, herzlich und unfähig, einen Raum still zu lassen.", traitLabel: "Sozialer Funke", traitDetail: "Macht jeden Ausflug verbundener und lebendiger." },
+  hedgehog: { species: "Igel", phrase: "Piek ist heute zu Besuch. Umarmungen brauchen besonders vorsichtigen Konsens.", personality: "Trocken im Humor, aufmerksam und wunderbar klar bei Grenzen.", traitLabel: "Sanfte Grenzen", traitDetail: "Hält intensive Pläne geerdet, sauberer und weniger kräftezehrend." },
+  alpaca: { species: "Alpaka", phrase: "Wolke und ich vergleichen unsere Flauschigkeit. Es bleibt unentschieden.", personality: "Unaufgeregt, kuschelig und begabt darin, weich zu landen.", traitLabel: "Weiche Landung", traitDetail: "Nimmt Hunger und Erschöpfung die harte Kante." },
+  goose: { species: "Gans", phrase: "Greta läuft mit sehr wichtigen kleinen Schritten durch den Kennel Club.", personality: "Mutig, bossy und vollkommen sicher, den Weg zu kennen.", traitLabel: "Klare Führung", traitDetail: "Findet mutigere Wege und bringt etwas Extra-Erfahrung mit heim." },
 });
 
 export function localizedFriend(friend, language = "en") {
-  return friend && language === "de" ? { ...friend, phrase: FRIEND_COPY_DE[friend.id] || friend.phrase } : friend;
+  if (!friend || language !== "de") return friend;
+  const copy = FRIEND_COPY_DE[friend.id];
+  return copy ? {
+    ...friend,
+    species: copy.species,
+    phrase: copy.phrase,
+    personality: copy.personality,
+    trait: { ...friend.trait, label: copy.traitLabel, detail: copy.traitDetail },
+  } : friend;
 }
 
 export const CROPS = Object.freeze({
@@ -59,9 +97,50 @@ function nextMoveDelay(seed, at, visits) {
   return (3 + (seedNumber(`${seed}:move:${at}:${visits}`) % 6)) * MINUTE;
 }
 
+const FRIEND_MEETING_COOLDOWN = 2 * 60 * MINUTE;
+const FRIEND_ACTIVITY_TYPES = new Set(["travel", "meadow", "garden"]);
+
+function cleanOriginLabel(value) {
+  return Array.from(String(value || "").normalize("NFKC").replace(/[<>\u0000-\u001f]/g, "").trim()).slice(0, 64).join("");
+}
+
+function normalizeFriendOrigin(candidate, fallbackArea = null) {
+  const origin = candidate && typeof candidate === "object" ? candidate : {};
+  const kind = origin.kind === "travel" ? "travel" : origin.kind === "world" ? "world" : "unknown";
+  return {
+    kind,
+    area: WORLD_AREAS[origin.area] ? origin.area : (kind === "world" && WORLD_AREAS[fallbackArea] ? fallbackArea : null),
+    destinationId: kind === "travel" && typeof origin.destinationId === "string" ? cleanOriginLabel(origin.destinationId) : null,
+    label: cleanOriginLabel(origin.label),
+  };
+}
+
+function normalizeFriendRecord(candidate, legacyAt = 0, fallbackArea = null) {
+  const record = candidate && typeof candidate === "object" ? candidate : {};
+  const firstMetAt = Math.max(0, Number(record.firstMetAt) || Number(legacyAt) || 0);
+  const lastMetAt = Math.max(firstMetAt, Number(record.lastMetAt) || firstMetAt);
+  return {
+    firstMetAt,
+    lastMetAt,
+    meetings: Math.max(firstMetAt || lastMetAt ? 1 : 0, Math.floor(Number(record.meetings) || 0)),
+    origin: normalizeFriendOrigin(record.origin, fallbackArea),
+    tripsTogether: Math.max(0, Math.floor(Number(record.tripsTogether) || 0)),
+    sessionsTogether: {
+      meadow: Math.max(0, Math.floor(Number(record.sessionsTogether?.meadow) || 0)),
+      garden: Math.max(0, Math.floor(Number(record.sessionsTogether?.garden) || 0)),
+    },
+    lastTogetherAt: Math.max(0, Number(record.lastTogetherAt) || 0),
+  };
+}
+
+function friendRecordsFrom(candidate, metFriendIds, fallbackArea) {
+  const source = candidate?.friendRecords && typeof candidate.friendRecords === "object" ? candidate.friendRecords : {};
+  return Object.fromEntries(metFriendIds.map((id) => [id, normalizeFriendRecord(source[id], candidate?.friendMetAt?.[id], fallbackArea)]));
+}
+
 export function createWorld(now = Date.now(), area = "home", seed = "capy") {
   return {
-    version: 3,
+    version: 4,
     area: WORLD_AREAS[area] ? area : "home",
     movedAt: now,
     nextMoveAt: now + nextMoveDelay(seed, now, 0),
@@ -70,6 +149,7 @@ export function createWorld(now = Date.now(), area = "home", seed = "capy") {
     visits: 0,
     metFriendIds: [],
     friendMetAt: {},
+    friendRecords: {},
     activity: null,
     socialGlowUntil: 0,
     pineappleUntil: 0,
@@ -78,24 +158,31 @@ export function createWorld(now = Date.now(), area = "home", seed = "capy") {
 
 export function normalizeWorld(candidate, now = Date.now(), seed = "capy") {
   const base = createWorld(now, candidate?.area, seed);
+  const metFriendIds = [...new Set([
+    ...(Array.isArray(candidate?.metFriendIds) ? candidate.metFriendIds : []),
+    ...Object.keys(candidate?.friendMetAt && typeof candidate.friendMetAt === "object" ? candidate.friendMetAt : {}),
+    ...Object.keys(candidate?.friendRecords && typeof candidate.friendRecords === "object" ? candidate.friendRecords : {}),
+  ].filter((id) => ANIMAL_FRIENDS[id]))];
   const world = candidate && typeof candidate === "object" ? {
     ...base,
     ...candidate,
-    version: 3,
+    version: 4,
     area: WORLD_AREAS[candidate.area] ? candidate.area : "home",
     movedAt: Math.max(0, Number(candidate.movedAt) || now),
     nextMoveAt: Math.max(now - 24 * 60 * MINUTE, Number(candidate.nextMoveAt) || base.nextMoveAt),
     friendId: ANIMAL_FRIENDS[candidate.friendId] ? candidate.friendId : null,
     friendUntil: Math.max(0, Number(candidate.friendUntil) || 0),
     visits: Math.max(0, Number(candidate.visits) || 0),
-    metFriendIds: [...new Set(Array.isArray(candidate.metFriendIds) ? candidate.metFriendIds.filter((id) => ANIMAL_FRIENDS[id]) : [])],
-    friendMetAt: candidate.friendMetAt && typeof candidate.friendMetAt === "object" ? Object.fromEntries(Object.entries(candidate.friendMetAt).filter(([id]) => ANIMAL_FRIENDS[id])) : {},
+    metFriendIds,
+    friendMetAt: Object.fromEntries(metFriendIds.map((id) => [id, Math.max(0, Number(candidate.friendMetAt?.[id]) || Number(candidate.friendRecords?.[id]?.firstMetAt) || 0)])),
+    friendRecords: friendRecordsFrom(candidate, metFriendIds, candidate.area),
     activity: candidate.activity && ["meadow", "garden"].includes(candidate.activity.area)
       ? {
           area: candidate.activity.area,
           startedAt: Math.max(0, Number(candidate.activity.startedAt) || now),
           returnsAt: Math.max(now - 24 * 60 * MINUTE, Number(candidate.activity.returnsAt) || now),
           secretBonus: SECRET_BONUSES.has(candidate.activity.secretBonus) ? candidate.activity.secretBonus : null,
+          companionId: metFriendIds.includes(candidate.activity.companionId) && ANIMAL_FRIENDS[candidate.activity.companionId] ? candidate.activity.companionId : null,
         }
       : null,
     socialGlowUntil: Math.max(0, Number(candidate.socialGlowUntil) || 0),
@@ -140,14 +227,87 @@ export function selectWorldArea(candidate, area, now = Date.now(), seed = "capy"
   };
 }
 
-export function recordFriendMeeting(candidate, friendId, now = Date.now(), seed = "capy") {
+export function recordFriendMeeting(candidate, friendId, now = Date.now(), seed = "capy", context = {}) {
   const world = normalizeWorld(candidate, now, seed);
   if (!ANIMAL_FRIENDS[friendId]) return world;
+  const previous = world.friendRecords[friendId] || null;
+  const sameEncounter = Boolean(previous?.lastMetAt && now - previous.lastMetAt < FRIEND_MEETING_COOLDOWN);
+  const firstMetAt = previous?.firstMetAt || now;
+  const origin = previous?.origin?.kind && previous.origin.kind !== "unknown"
+    ? previous.origin
+    : normalizeFriendOrigin({
+        kind: context.kind === "travel" ? "travel" : "world",
+        area: context.area || world.area,
+        destinationId: context.destinationId,
+        label: context.label,
+      }, world.area);
+  const record = {
+    ...(previous || normalizeFriendRecord(null)),
+    firstMetAt,
+    lastMetAt: sameEncounter ? previous.lastMetAt : now,
+    meetings: Math.max(1, Number(previous?.meetings) || 0) + (previous && !sameEncounter ? 1 : 0),
+    origin,
+  };
   return {
     ...world,
     metFriendIds: [...new Set([...world.metFriendIds, friendId])],
-    friendMetAt: { ...world.friendMetAt, [friendId]: now },
+    friendMetAt: { ...world.friendMetAt, [friendId]: firstMetAt },
+    friendRecords: { ...world.friendRecords, [friendId]: record },
   };
+}
+
+export function recordFriendCompanionActivity(candidate, friendId, activity, now = Date.now(), seed = "capy") {
+  let world = normalizeWorld(candidate, now, seed);
+  if (!ANIMAL_FRIENDS[friendId] || !FRIEND_ACTIVITY_TYPES.has(activity) || !world.metFriendIds.includes(friendId)) return world;
+  const previous = world.friendRecords[friendId] || normalizeFriendRecord(null, world.friendMetAt[friendId]);
+  const record = {
+    ...previous,
+    tripsTogether: previous.tripsTogether + (activity === "travel" ? 1 : 0),
+    sessionsTogether: {
+      ...previous.sessionsTogether,
+      ...(activity === "meadow" ? { meadow: previous.sessionsTogether.meadow + 1 } : {}),
+      ...(activity === "garden" ? { garden: previous.sessionsTogether.garden + 1 } : {}),
+    },
+    lastTogetherAt: now,
+  };
+  world = { ...world, friendRecords: { ...world.friendRecords, [friendId]: record } };
+  return world;
+}
+
+function relationshipFor(record, language = "en") {
+  const score = Math.max(1, Number(record?.meetings) || 1)
+    + Math.max(0, Number(record?.tripsTogether) || 0) * 2
+    + Math.max(0, Number(record?.sessionsTogether?.meadow) || 0) * 2
+    + Math.max(0, Number(record?.sessionsTogether?.garden) || 0) * 2;
+  const tiers = language === "de"
+    ? [[10, "Herzensfreund"], [6, "Packfreund"], [3, "Vertrautes Gesicht"], [1, "Neue Bekanntschaft"]]
+    : [[10, "Close companion"], [6, "Pack mate"], [3, "Friendly regular"], [1, "New acquaintance"]];
+  const [threshold, label] = tiers.find(([minimum]) => score >= minimum) || tiers.at(-1);
+  return { score, tier: threshold, label };
+}
+
+export function friendBookEntry(candidate, friendId, language = "en", now = Date.now(), seed = "capy") {
+  const world = normalizeWorld(candidate, now, seed);
+  const friend = localizedFriend(ANIMAL_FRIENDS[friendId], language);
+  const met = Boolean(friend && world.metFriendIds.includes(friendId));
+  const record = met ? world.friendRecords[friendId] || normalizeFriendRecord(null, world.friendMetAt[friendId]) : null;
+  return friend ? { met, friend, record, relationship: met ? relationshipFor(record, language) : null } : null;
+}
+
+export function availableCompanions(candidate, language = "en", now = Date.now(), seed = "capy") {
+  const world = normalizeWorld(candidate, now, seed);
+  return world.metFriendIds
+    .map((friendId) => friendBookEntry(world, friendId, language, now, seed))
+    .filter((entry) => entry?.met);
+}
+
+export function companionActivityEffect(friendId, activity, progress = 1, language = "en") {
+  const friend = localizedFriend(ANIMAL_FRIENDS[friendId], language);
+  if (!friend || !FRIEND_ACTIVITY_TYPES.has(activity)) return null;
+  const scale = Math.max(0, Math.min(1, Number(progress) || 0));
+  const rawChanges = friend.trait.effects[activity] || {};
+  const changes = Object.fromEntries(Object.entries(rawChanges).map(([key, value]) => [key, Math.round(value * scale)]).filter(([, value]) => value !== 0));
+  return { friendId, activity, trait: friend.trait, changes };
 }
 
 export function prepareWorldActivity(candidate, preparation, now = Date.now(), seed = "capy") {
@@ -159,6 +319,7 @@ export function prepareWorldActivity(candidate, preparation, now = Date.now(), s
 export function startWorldActivity(candidate, area, now = Date.now(), seed = "capy", context = {}) {
   const world = normalizeWorld(candidate, now, seed);
   if (world.activity || !["meadow", "garden"].includes(area)) return { world, started: false };
+  const companionId = ANIMAL_FRIENDS[context.companionId] && world.metFriendIds.includes(context.companionId) ? context.companionId : null;
   const secretBonus = area === "garden" && world.pineappleUntil > now
     ? "pineapple"
     : area === "meadow" && Number(context.clean) >= 99.5 ? "spotless" : null;
@@ -170,7 +331,7 @@ export function startWorldActivity(candidate, area, now = Date.now(), seed = "ca
       movedAt: now,
       friendId: null,
       friendUntil: 0,
-      activity: { area, startedAt: now, returnsAt: now + 40 * MINUTE, secretBonus },
+      activity: { area, startedAt: now, returnsAt: now + 40 * MINUTE, secretBonus, companionId },
       nextMoveAt: Math.max(world.nextMoveAt, now + 45 * MINUTE),
       pineappleUntil: secretBonus === "pineapple" ? 0 : world.pineappleUntil,
     },
