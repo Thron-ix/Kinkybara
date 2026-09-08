@@ -808,10 +808,43 @@ function berlinSolarScene(now = Date.now()) {
 }
 
 function renderOutfit() {
+  const outfitKey = JSON.stringify(state.inventory.equipped);
+  if (elements.outfitLayer.dataset.equipmentKey === outfitKey
+    && elements.capy.querySelector(".fitted-gear-body")
+    && elements.capy.querySelector(".fitted-gear-face")) return;
+  elements.outfitLayer.dataset.equipmentKey = outfitKey;
   elements.outfitLayer.replaceChildren();
+  const gearLayers = Object.fromEntries(["body", "face"].map((name) => {
+    let layer = elements.capy.querySelector(`.fitted-gear-${name}`);
+    if (!layer) {
+      layer = document.createElement("span");
+      layer.className = `fitted-gear-layer fitted-gear-${name}`;
+      layer.setAttribute("aria-hidden", "true");
+      elements.capy.append(layer);
+    }
+    layer.replaceChildren();
+    return [name, layer];
+  }));
   for (const [slot, itemId] of Object.entries(state.inventory.equipped)) {
     const item = ITEM_DEFINITIONS[itemId];
     if (!item) continue;
+    if (item.wear) {
+      for (const fit of item.wear) {
+        const image = document.createElement("img");
+        image.className = "fitted-gear-piece";
+        image.src = item.asset;
+        image.alt = "";
+        image.draggable = false;
+        image.dataset.item = itemId;
+        image.dataset.slot = slot;
+        image.style.left = `${fit.x / CAPY_WIDTH * 100}%`;
+        image.style.top = `${fit.y / CAPY_HEIGHT * 100}%`;
+        image.style.width = `${fit.width / CAPY_WIDTH * 100}%`;
+        image.style.height = `${fit.height / CAPY_HEIGHT * 100}%`;
+        gearLayers[item.gearLayer || "body"].append(image);
+      }
+      continue;
+    }
     const piece = document.createElement("i");
     piece.className = "outfit-piece";
     piece.dataset.slot = slot;
@@ -1222,10 +1255,10 @@ function renderInventory(filter = inventoryFilter) {
   const equippedCount = Object.values(state.inventory.equipped).filter(Boolean).length;
   $("#inventory-summary").innerHTML = state.language === "de" ? `
     <div><strong>${completion.owned}/${completion.total}</strong><small>ENTDECKT</small></div>
-    <div><strong>${equippedCount}/5</strong><small>ANGEZOGEN</small></div>
+    <div><strong>${equippedCount}/${Object.keys(EQUIPMENT_SLOTS).length}</strong><small>ANGEZOGEN</small></div>
     <div><strong>${state.inventory.placedItemIds.length}</strong><small>PLATZIERT</small></div>` : `
     <div><strong>${completion.owned}/${completion.total}</strong><small>DISCOVERED</small></div>
-    <div><strong>${equippedCount}/5</strong><small>WORN</small></div>
+    <div><strong>${equippedCount}/${Object.keys(EQUIPMENT_SLOTS).length}</strong><small>WORN</small></div>
     <div><strong>${state.inventory.placedItemIds.length}</strong><small>PLACED</small></div>`;
   $$("button[data-filter]", $("#inventory-tabs")).forEach((button) => button.classList.toggle("is-active", button.dataset.filter === filter));
   const hint = $("#inventory-hint");

@@ -561,6 +561,14 @@ dialog::backdrop { background: rgb(32 26 23 / 58%); backdrop-filter: blur(2px); 
 .world-navigation > span.is-active { background: #dff0b7; color: var(--ink); opacity: 1; box-shadow: 2px 2px var(--ink); }
 
 .outfit-layer { position: absolute; z-index: 6; left: 50%; bottom: 0; width: 252px; height: 153px; transform: translateX(-50%); pointer-events: none; }
+.fitted-gear-layer { position: absolute; inset: 0; pointer-events: none; }
+.fitted-gear-body { z-index: 5; }
+.fitted-gear-face { z-index: 7; }
+.fitted-gear-piece { position: absolute; display: block; max-width: none; object-fit: fill; filter: none; image-rendering: auto; }
+.fitted-gear-piece[data-slot="harness"] { z-index: 1; }
+.fitted-gear-piece[data-slot="neck"] { z-index: 2; }
+.fitted-gear-piece[data-slot="paws"] { z-index: 3; }
+.fitted-gear-piece[data-slot="cuffs"] { z-index: 4; }
 .outfit-piece { position: absolute; display: grid; place-items: center; color: #fff8dd; font-style: normal; font-weight: 900; text-shadow: 2px 2px var(--ink); filter: drop-shadow(2px 2px 0 var(--ink)); }
 .outfit-piece[data-slot="head"] { right: 23px; top: 0; width: 65px; height: 32px; background: #8e4260; font-size: 13px; transform: rotate(3deg); }
 .outfit-piece[data-item="travel_hat"] { background: #7b5b37; clip-path: polygon(20% 0, 80% 0, 90% 60%, 100% 60%, 100% 82%, 0 82%, 0 60%, 10% 60%); }
@@ -836,6 +844,7 @@ dialog::backdrop { background: rgb(32 26 23 / 58%); backdrop-filter: blur(2px); 
 .pack-cards-button { width: 100%; min-height: 46px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 3px 10px; margin-top: 9px; padding: 7px 10px; border: 2px solid var(--ink); background: linear-gradient(105deg, var(--accent-primary), var(--accent-secondary)); color: #fff; box-shadow: 3px 3px var(--ink); text-align: left; }
 .pack-cards-button strong { font-size: 9px; letter-spacing: .06em; }.pack-cards-button b { grid-column: 2; grid-row: 1; font-size: 21px; }
 .pack-cards-intro { color: #5f505b; font: 500 11px/1.45 ui-rounded, system-ui, sans-serif; }
+.pack-cards-sheet:has(.pack-difficulty[hidden]) .pack-cards-intro { display: none; }
 .pack-cards-message { min-height: 38px; margin: 8px 0; padding: 9px; background: color-mix(in srgb, var(--accent-secondary) 22%, #fff); font-size: 11px; font-weight: 900; line-height: 1.35; text-align: center; }
 .pack-card-table { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .pack-card { min-width: 0; min-height: 292px; display: grid; grid-template-rows: 82px auto 1fr; overflow: hidden; border: 3px solid var(--ink); background: #fff; color: var(--ink); box-shadow: 4px 4px var(--ink); }
@@ -845,6 +854,38 @@ dialog::backdrop { background: rgb(32 26 23 / 58%); backdrop-filter: blur(2px); 
 .pack-card-stats { display: grid; align-content: stretch; }.pack-card-stats > * { min-height: 43px; display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 6px 7px; border: 0; border-bottom: 1px solid #d7cbd3; background: #fff; color: var(--ink); }.pack-card-stats button { cursor: pointer; }.pack-card-stats button:active { background: color-mix(in srgb, var(--accent-primary) 20%, #fff); }.pack-card-stats button:disabled { cursor: default; opacity: 1; }.pack-card-stats span { overflow: hidden; font-size: 10px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }.pack-card-stats strong { font-size: 14px; }.pack-card-stats .is-chosen { background: color-mix(in srgb, var(--accent-secondary) 34%, #fff); outline: 2px solid var(--ink); outline-offset: -2px; }
 .pack-card-back { grid-row: 1 / -1; display: grid; place-content: center; gap: 8px; padding: 14px; background: repeating-linear-gradient(45deg, #211923 0 12px, #33283a 12px 24px); color: #fff; text-align: center; }.pack-card-back strong { font-size: 16px; }.pack-card-back span { color: #f0d56c; font-size: 8px; font-weight: 900; letter-spacing: .12em; }
 .pack-card-next { margin-top: 14px; }
+/* Keep compared values level even when only one card has special-card copy. */
+@supports (grid-template-rows: subgrid) {
+  .pack-card-table { grid-template-rows: 82px auto auto; }
+  .pack-card-table > .pack-card { grid-row: 1 / span 3; grid-template-rows: subgrid; row-gap: 0; }
+  .pack-card-table > [data-owner="you"] { grid-column: 1; }
+  .pack-card-table > [data-owner="kinkybara"] { grid-column: 2; }
+}
+.pack-scoreboard { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.pack-scoreboard > span { display: grid; gap: 3px; padding: 5px; border: 2px solid transparent; font-size: 10px; text-align: center; }
+.pack-scoreboard b { font-size: 25px; line-height: 1; }
+.pack-scoreboard .pack-round-number { font-size: 10px; }
+.pack-round-number small { font-size: 8px; }
+.pack-scoreboard[data-winner="player"] [data-side="player"],
+.pack-scoreboard[data-winner="rival"] [data-side="rival"] { background: #fff1bd; color: #251c27; border-color: #fffaf1; }
+.pack-trick-result { min-height: 37px; display: grid; place-items: center; margin-bottom: 10px; padding: 7px; border: 2px solid #251c27; background: #eee5ed; color: #251c27; font-size: 12px; font-weight: 900; text-align: center; }
+.pack-trick-result[data-winner="player"] { background: #e3efc2; }
+.pack-trick-result[data-winner="rival"] { background: #f5d5bd; }
+.pack-trick-result[data-winner="tie"] { background: #eee5ed; }
+.pack-card-table { position: relative; }
+.pack-card-table[data-winner="player"] .pack-card[data-owner="you"],
+.pack-card-table[data-winner="rival"] .pack-card[data-owner="kinkybara"] { outline: 3px solid #786339; outline-offset: 2px; }
+.pack-trick-stack { position: absolute; z-index: 5; left: 50%; top: 23%; width: 60px; height: 82px; pointer-events: none; animation: collect-trick .85s ease-in-out both; --trick-direction: -1; }
+.pack-card-table[data-winner="rival"] .pack-trick-stack { --trick-direction: 1; }
+.pack-trick-stack i { position: absolute; inset: 0; border: 3px solid #251c27; border-radius: 5px; background: repeating-linear-gradient(45deg, #64476e 0 6px, #38293e 6px 12px); box-shadow: inset 0 0 0 4px #fff8e4, 3px 3px #251c27; }
+.pack-trick-stack i:first-child { transform: rotate(-12deg) translate(-7px, -4px); }
+@keyframes collect-trick {
+  0% { transform: translate(-50%, 20px) scale(.7); opacity: 0; }
+  20% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  75% { transform: translate(calc(-50% + var(--trick-direction) * 90px), -35px) rotate(calc(var(--trick-direction) * 14deg)); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--trick-direction) * 90px), -45px) scale(.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .pack-trick-stack { display: none; animation: none; } }
 .pack-cards-credit { margin: 12px 0 0 !important; color: #786a74; font: 500 8px/1.35 ui-rounded, system-ui, sans-serif !important; text-align: center; }
 
 .sprite-packCards { border: 3px solid var(--ink); background: linear-gradient(135deg, var(--accent-primary) 0 50%, var(--accent-secondary) 50%); box-shadow: 5px 5px 0 -2px #f6edf3, 5px 5px 0 0 var(--ink); }
@@ -873,12 +914,6 @@ dialog::backdrop { background: rgb(32 26 23 / 58%); backdrop-filter: blur(2px); 
 .outfit-piece[data-item="night_hood"]::after { background: var(--accent-primary); }
 .outfit-piece[data-item="prism_hood"]::before { background: var(--accent-secondary); }
 .outfit-piece[data-item="prism_hood"]::after { background: var(--accent-primary); }
-.outfit-piece[data-slot="eyes"] { right: 11px; top: 47px; width: 61px; height: 22px; border: 5px double var(--accent-secondary); border-radius: 14px; color: transparent; filter: drop-shadow(2px 2px 0 var(--ink)); }
-.outfit-piece[data-slot="neck"] { z-index: 1; right: 88px; top: 72px; width: 17px; height: 43px; border: 3px solid var(--ink); border-radius: 8px; background: var(--accent-secondary); color: transparent; transform: rotate(5deg); }
-.outfit-piece[data-slot="neck"]::after { content: ""; position: absolute; left: 50%; top: 29px; width: 12px; height: 12px; transform: translateX(-50%); border: 3px solid var(--ink); border-radius: 50%; background: var(--accent-primary); }
-.outfit-piece[data-slot="harness"] { left: 45px; top: 57px; width: 122px; height: 67px; border: 9px double var(--accent-primary); background: transparent; color: transparent; opacity: .96; }.outfit-piece[data-slot="harness"]::after { content: ""; position: absolute; inset: 42% -9px auto; height: 8px; background: var(--accent-secondary); transform: rotate(-5deg); }
-.outfit-piece[data-item="cross_harness"] { border-style: solid; transform: rotate(2deg); }.outfit-piece[data-item="reflective_harness"] { border-color: var(--accent-secondary); box-shadow: 0 0 8px var(--accent-secondary); }
-.outfit-piece[data-slot="paws"] { left: 69px; bottom: -4px; width: 118px; height: 20px; background: repeating-linear-gradient(90deg, var(--accent-secondary) 0 30px, transparent 30px 76px, var(--accent-secondary) 76px 108px, transparent 108px); color: transparent; }
 
 @media (max-width: 360px) {
   .pack-card { min-height: 268px; }
@@ -1249,21 +1284,16 @@ dialog.sheet[open] { animation: modal-in .18s steps(3, end); }
 .companion-picker > p { min-height: 30px; margin: 0; color: #41383e; font: 600 10px/1.4 ui-rounded, system-ui, sans-serif; }
 .inventory-card-icon[src*="gear-locker"], .inventory-card-icon[src*="friend-book"] { width: 68px; height: 68px; align-self: start; border: 0; background: transparent; }
 
-/* Slot artwork reads as gear even before the label is read. */
-.inventory-card-icon[data-slot], .locker-gear-icon[data-slot] { position: relative; overflow: visible; color: transparent; background: #f4edf1; }
-.locker-gear-icon { width: 44px; height: 44px; display: grid; place-items: center; border: 2px solid #251c27; }
-.inventory-card-icon[data-slot]::before, .inventory-card-icon[data-slot]::after,
-.locker-gear-icon[data-slot]::before, .locker-gear-icon[data-slot]::after { content: ""; position: absolute; box-sizing: border-box; }
-.inventory-card-icon[data-slot="hood"]::before, .locker-gear-icon[data-slot="hood"]::before { left: 9px; top: 9px; width: 25px; height: 27px; border: 3px solid #251c27; border-radius: 45% 48% 42% 44%; background: #1c1820; }
-.inventory-card-icon[data-slot="hood"]::after, .locker-gear-icon[data-slot="hood"]::after { left: 20px; top: 14px; width: 21px; height: 14px; border: 3px solid #251c27; border-radius: 50% 60% 60% 50%; background: #f7f1ee; transform: rotate(8deg); box-shadow: -11px -14px 0 -4px #f7f1ee; }
-.inventory-card-icon[data-slot="eyes"]::before, .locker-gear-icon[data-slot="eyes"]::before { left: 5px; top: 15px; width: 14px; height: 14px; border: 4px solid #302235; border-radius: 50%; box-shadow: 18px 0 0 -4px #f4edf1, 18px 0 0 0 #302235; }
-.inventory-card-icon[data-slot="eyes"]::after, .locker-gear-icon[data-slot="eyes"]::after { left: 17px; top: 20px; width: 10px; height: 4px; background: #302235; }
-.inventory-card-icon[data-slot="neck"]::before, .locker-gear-icon[data-slot="neck"]::before { left: 5px; top: 16px; width: 33px; height: 12px; border: 3px solid #251c27; border-radius: 7px; background: var(--accent-secondary); }
-.inventory-card-icon[data-slot="neck"]::after, .locker-gear-icon[data-slot="neck"]::after { left: 18px; top: 24px; width: 10px; height: 10px; border: 3px solid #251c27; border-radius: 50%; background: var(--accent-primary); }
-.inventory-card-icon[data-slot="harness"]::before, .locker-gear-icon[data-slot="harness"]::before { left: 18px; top: 3px; width: 9px; height: 37px; border: 2px solid #251c27; background: var(--accent-primary); transform: rotate(29deg); }
-.inventory-card-icon[data-slot="harness"]::after, .locker-gear-icon[data-slot="harness"]::after { left: 18px; top: 3px; width: 9px; height: 37px; border: 2px solid #251c27; background: var(--accent-secondary); transform: rotate(-29deg); }
-.inventory-card-icon[data-slot="paws"]::before, .locker-gear-icon[data-slot="paws"]::before { left: 5px; top: 18px; width: 14px; height: 17px; border: 3px solid #251c27; border-radius: 6px 6px 2px 2px; background: var(--accent-secondary); box-shadow: 20px 0 0 -3px var(--accent-secondary), 20px 0 0 0 #251c27; }
-.inventory-card-icon[data-slot="paws"]::after, .locker-gear-icon[data-slot="paws"]::after { left: 4px; top: 34px; width: 16px; height: 4px; background: #251c27; box-shadow: 20px 0 #251c27; }
+/* Real gear thumbnails share the exact worn artwork. */
+.inventory-card { grid-template-rows: 68px auto auto 36px; }
+.inventory-card-icon[data-slot], .locker-gear-icon[data-slot] { display: block; object-fit: contain; border: 0; background: transparent; image-rendering: auto; }
+.inventory-card-icon[data-slot] { width: 68px; height: 68px; }
+.locker-gear-icon { width: 64px; height: 64px; object-fit: contain; }
+.gear-locker-grid button { grid-template-columns: minmax(0, 1fr); grid-template-rows: 64px auto auto; justify-items: center; align-content: start; gap: 7px; text-align: center; }
+.gear-locker-grid button > .locker-gear-icon { grid-column: 1; grid-row: 1; }
+.gear-locker-grid button > strong { grid-column: 1; grid-row: 2; align-self: center; }
+.gear-locker-grid button > small { grid-column: 1; grid-row: 3; }
+.gear-locker-grid button > span.locker-gear-icon { width: 64px; height: 64px; }
 .auto-travel-status { display: grid; gap: 4px; margin: 10px 0; padding: 9px; border: 2px solid #251c27; background: #e8eddf; color: #251c27; }
 .auto-travel-status strong { font-size: 8px; }.auto-travel-status span { color: #51464d; font: 600 8px/1.4 ui-rounded, system-ui, sans-serif; }
 
@@ -1305,13 +1335,6 @@ dialog.sheet[open] { animation: modal-in .18s steps(3, end); }
   .gear-locker-grid button { min-height: 112px; }
 }
 
-/* Clearer silhouettes for non-hood accessories. */
-.outfit-piece[data-slot="eyes"] { right: 10px; top: 47px; width: 58px; height: 21px; border: 0; border-radius: 0; background: radial-gradient(circle at 25% 50%, transparent 0 8px, var(--accent-secondary) 8px 12px, transparent 12px), radial-gradient(circle at 75% 50%, transparent 0 8px, var(--accent-secondary) 8px 12px, transparent 12px); filter: drop-shadow(2px 2px 0 var(--ink)); }
-.outfit-piece[data-slot="eyes"]::after { content: ""; position: absolute; left: 22px; top: 8px; width: 14px; height: 4px; background: var(--accent-secondary); }
-.outfit-piece[data-slot="neck"] { z-index: 3; right: 60px; top: 91px; width: 56px; height: 14px; border: 3px solid var(--ink); border-radius: 8px; background: var(--accent-secondary); transform: rotate(-2deg); }
-.outfit-piece[data-slot="neck"]::after { left: 50%; top: 8px; width: 13px; height: 13px; background: var(--accent-primary); }
-.outfit-piece[data-slot="paws"] { left: 68px; bottom: -5px; width: 120px; height: 22px; border: 0; background: linear-gradient(90deg, var(--accent-secondary) 0 31px, transparent 31px 76px, var(--accent-secondary) 76px 112px, transparent 112px); filter: drop-shadow(2px 2px 0 var(--ink)); }
-.outfit-piece[data-slot="paws"]::after { content: ""; position: absolute; left: 0; right: 8px; bottom: -3px; height: 5px; background: linear-gradient(90deg, var(--ink) 0 31px, transparent 31px 76px, var(--ink) 76px 112px, transparent 112px); }
 
 @media (max-width: 360px) {
   .gear-locker-grid, .friend-book-grid { grid-template-columns: 1fr; }

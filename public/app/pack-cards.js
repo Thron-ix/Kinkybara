@@ -163,12 +163,20 @@ export function startPackCards({ stage, status, message, language = "en", seed =
   const rivals = PACK_CARD_RIVALS.map((profile) => ({ ...profile, wins: 0, deck: shuffledDeck(`${seed}:${profile.id}`) }));
   const targetWins = Math.floor(mode.rounds / 2) + 1;
   let round = 0; let playerWins = 0; let previousStat = null; let rivalCursor = seedNumber(`${seed}:first-rival`) % rivals.length; let stopped = false;
+  const stop = () => {
+    stopped = true;
+    status.classList.remove("pack-scoreboard");
+    delete status.dataset.winner;
+    stage.querySelector(".pack-trick-stack")?.remove();
+  };
   const totalRivalWins = () => rivals.reduce((sum, rival) => sum + rival.wins, 0);
-  const updateStatus = () => {
+  const updateStatus = (winner = null) => {
     const matchPointThreshold = targetWins - 1;
     const rivalWins = totalRivalWins();
     const matchPoint = playerWins >= matchPointThreshold || rivalWins >= matchPointThreshold;
-    status.textContent = `${Math.min(round + 1, mode.rounds)}/${mode.rounds} · ${labels.you} ${playerWins} · PACK ${rivalWins}${matchPoint ? ` · ${labels.matchPoint}` : ""}`;
+    status.classList.add("pack-scoreboard");
+    status.dataset.winner = winner || "";
+    status.innerHTML = `<span data-side="player">${labels.you}<b>${playerWins}</b></span><span class="pack-round-number">${lang === "de" ? "RUNDE" : "ROUND"} ${Math.min(round + 1, mode.rounds)}/${mode.rounds}${matchPoint ? `<small>${labels.matchPoint}</small>` : ""}</span><span data-side="rival">PACK<b>${rivalWins}</b></span>`;
   };
   const renderRound = () => {
     if (stopped) return;
@@ -178,6 +186,8 @@ export function startPackCards({ stage, status, message, language = "en", seed =
     const roundRule = packCardRuleForRound(seed, round, mode.id);
     const rivalCards = Array.from({ length: mode.rivalChoices }, (_, offset) => activeRival.deck[(round * mode.rivalChoices + offset) % activeRival.deck.length]);
     const cards = document.createElement("div"); cards.className = "pack-card-table";
+    const outcome = document.createElement("div"); outcome.className = "pack-trick-result";
+    outcome.textContent = `${labels.you} ↔ ${activeRival.name}`;
     const playerView = cardView(playerCard, "you", labels, lang, mode); let rivalView = cardView(rivalCards[0], "kinkybara", labels, lang, mode, true, mode.rivalChoices, activeRival.name);
     const ruleCopy = PACK_CARD_RULES[roundRule][lang];
     const repeatHint = previousStat && mode.repeatPenalty ? ` · ${labels[previousStat]} ${labels.repeat}: −${mode.repeatPenalty}` : "";
@@ -202,18 +212,35 @@ export function startPackCards({ stage, status, message, language = "en", seed =
       message.textContent = `${baseMessage} · ${result.playerValue}:${result.rivalValue} · ${rules.join(" · ")}`;
       previousStat = button.dataset.stat;
       if (!result.reversed) rivalCursor = (rivalCursor + 1) % rivals.length;
-      updateStatus();
+      updateStatus(result.winner);
+      cards.dataset.winner = result.winner;
+      outcome.dataset.winner = result.winner;
+      outcome.textContent = result.winner === "player"
+        ? `← ${lang === "de" ? "DEIN STICH" : "YOUR TRICK"} · +${result.points}`
+        : result.winner === "rival" ? `${activeRival.name} · +${result.points} →`
+          : lang === "de" ? "GLEICHSTAND · KEIN PUNKT" : "TIE · NO POINT";
+      // The score is settled immediately. Animation is only feedback, never a
+      // gate on play, and removing the round also removes its animation.
+      if (result.winner !== "tie") {
+        const trick = document.createElement("div"); trick.className = "pack-trick-stack";
+        trick.setAttribute("aria-hidden", "true");
+        trick.append(document.createElement("i"), document.createElement("i"));
+        cards.append(trick);
+        trick.addEventListener("animationend", () => trick.remove(), { once: true });
+      }
       const rivalWins = totalRivalWins();
       const decisive = playerWins >= targetWins || rivalWins >= targetWins;
       const next = document.createElement("button"); next.type = "button"; next.className = "primary-button pack-card-next"; next.textContent = decisive || round === mode.rounds - 1 ? labels.draw : labels.next;
       next.addEventListener("click", () => {
         if (stopped) return;
-        if (decisive || round === mode.rounds - 1) { stopped = true; onFinish({ playerWins, rivalPackWins: rivalWins, rivals: rivals.map(({ id, name, wins }) => ({ id, name, wins })), difficulty: mode.id, roundsPlayed: round + 1, score: Math.min(100, Math.max(20, 50 + (playerWins - rivalWins) * 12)), xp: mode.xp }); }
+        if (decisive || round === mode.rounds - 1) { stop(); onFinish({ playerWins, rivalPackWins: rivalWins, rivals: rivals.map(({ id, name, wins }) => ({ id, name, wins })), difficulty: mode.id, roundsPlayed: round + 1, score: Math.min(100, Math.max(20, 50 + (playerWins - rivalWins) * 12)), xp: mode.xp }); }
         else { round += 1; renderRound(); }
-      }, { once: true }); stage.append(next); next.focus();
+      }, { once: true }); stage.append(next); next.focus({ preventScroll: true });
     }, { once: true }));
-    stage.append(cards);
-    window.requestAnimationFrame(() => playerView.querySelector("button[data-stat]")?.focus());
+    stage.append(outcome, cards);
+    window.requestAnimationFrame(() => {
+      if (!stopped && playerView.isConnected) playerView.querySelector("button[data-stat]")?.focus({ preventScroll: true });
+    });
   };
-  renderRound(); return () => { stopped = true; };
+  renderRound(); return stop;
 }

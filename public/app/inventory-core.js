@@ -1,24 +1,29 @@
+import { GEAR_ART } from "./gear-art.js";
+
 export const EQUIPMENT_SLOTS = Object.freeze({
   hood: "HOOD",
   eyes: "EYES",
   neck: "NECK",
   harness: "HARNESS",
   paws: "PAWS",
+  cuffs: "CUFFS",
 });
 
 export const ITEM_DEFINITIONS = Object.freeze({
-  signature_hood: { id: "signature_hood", type: "wearable", slot: "hood", label: "Signature pup hood", icon: "▰", detail: "The hood that started it all: soft ears, open snout, your colors." },
-  night_hood: { id: "night_hood", type: "wearable", slot: "hood", label: "Night hood", icon: "◆", detail: "Dark all over, with bright ears after midnight." },
-  prism_hood: { id: "prism_hood", type: "wearable", slot: "hood", label: "Prism hood", icon: "◇", detail: "Made for club lights." },
-  round_glasses: { id: "round_glasses", type: "wearable", slot: "eyes", label: "Round glasses", icon: "◎", detail: "For a quiet look across the lounge." },
-  neon_visors: { id: "neon_visors", type: "wearable", slot: "eyes", label: "Neon visors", icon: "═", detail: "Two bright lines for long nights." },
-  soft_collar: { id: "soft_collar", type: "wearable", slot: "neck", label: "Soft collar", icon: "○", detail: "Soft to touch. Clear in its message." },
-  pack_bandana: { id: "pack_bandana", type: "wearable", slot: "neck", label: "Pack bandana", icon: "▽", detail: "Quiet signal. The pack gets it." },
-  soft_harness: { id: "soft_harness", type: "wearable", slot: "harness", label: "Signature harness", icon: "H", detail: "Your colors. Your rules." },
-  cross_harness: { id: "cross_harness", type: "wearable", slot: "harness", label: "Cross harness", icon: "X", detail: "Clean straps. Strong look." },
-  reflective_harness: { id: "reflective_harness", type: "wearable", slot: "harness", label: "Reflective harness", icon: "H", detail: "Catches the light when the room goes dark." },
-  paw_warmers: { id: "paw_warmers", type: "wearable", slot: "paws", label: "Paw warmers", icon: "∥", detail: "Warm paws, dressed in your second color." },
-  sturdy_boots: { id: "sturdy_boots", type: "wearable", slot: "paws", label: "Sturdy boots", icon: "▰", detail: "For concrete floors and long nights." },
+  signature_hood: { id: "signature_hood", type: "wearable", slot: "hood", label: "Signature pup hood", icon: "▰", asset: "./assets/pup-hood-base.png", detail: "The hood that started it all: soft ears, open snout, your colors." },
+  night_hood: { id: "night_hood", type: "wearable", slot: "hood", label: "Night hood", icon: "◆", asset: "./assets/pup-hood-base.png", detail: "Dark all over, with bright ears after midnight." },
+  prism_hood: { id: "prism_hood", type: "wearable", slot: "hood", label: "Prism hood", icon: "◇", asset: "./assets/pup-hood-base.png", detail: "Made for club lights." },
+  round_glasses: { id: "round_glasses", type: "wearable", slot: "eyes", label: "Round glasses", icon: "◎", ...GEAR_ART.round_glasses, detail: "For a quiet look across the lounge." },
+  neon_visors: { id: "neon_visors", type: "wearable", slot: "eyes", label: "Neon visor", icon: "═", ...GEAR_ART.neon_visors, detail: "A little neon for a long night." },
+  soft_collar: { id: "soft_collar", type: "wearable", slot: "neck", label: "Soft collar", icon: "○", ...GEAR_ART.soft_collar, detail: "Soft leather. One very shiny ring." },
+  pack_bandana: { id: "pack_bandana", type: "wearable", slot: "neck", label: "Pack bandana", icon: "▽", ...GEAR_ART.pack_bandana, detail: "Quiet signal. The pack gets it." },
+  soft_harness: { id: "soft_harness", type: "wearable", slot: "harness", label: "Signature harness", icon: "H", ...GEAR_ART.soft_harness, detail: "Soft leather, silver rings. Fits just right." },
+  cross_harness: { id: "cross_harness", type: "wearable", slot: "harness", label: "Cross harness", icon: "X", ...GEAR_ART.cross_harness, detail: "Crossed straps and a ring worth a second look." },
+  reflective_harness: { id: "reflective_harness", type: "wearable", slot: "harness", label: "Reflective harness", icon: "H", ...GEAR_ART.reflective_harness, detail: "Catches the light when the room goes dark." },
+  paw_warmers: { id: "paw_warmers", type: "wearable", slot: "paws", label: "Paw warmers", icon: "∥", ...GEAR_ART.paw_warmers, detail: "Warm paws. Ridiculously soft." },
+  sturdy_boots: { id: "sturdy_boots", type: "wearable", slot: "paws", label: "Sturdy boots", icon: "▰", ...GEAR_ART.sturdy_boots, detail: "For concrete floors and long nights." },
+  ankle_cuffs: { id: "ankle_cuffs", type: "wearable", slot: "cuffs", label: "Ankle cuffs", icon: "○", ...GEAR_ART.ankle_cuffs, detail: "Padded leather around the ankles. A little jingle with every step." },
+  thigh_cuffs: { id: "thigh_cuffs", type: "wearable", slot: "cuffs", label: "Thigh cuffs", icon: "○", ...GEAR_ART.thigh_cuffs, detail: "A pair of snug straps, worn a little higher." },
   card_table: { id: "card_table", type: "placeable", area: "wintergarden", label: "Pack Cards table", icon: "▦", asset: "./assets/pack-cards-joker.png", detail: "Roxy and Jinx are always up for one more round." },
   karaoke_mic: { id: "karaoke_mic", type: "placeable", area: "wintergarden", label: "Karaoke mic", icon: "♪", detail: "For solos, duets and questionable encores." },
   juice_bar: { id: "juice_bar", type: "placeable", area: "wintergarden", label: "Juice bar", icon: "▥", detail: "Orange, pineapple, enough for the pack." },
@@ -36,14 +41,16 @@ const ITEM_COPY_DE = Object.freeze({
   night_hood: ["Nacht-Hood", "Dunkel rundum, mit hellen Ohren nach Mitternacht."],
   prism_hood: ["Prisma-Hood", "Gemacht fürs Clublicht."],
   round_glasses: ["Runde Brille", "Für den stillen Blick durch die Lounge."],
-  neon_visors: ["Neon-Visier", "Zwei helle Linien für lange Nächte."],
-  soft_collar: ["Weiches Halsband", "Weich im Griff. Klar in der Ansage."],
+  neon_visors: ["Neon-Visier", "Ein bisschen Neon für eine lange Nacht."],
+  soft_collar: ["Weiches Halsband", "Weiches Leder. Ein ziemlich glänzender Ring."],
   pack_bandana: ["Pack-Bandana", "Stilles Zeichen. Das Pack versteht es."],
-  soft_harness: ["Signatur-Harness", "Deine Farben. Deine Regeln."],
-  cross_harness: ["Kreuz-Harness", "Klare Riemen. Starker Look."],
+  soft_harness: ["Signatur-Harness", "Weiches Leder, silberne Ringe. Sitzt genau richtig."],
+  cross_harness: ["Kreuz-Harness", "Gekreuzte Riemen und ein Ring, der Blicke fängt."],
   reflective_harness: ["Reflektor-Harness", "Fängt das Licht, wenn der Raum dunkel wird."],
-  paw_warmers: ["Pfotenwärmer", "Warme Pfoten in deiner zweiten Farbe."],
+  paw_warmers: ["Pfotenwärmer", "Warme Pfoten. Unverschämt weich."],
   sturdy_boots: ["Feste Boots", "Für Betonböden und lange Nächte."],
+  ankle_cuffs: ["Knöchel-Cuffs", "Gepolstertes Leder an den Knöcheln. Klimpert bei jedem Schritt."],
+  thigh_cuffs: ["Oberschenkel-Cuffs", "Zwei weiche Riemen, ein Stück höher getragen."],
   card_table: ["Pack-Cards-Tisch", "Roxy und Jinx sind immer für eine Revanche zu haben."],
   karaoke_mic: ["Karaoke-Mikro", "Für Soli, Duette und fragwürdige Zugaben."],
   juice_bar: ["Saftbar", "Orange, Ananas, genug fürs Pack."],
@@ -56,7 +63,7 @@ const ITEM_COPY_DE = Object.freeze({
   memory_camera: ["Erinnerungskamera", "Hält den Moment hier fest – nur für dich."],
 });
 
-const SLOT_COPY_DE = Object.freeze({ hood: "HOOD", eyes: "AUGEN", neck: "HALS", harness: "HARNESS", paws: "PFOTEN" });
+const SLOT_COPY_DE = Object.freeze({ hood: "HOOD", eyes: "AUGEN", neck: "HALS", harness: "HARNESS", paws: "PFOTEN", cuffs: "CUFFS" });
 
 export function localizedItem(item, language = "en") {
   if (!item || language !== "de") return item;
@@ -70,8 +77,8 @@ export function localizedSlot(slot, language = "en") {
 
 export const DESTINATION_REWARDS = Object.freeze({
   folsom: ["signature_hood", "soft_collar", "friend_book"],
-  laboratory: ["night_hood", "reflective_harness", "neon_lamp"],
-  berghain: ["neon_visors", "cross_harness", "tiny_speaker"],
+  laboratory: ["night_hood", "reflective_harness", "neon_lamp", "thigh_cuffs"],
+  berghain: ["neon_visors", "cross_harness", "tiny_speaker", "ankle_cuffs"],
   ruhr_pack: ["sturdy_boots", "kennel_sign", "memory_camera"],
   mannheim: ["pack_bandana", "karaoke_mic", "juice_bar", "friend_book"],
   csd_berlin: ["prism_hood", "card_table", "memory_camera"],
@@ -92,7 +99,7 @@ export function createInventory() {
   return {
     version: 1,
     ownedItemIds: [...STARTER_ITEMS],
-    equipped: { hood: "signature_hood", eyes: null, neck: null, harness: null, paws: null },
+    equipped: { hood: "signature_hood", eyes: null, neck: null, harness: null, paws: null, cuffs: null },
     placedItemIds: ["card_table"],
     discoveredAt: {},
   };
@@ -106,9 +113,6 @@ export function normalizeInventory(candidate) {
     && !previousOwnedItemIds.includes("signature_hood")
     && candidate.equipped?.harness === "soft_harness"
     && !candidate.equipped?.hood;
-  const automaticStarterCollar = candidate.equipped?.hood === "signature_hood"
-    && candidate.equipped?.neck === "soft_collar"
-    && !candidate.equipped?.harness;
   const ownedItemIds = uniqueKnown([...STARTER_ITEMS, ...(candidate.ownedItemIds || [])]);
   const hasExplicitEquipment = candidate.equipped && typeof candidate.equipped === "object";
   const equipped = hasExplicitEquipment
@@ -123,7 +127,6 @@ export function normalizeInventory(candidate) {
     equipped.neck = null;
     equipped.harness = null;
   }
-  if (automaticStarterCollar) equipped.neck = null;
   const placedItemIds = uniqueKnown(candidate.placedItemIds)
     .filter((id) => ownedItemIds.includes(id) && ITEM_DEFINITIONS[id].type === "placeable");
   return {
