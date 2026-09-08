@@ -396,8 +396,11 @@
     </dialog>
 
     <dialog class="sheet story-sheet" id="story-dialog" aria-labelledby="story-title">
-      <div class="sheet-title"><div><p class="sheet-kicker">STORY · 9:16</p><h2 id="story-title" data-i18n="story.title">Made for your Story</h2></div><button type="button" data-close data-i18n-aria="common.close" aria-label="Close">×</button></div>
-      <p class="story-hint" data-i18n="story.hint">Save the image or take a screenshot. The space below is yours for text and stickers.</p>
+      <div class="sheet-title"><div><p class="sheet-kicker">STORY · 9:16</p><h2 id="story-title" data-i18n="story.title">Story Studio</h2></div><button type="button" data-close data-i18n-aria="common.close" aria-label="Close">×</button></div>
+      <div class="story-options">
+        <div class="story-looks" role="group" data-i18n-aria="story.look" aria-label="Look"><button type="button" data-story-look="studio" aria-pressed="true">STUDIO</button><button type="button" data-story-look="neon" aria-pressed="false">NEON</button><button type="button" data-story-look="print" aria-pressed="false">PRINT</button></div>
+        <label class="story-mirror"><input id="story-mirror" type="checkbox" /><span data-i18n="story.mirror">MIRROR</span></label>
+      </div>
       <canvas id="story-canvas" width="1080" height="1920" role="img" data-i18n-aria="story.image" aria-label="Your Kinkybara in its current outfit, with space below for Story text" hidden></canvas>
       <p id="story-status" class="story-status" role="status"></p>
       <div class="story-actions">

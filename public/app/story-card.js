@@ -3,6 +3,14 @@ import { GEAR_ART, tintedGearSource } from "./gear-art.js";
 import { t } from "./i18n.js";
 
 export const STORY_SIZE = Object.freeze({ width: 1080, height: 1920 });
+export const STORY_LOOKS = Object.freeze({
+  studio: { background: "#19181d", foreground: "#f3eee5", panel: "#26242c", muted: "#b5adb8" },
+  neon: { background: "#161525", foreground: "#f8f0ff", panel: "#242038", muted: "#bfb2d0" },
+  print: { background: "#eee7dc", foreground: "#24212a", panel: "#ded5c8", muted: "#645963" },
+});
+export function normalizeStoryOptions(value) {
+  return { look: Object.hasOwn(STORY_LOOKS, value?.look) ? value.look : "studio", mirrored: value?.mirrored === true };
+}
 const HOOD_ASSETS = ["base", "primary-mask", "secondary-mask"].map((name) => `./assets/pup-hood-${name}.png`);
 
 // Capture appearance only, never needs, travel history, friends or the save itself.
@@ -88,7 +96,9 @@ function text(ctx, value, x, y, size, color, maxWidth = 880) {
 
 // One local PNG is both the preview and the export. No DOM serialization,
 // third-party renderer, remote font, upload or platform account is needed.
-export async function renderStoryCard(canvas, appearance) {
+export async function renderStoryCard(canvas, appearance, options = {}) {
+  const { look, mirrored } = normalizeStoryOptions(options);
+  const theme = STORY_LOOKS[look];
   const paths = storyAssetPaths(appearance);
   const loaded = await Promise.all(paths.map(loadImage));
   const images = Object.fromEntries(paths.map((path, index) => [path, loaded[index]]));
@@ -100,43 +110,56 @@ export async function renderStoryCard(canvas, appearance) {
   canvas.height = STORY_SIZE.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas unavailable");
-  const ink = "#251c27";
-  const cream = "#fff6e5";
   const rect = (x, y, w, h, color) => { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); };
+  rect(0, 0, 1080, 1920, theme.background);
+  rect(76, 135, 42, 8, appearance.primary);
+  rect(126, 135, 42, 8, appearance.secondary);
+  text(ctx, t(appearance.language, "story.eyebrow"), 76, 211, 39, theme.foreground);
+  text(ctx, appearance.name, 70, 350, 138, theme.foreground, 932);
+  rect(76, 390, 928, 2, theme.muted);
 
-  rect(0, 0, 1080, 1920, cream);
-  rect(0, 0, 1080, 1110, "#343849");
-  rect(0, 0, 1080, 26, appearance.primary);
-  rect(540, 0, 540, 26, appearance.secondary);
-  text(ctx, t(appearance.language, "story.eyebrow"), 84, 227, 34, cream);
-  text(ctx, appearance.name, 78, 360, 132, cream, 920);
-  rect(84, 403, 58, 12, appearance.primary);
-  rect(150, 403, 58, 12, appearance.secondary);
-
-  // Pixel sun and quiet hills echo the world without carrying its controls over.
-  rect(823, 477, 126, 150, "#f2cb6d");
-  rect(799, 501, 174, 102, "#f2cb6d");
-  rect(823, 501, 102, 78, "#ffde85");
-  for (const [x, y] of [[99, 559], [234, 485], [721, 428]]) {
-    rect(x, y + 9, 30, 10, cream);
-    rect(x + 10, y, 10, 30, cream);
+  if (look === "print") {
+    // Two offset screen-print slabs; deliberately chunky rather than scenery.
+    rect(112, 492, 798, 563, theme.foreground);
+    rect(148, 456, 798, 563, appearance.primary);
+    rect(148, 456, 798, 12, theme.foreground);
+    rect(934, 456, 12, 563, theme.foreground);
+    ctx.save(); ctx.globalAlpha = .25;
+    for (let y = 488; y < 1010; y += 24) for (let x = 176; x < 930; x += 24) rect(x, y, 4, 4, theme.foreground);
+    ctx.restore();
+  } else {
+    const halo = ctx.createRadialGradient(620, 805, 25, 620, 805, 510);
+    halo.addColorStop(0, look === "neon" ? "#695779" : "#51464b");
+    halo.addColorStop(.58, theme.panel);
+    halo.addColorStop(1, theme.background);
+    ctx.fillStyle = halo; ctx.fillRect(0, 420, 1080, 760);
+    ctx.save();
+    ctx.strokeStyle = look === "neon" ? appearance.primary : "#77717d";
+    ctx.lineWidth = look === "neon" ? 7 : 2;
+    if (look === "neon") { ctx.shadowBlur = 28; ctx.shadowColor = appearance.primary; }
+    ctx.strokeRect(117, 496, 846, 552);
+    ctx.restore();
+    if (look === "neon") {
+      ctx.save(); ctx.globalAlpha = .15;
+      for (let y = 474; y < 1090; y += 28) rect(76, y, 928, 2, theme.foreground);
+      ctx.restore();
+      rect(965, 684, 11, 190, appearance.secondary);
+    }
   }
-  ctx.fillStyle = "#718b69";
-  ctx.beginPath(); ctx.ellipse(123, 974, 460, 251, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#587b61";
-  ctx.beginPath(); ctx.ellipse(1070, 985, 512, 284, 0, 0, Math.PI * 2); ctx.fill();
-  rect(0, 1002, 1080, 108, "#52644a");
-  ctx.fillStyle = "#40573e";
-  ctx.beginPath(); ctx.ellipse(540, 1030, 414, 34, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = look === "print" ? "#c3baad" : "#100f15";
+  ctx.beginPath(); ctx.ellipse(540, 1118, 420, 31, 0, 0, Math.PI * 2); ctx.fill();
 
   ctx.save();
-  ctx.translate(130, 563);
-  ctx.scale(14, 14);
+  ctx.translate(mirrored ? 950 : 130, 650);
+  ctx.scale(mirrored ? -14 : 14, 14);
   const drawGear = (layer) => {
     for (const id of appearance.gear) {
       const art = GEAR_ART[id];
       if ((art.gearLayer || "body") !== layer) continue;
+      ctx.save();
+      ctx.imageSmoothingEnabled = !["soft_collar", "sturdy_boots", "sport_socks", "signature_socks"].includes(id);
       for (const fit of art.wear) ctx.drawImage(gearImages[id], fit.x, fit.y, fit.width, fit.height);
+      ctx.restore();
     }
   };
   drawGear("back");
@@ -165,13 +188,13 @@ export async function renderStoryCard(canvas, appearance) {
   }
   drawGear("face");
   ctx.restore();
-  rect(0, 1110, 1080, 810, cream);
-  rect(0, 1094, 1080, 16, "#789463");
-  // Intentionally empty: y=1110…1640 is reserved for the owner's Story text.
-  text(ctx, "KINKYBARA", 84, 1710, 62, ink);
-  text(ctx, "thron-ix.github.io/Kinkybara", 84, 1760, 28, ink);
-  rect(84, 1791, 56, 10, appearance.primary);
-  rect(148, 1791, 56, 10, appearance.secondary);
+  // No prompts or decorations in the editing space: y=1180…1610 stays clear.
+  rect(0, 1180, 1080, 740, theme.background);
+  rect(76, 1660, 928, 2, theme.muted);
+  text(ctx, "KINKYBARA", 76, 1730, 47, theme.foreground);
+  text(ctx, "thron-ix.github.io/Kinkybara", 76, 1780, 28, theme.muted);
+  rect(908, 1698, 42, 16, appearance.primary);
+  rect(962, 1698, 42, 16, appearance.secondary);
   return new Promise((resolve, reject) => canvas.toBlob((blob) => {
     if (blob) resolve(blob);
     else reject(new Error("Story export unavailable"));

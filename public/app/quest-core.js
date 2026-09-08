@@ -21,7 +21,7 @@ export const QUEST_DEFINITIONS = Object.freeze({
     title: "Capy-Merkspiel",
     short: "Ein richtiges Brettspiel für zwei schlaue Köpfe.",
     intro: "Brettspielzeit! Ich merke mir die Snacks, du die Wege – Deal?",
-    instruction: "Finde alle sechs Paare mit möglichst wenigen Zügen.",
+    instruction: "Finde alle Paare mit möglichst wenigen Zügen.",
     reward: { xp: 20, fun: 10, curiosity: 5, social: 4 },
   },
   "coffee-perfect": {
@@ -43,7 +43,7 @@ export const QUEST_DEFINITIONS = Object.freeze({
     title: "Das zwiebelfreie Grillfest",
     short: "Grillt Lieblingssnacks – aber keine einzige Zwiebel.",
     intro: "Grillabend! Aber bitte pass auf: Zwiebeln finde ich wirklich capygrässlich.",
-    instruction: "Gutes Grillgut kommt auf den Rost, Zwiebeln bleiben draußen.",
+    instruction: "Gutes Grillgut auf den Rost, Zwiebeln aussortieren – bevor die Zeit abläuft.",
     reward: { xp: 20, satiety: 9, fun: 8, social: 5 },
   },
   "city-tour": {
@@ -54,7 +54,7 @@ export const QUEST_DEFINITIONS = Object.freeze({
     title: "Unterwegs mit Capy",
     short: "Findet gemeinsam den Weg durch eine kleine Stadt.",
     intro: "Rucksack gepackt? Ich bin gern unterwegs – solange wir zusammen gehen.",
-    instruction: "Besuche die fünf Ziele in der angezeigten Reihenfolge.",
+    instruction: "Besuche die Ziele in der angezeigten Reihenfolge.",
     reward: { xp: 22, curiosity: 12, fun: 6, energy: -3, social: 4 },
   },
   "pond-rhythm": {
@@ -132,10 +132,10 @@ export const QUEST_DEFINITIONS = Object.freeze({
 
 const QUEST_COPY_EN = Object.freeze({
   "glitter-hunt": ["Glitter in the reeds", "Catch the sparkling pond stars together.", "Something is sparkling! Will you help me collect all the glitter stars?", "Tap as many glitter stars as possible in 22 seconds."],
-  "board-memory": ["Capy memory", "A proper board game for two clever minds.", "Board-game time! I remember the snacks, you remember the paths — deal?", "Find all six pairs in as few moves as possible."],
+  "board-memory": ["Capy memory", "A proper board game for two clever minds.", "Board-game time! I remember the snacks, you remember the paths — deal?", "Find all pairs in as few moves as possible."],
   "coffee-perfect": ["Perfect Capy coffee", "Hit the golden comfort zone five times.", "Coffee smell! Mine is a capy-friendly oat-milk foam, of course.", "Stop the moving marker in the golden zone five times."],
-  "onion-free-grill": ["The onion-free barbecue", "Grill favorite snacks — without a single onion.", "Barbecue night! Please watch out: I find onions truly capy-awful.", "Good food goes on the grill; onions stay out."],
-  "city-tour": ["Out and about with Capy", "Find your way through a little city together.", "Bag packed? I love going out — as long as we go together.", "Visit the five destinations in the order shown."],
+  "onion-free-grill": ["The onion-free barbecue", "Grill favorite snacks — without a single onion.", "Barbecue night! Please watch out: I find onions truly capy-awful.", "Grill the good food and skip the onions before time runs out."],
+  "city-tour": ["Out and about with Capy", "Find your way through a little city together.", "Bag packed? I love going out — as long as we go together.", "Visit the destinations in the order shown."],
   "pond-rhythm": ["Water-lily symphony", "Remember the pond melody as it grows.", "The water lilies are making music! Can we tap their melody back?", "Remember the glowing sequence and repeat it correctly."],
   "social-circle": ["Time for company", "Cuddle, talk and play tug together.", "I want lots of company today. Shall we do three things together?", "Complete the three activities from the regular action bar.", ["Have a long cuddle", "Have a conversation", "Play tug"]],
   "day-trip": ["Little day trip", "Explore, share provisions and dry off afterwards.", "I want to go out! Shall we pack an apple and a towel?", "Complete the three activities in any order.", ["Explore a corner", "Share an apple", "Rub the fur dry"]],

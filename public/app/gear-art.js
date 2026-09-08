@@ -9,17 +9,17 @@ const ankles = [{ x: 8.5, y: 27, width: 8.5, height: 5.5 }, { x: 30.5, y: 27, wi
 export const GEAR_ART = Object.freeze({
   round_glasses: { asset: asset("round-glasses"), gearLayer: "face", wear: [{ x: 32.5, y: 7, width: 19, height: 8 }] },
   neon_visors: { asset: asset("neon-visor"), gearLayer: "face", wear: [{ x: 32, y: 6.5, width: 20, height: 8 }] },
-  soft_collar: { asset: asset("leather-collar-v2"), wear: [{ x: 31, y: 12, width: 15, height: 17 }] },
+  soft_collar: { asset: asset("leather-collar-v3"), wear: [{ x: 32, y: 14.5, width: 12, height: 11.5 }] },
   pack_bandana: { asset: asset("pack-bandana"), wear: [{ x: 30, y: 15, width: 15, height: 13 }] },
   soft_harness: { asset: asset("ring-harness"), wear: harnessFit },
   cross_harness: { asset: asset("cross-harness"), wear: harnessFit },
   reflective_harness: { asset: asset("reflective-harness"), wear: harnessFit },
   paw_warmers: { asset: asset("paw-warmer"), wear: [{ x: 8.5, y: 26, width: 8.5, height: 6.5 }, { x: 30.5, y: 26, width: 8.5, height: 6.5 }] },
-  sturdy_boots: { asset: asset("leather-boot"), wear: [{ x: 8, y: 26, width: 9.5, height: 8 }, { x: 30, y: 26, width: 9.5, height: 8 }] },
+  sturdy_boots: { asset: asset("pixel-boot"), wear: [{ x: 8, y: 24.5, width: 10, height: 9.5 }, { x: 30, y: 24.5, width: 10, height: 9.5 }] },
   ankle_cuffs: { asset: asset("leather-cuff"), wear: ankles },
   thigh_cuffs: { asset: asset("leather-cuff"), wear: [{ x: 7.5, y: 23, width: 10, height: 6.5 }, { x: 29.5, y: 23, width: 10, height: 6.5 }] },
-  sport_socks: { asset: asset("sport-sock"), wear: [{ x: 8, y: 24.5, width: 10, height: 9 }, { x: 30, y: 24.5, width: 10, height: 9 }] },
-  signature_socks: { asset: asset("sport-sock"), tint: "primary", wear: [{ x: 8, y: 24.5, width: 10, height: 9 }, { x: 30, y: 24.5, width: 10, height: 9 }] },
+  sport_socks: { asset: asset("pixel-sock"), wear: [{ x: 8.5, y: 24, width: 9, height: 10 }, { x: 30.5, y: 24, width: 9, height: 10 }] },
+  signature_socks: { asset: asset("pixel-sock"), tint: "primary", wear: [{ x: 8.5, y: 24, width: 9, height: 10 }, { x: 30.5, y: 24, width: 9, height: 10 }] },
   signature_tail: { asset: asset("pup-tail"), tint: "primary", gearLayer: "back", wear: [{ x: -8, y: 10, width: 16, height: 17 }] },
 });
 

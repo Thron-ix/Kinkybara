@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { STORY_SIZE, captureStoryAppearance, storyAssetPaths } from "../public/app/story-card.js";
+import { STORY_SIZE, STORY_LOOKS, normalizeStoryOptions, captureStoryAppearance, storyAssetPaths } from "../public/app/story-card.js";
 import { CAPY_PIXELS } from "../public/app/pet-art.js";
 import { t } from "../public/app/i18n.js";
 import { createInventory, addInventoryItem, normalizeInventory, toggleEquipment, DESTINATION_REWARDS } from "../public/app/inventory-core.js";
@@ -39,12 +39,19 @@ test("Story assets are local, deduplicated and precached, including tintable gea
 });
 
 test("all Story controls have natural German and English copy", () => {
-  for (const key of ["open", "title", "hint", "eyebrow", "image", "share", "save", "loading", "error", "shareError"]) {
+  for (const key of ["open", "title", "eyebrow", "look", "mirror", "image", "share", "save", "loading", "error", "shareError"]) {
     const id = `story.${key}`;
     assert.notEqual(t("de", id), id);
     assert.notEqual(t("en", id), id);
-    assert.notEqual(t("de", id), t("en", id));
+    if (!["title", "eyebrow"].includes(key)) assert.notEqual(t("de", id), t("en", id));
   }
+  assert.equal(t("de", "story.eyebrow"), "KINKYBARA");
+});
+
+test("Story options stay local and normalize invalid or old settings", () => {
+  assert.deepEqual(normalizeStoryOptions(null), { look: "studio", mirrored: false });
+  assert.deepEqual(normalizeStoryOptions({ look: "toString", mirrored: "true" }), { look: "studio", mirrored: false });
+  for (const look of Object.keys(STORY_LOOKS)) assert.deepEqual(normalizeStoryOptions({ look, mirrored: true }), { look, mirrored: true });
 });
 
 test("socks replace footwear, tail has its own slot, and both survive old saves", () => {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "kinkybara-shell-v45";
+const CACHE_NAME = "kinkybara-shell-v46";
 const APP_SHELL = Object.freeze([
   "./index.html",
   "./styles.css",
@@ -16,13 +16,14 @@ const APP_SHELL = Object.freeze([
   "./assets/gear-reflective-harness.png",
   "./assets/gear-round-glasses.png",
   "./assets/gear-neon-visor.png",
-  "./assets/gear-leather-collar-v2.png",
-  "./assets/gear-sport-sock.png",
+  "./assets/gear-leather-collar-v3.png",
+  "./assets/gear-pixel-sock.png",
   "./assets/gear-pup-tail.png",
   "./assets/visitor-chicken.png",
+  "./assets/pixel-fallow-deer.svg",
   "./assets/gear-pack-bandana.png",
   "./assets/gear-leather-cuff.png",
-  "./assets/gear-leather-boot.png",
+  "./assets/gear-pixel-boot.png",
   "./assets/gear-paw-warmer.png",
   "./game-core.js",
   "./pet-art.js",

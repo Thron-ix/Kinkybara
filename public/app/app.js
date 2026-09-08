@@ -96,7 +96,7 @@ import {
   worldActivityTimeLabel,
 } from "./world-core.js";
 import { applyI18n, languageFor, t } from "./i18n.js";
-import { captureStoryAppearance, renderStoryCard } from "./story-card.js";
+import { captureStoryAppearance, normalizeStoryOptions, renderStoryCard } from "./story-card.js";
 import { tintedGearSource } from "./gear-art.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -2915,7 +2915,14 @@ $("#settings-button").addEventListener("click", () => { syncSettingsForm(); open
 
 let storyVersion = 0;
 let storyFile = null;
-$("#story-button").addEventListener("click", async () => {
+let storyAppearance = null;
+let storyOptions = normalizeStoryOptions(null);
+try { storyOptions = normalizeStoryOptions(JSON.parse(localStorage.getItem("kinkybara-story-options-v1"))); } catch { /* Defaults also work without browser storage. */ }
+function syncStoryOptions() {
+  $$('[data-story-look]').forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.storyLook === storyOptions.look)));
+  $("#story-mirror").checked = storyOptions.mirrored;
+}
+async function prepareStoryImage() {
   const version = ++storyVersion;
   const language = state.language;
   const dialog = $("#story-dialog");
@@ -2926,11 +2933,10 @@ $("#story-button").addEventListener("click", async () => {
   $("#story-save").disabled = true;
   $("#story-share").hidden = true;
   status.textContent = t(language, "story.loading");
-  openDialog(dialog);
   try {
-    const appearance = captureStoryAppearance(state, elements.capy);
+    const appearance = storyAppearance;
     const prepared = document.createElement("canvas");
-    const blob = await renderStoryCard(prepared, appearance);
+    const blob = await renderStoryCard(prepared, appearance, storyOptions);
     if (version !== storyVersion || !dialog.open) return;
     canvas.getContext("2d").drawImage(prepared, 0, 0);
     canvas.hidden = false;
@@ -2942,8 +2948,28 @@ $("#story-button").addEventListener("click", async () => {
   } catch {
     if (version === storyVersion && dialog.open) status.textContent = t(language, "story.error");
   }
+}
+$("#story-button").addEventListener("click", () => {
+  syncStoryOptions();
+  storyFile = null;
+  storyAppearance = null;
+  $("#story-canvas").hidden = true;
+  $("#story-save").disabled = true;
+  $("#story-share").hidden = true;
+  openDialog($("#story-dialog"));
+  try { storyAppearance = captureStoryAppearance(state, elements.capy); }
+  catch { $("#story-status").textContent = t(state.language, "story.error"); return; }
+  prepareStoryImage();
 });
-$("#story-dialog").addEventListener("close", () => { storyVersion += 1; storyFile = null; });
+function changeStoryOptions(value) {
+  storyOptions = normalizeStoryOptions(value);
+  syncStoryOptions();
+  try { localStorage.setItem("kinkybara-story-options-v1", JSON.stringify(storyOptions)); } catch { /* Keep the selection for this session. */ }
+  if ($("#story-dialog").open && storyAppearance) prepareStoryImage();
+}
+$$('[data-story-look]').forEach((button) => button.addEventListener("click", () => changeStoryOptions({ ...storyOptions, look: button.dataset.storyLook })));
+$("#story-mirror").addEventListener("change", (event) => changeStoryOptions({ ...storyOptions, mirrored: event.target.checked }));
+$("#story-dialog").addEventListener("close", () => { storyVersion += 1; storyFile = null; storyAppearance = null; });
 $("#story-save").addEventListener("click", () => {
   if (!storyFile) return;
   const url = URL.createObjectURL(storyFile);
