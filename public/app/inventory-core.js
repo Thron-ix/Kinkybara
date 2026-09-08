@@ -1,4 +1,5 @@
 import { GEAR_ART } from "./gear-art.js";
+import { WORLD_ART } from "./world-art.js";
 
 export const EQUIPMENT_SLOTS = Object.freeze({
   hood: "HOOD",
@@ -30,14 +31,14 @@ export const ITEM_DEFINITIONS = Object.freeze({
   signature_tail: { id: "signature_tail", type: "wearable", slot: "tail", label: "Signature pup tail", icon: "⌁", ...GEAR_ART.signature_tail, detail: "A little wag in your colors. Hard to keep still." },
   card_table: { id: "card_table", type: "placeable", area: "wintergarden", label: "Pack Cards table", icon: "▦", asset: "./assets/pack-cards-joker.png", detail: "Roxy and Jinx are always up for one more round." },
   karaoke_mic: { id: "karaoke_mic", type: "placeable", area: "wintergarden", label: "Karaoke mic", icon: "♪", detail: "For solos, duets and questionable encores." },
-  juice_bar: { id: "juice_bar", type: "placeable", area: "wintergarden", label: "Juice bar", icon: "▥", detail: "Orange, pineapple, enough for the pack." },
+  juice_bar: { id: "juice_bar", type: "placeable", ...WORLD_ART.juice_bar, label: "Juice bar", icon: "▥", detail: "A little juice break in the Play Area." },
   gear_locker: { id: "gear_locker", type: "container", label: "Gear locker", icon: "▣", asset: "./assets/gear-locker.png", detail: "Everything you have found, in one place." },
   friend_book: { id: "friend_book", type: "container", label: "Friend book", icon: "♥", asset: "./assets/friend-book.png", detail: "Every friend your Kinkybara has met, page by page." },
   kennel_sign: { id: "kennel_sign", type: "placeable", area: "meadow", label: "Kennel sign", icon: "▰", asset: "./assets/kennel-sofa.png", detail: "A sofa says: come closer." },
   play_mat: { id: "play_mat", type: "placeable", area: "home", label: "Signature play mat", icon: "▤", detail: "A soft spot beside the den, in your colors." },
-  neon_lamp: { id: "neon_lamp", type: "placeable", area: "garden", label: "Neon lamp", icon: "✦", detail: "Your colors, lighting the Play Area." },
-  tiny_speaker: { id: "tiny_speaker", type: "placeable", area: "meadow", label: "Tiny speaker", icon: "♫", detail: "Small box. Plenty of noise." },
-  memory_camera: { id: "memory_camera", type: "placeable", area: "home", label: "Memory camera", icon: "◉", detail: "Keeps the moment here, just for you." },
+  neon_lamp: { id: "neon_lamp", type: "placeable", ...WORLD_ART.neon_lamp, label: "Neon lamp", icon: "✦", detail: "Frames the den in signature light." },
+  tiny_speaker: { id: "tiny_speaker", type: "placeable", ...WORLD_ART.tiny_speaker, label: "Boombox", icon: "♫", detail: "A little beat for the Pack Lounge." },
+  memory_camera: { id: "memory_camera", type: "placeable", ...WORLD_ART.memory_camera, label: "Memory camera", icon: "◉", detail: "A snapshot by the den. Opens the Story Studio." },
 });
 
 const ITEM_COPY_DE = Object.freeze({
@@ -60,14 +61,14 @@ const ITEM_COPY_DE = Object.freeze({
   signature_tail: ["Signatur-Pup-Tail", "Ein kleines Wedeln in deiner Farbe. Hält selten still."],
   card_table: ["Pack-Cards-Tisch", "Roxy und Jinx sind immer für eine Revanche zu haben."],
   karaoke_mic: ["Karaoke-Mikro", "Für Soli, Duette und fragwürdige Zugaben."],
-  juice_bar: ["Saftbar", "Orange, Ananas, genug fürs Pack."],
+  juice_bar: ["Saftbar", "Eine kleine Saftpause in der Play Area."],
   gear_locker: ["Gear-Schrank", "Alles Gefundene an einem Ort."],
   friend_book: ["Freundebuch", "Alle Freunde deines Kinkybaras, Seite für Seite."],
   kennel_sign: ["Kennel-Schild", "Ein Sofa sagt: rück näher."],
   play_mat: ["Signatur-Spielmatte", "Ein weicher Platz neben der Höhle, in deinen Farben."],
-  neon_lamp: ["Neonlampe", "Deine Farben, als Licht in der Play Area."],
-  tiny_speaker: ["Kleiner Lautsprecher", "Kleine Box. Genug Lärm."],
-  memory_camera: ["Erinnerungskamera", "Hält den Moment hier fest – nur für dich."],
+  neon_lamp: ["Neonlampe", "Rahmt die Höhle in Signaturlicht."],
+  tiny_speaker: ["Boombox", "Ein kleiner Beat für die Pack Lounge."],
+  memory_camera: ["Erinnerungskamera", "Ein Schnappschuss an der Höhle. Öffnet das Story Studio."],
 });
 
 const SLOT_COPY_DE = Object.freeze({ hood: "HOOD", eyes: "AUGEN", neck: "HALS", harness: "HARNESS", paws: "PFOTEN", cuffs: "CUFFS", tail: "TAIL" });

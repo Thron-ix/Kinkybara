@@ -1,5 +1,6 @@
-import { CAPY_HEIGHT, CAPY_PIXELS, CAPY_WIDTH } from "./pet-art.js";
+import { CAPY_HEIGHT, CAPY_PIXELS, CAPY_WIDTH, drawCapyFur } from "./pet-art.js";
 import { GEAR_ART, tintedGearSource } from "./gear-art.js";
+import { WORLD_ART, availableStoryDecorations, selectedStoryDecoration } from "./world-art.js";
 import { t } from "./i18n.js";
 
 export const STORY_SIZE = Object.freeze({ width: 1080, height: 1920 });
@@ -9,7 +10,7 @@ export const STORY_LOOKS = Object.freeze({
   print: { background: "#eee7dc", foreground: "#24212a", panel: "#ded5c8", muted: "#645963" },
 });
 export function normalizeStoryOptions(value) {
-  return { look: Object.hasOwn(STORY_LOOKS, value?.look) ? value.look : "studio", mirrored: value?.mirrored === true };
+  return { look: Object.hasOwn(STORY_LOOKS, value?.look) ? value.look : "studio", mirrored: value?.mirrored === true, decoration: Object.hasOwn(WORLD_ART, value?.decoration) ? value.decoration : "none" };
 }
 const HOOD_ASSETS = ["base", "primary-mask", "secondary-mask"].map((name) => `./assets/pup-hood-${name}.png`);
 
@@ -47,13 +48,17 @@ export function captureStoryAppearance(state, capy) {
     palette,
     hood,
     gear: Object.values(state.inventory.equipped).filter((id) => Object.hasOwn(GEAR_ART, id)),
+    dirty: state.clean < 38,
+    decorations: availableStoryDecorations(state.inventory),
   };
 }
 
-export function storyAssetPaths(appearance) {
+export function storyAssetPaths(appearance, options = {}) {
+  const decoration = selectedStoryDecoration(appearance, options);
   return [...new Set([
     ...appearance.gear.map((id) => GEAR_ART[id].asset),
     ...(appearance.hood ? HOOD_ASSETS : []),
+    ...(decoration && decoration !== "neon_lamp" ? [WORLD_ART[decoration].asset] : []),
   ])];
 }
 
@@ -97,9 +102,11 @@ function text(ctx, value, x, y, size, color, maxWidth = 880) {
 // One local PNG is both the preview and the export. No DOM serialization,
 // third-party renderer, remote font, upload or platform account is needed.
 export async function renderStoryCard(canvas, appearance, options = {}) {
-  const { look, mirrored } = normalizeStoryOptions(options);
+  const normalized = normalizeStoryOptions(options);
+  const { look, mirrored } = normalized;
+  const decoration = selectedStoryDecoration(appearance, normalized);
   const theme = STORY_LOOKS[look];
-  const paths = storyAssetPaths(appearance);
+  const paths = storyAssetPaths(appearance, normalized);
   const loaded = await Promise.all(paths.map(loadImage));
   const images = Object.fromEntries(paths.map((path, index) => [path, loaded[index]]));
   const gearImages = Object.fromEntries(await Promise.all(appearance.gear.map(async (id) => {
@@ -148,6 +155,11 @@ export async function renderStoryCard(canvas, appearance, options = {}) {
   }
   ctx.fillStyle = look === "print" ? "#c3baad" : "#100f15";
   ctx.beginPath(); ctx.ellipse(540, 1118, 420, 31, 0, 0, Math.PI * 2); ctx.fill();
+  if (decoration === "neon_lamp") {
+    ctx.save(); ctx.strokeStyle = appearance.primary; ctx.lineWidth = 8;
+    ctx.shadowBlur = 25; ctx.shadowColor = appearance.primary;
+    ctx.strokeRect(103, 479, 874, 654); ctx.restore();
+  }
 
   ctx.save();
   ctx.translate(mirrored ? 950 : 130, 650);
@@ -172,6 +184,7 @@ export async function renderStoryCard(canvas, appearance, options = {}) {
       rect(x, y + offset, 1, 1, appearance.palette[code]);
     }
   }
+  drawCapyFur(ctx, appearance.palette, appearance.dirty);
   drawGear("body");
   if (appearance.hood) {
     const hood = appearance.hood;
@@ -188,6 +201,12 @@ export async function renderStoryCard(canvas, appearance, options = {}) {
   }
   drawGear("face");
   ctx.restore();
+  if (decoration && decoration !== "neon_lamp") {
+    const size = decoration === "tiny_speaker" ? { width: 195, height: 100 } : decoration === "juice_bar" ? { width: 172, height: 122 } : { width: 90, height: 130 };
+    const x = mirrored ? 76 : 1004 - size.width;
+    contain(ctx, images[WORLD_ART[decoration].asset], { x, y: 1158 - size.height, ...size });
+    if (decoration === "tiny_speaker") { text(ctx, "♪", x + 16, 1036, 27, theme.foreground); text(ctx, "♫", x + 136, 1020, 25, theme.foreground); }
+  }
   // No prompts or decorations in the editing space: y=1180…1610 stays clear.
   rect(0, 1180, 1080, 740, theme.background);
   rect(76, 1660, 928, 2, theme.muted);

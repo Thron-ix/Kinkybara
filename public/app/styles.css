@@ -110,9 +110,7 @@ h3 { margin: 0; font-size: 16px; line-height: 1.1; }
 .pixel-g { background: #f9e9ca; box-shadow: inset -2px -2px #1e1713; }
 .pixel-capy[data-mood="sad"] .pixel-e, .pixel-capy[data-mood="urgent"] .pixel-e { transform: translateY(2px) scaleY(.65); }
 .is-sleeping .pixel-e, .is-sleeping .pixel-g { transform: scaleY(.22); background: #33231b; box-shadow: none; }
-.pixel-capy.is-dirty::after, .pixel-capy.is-dirty::before { content: ""; position: absolute; width: calc(var(--px) * 1.25); height: calc(var(--px) * 1.25); background: #68613a; box-shadow: calc(var(--px) * 5) calc(var(--px) * 2) #68613a, calc(var(--px) * 10) calc(var(--px) * -2) #68613a; }
-.pixel-capy.is-dirty::after { left: 68px; top: 78px; }
-.pixel-capy.is-dirty::before { left: 120px; top: 55px; }
+.capy-fur { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; image-rendering: pixelated; }
 .pixel-capy.drop-ready { filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 7px #f6d557); animation: capy-ready .28s steps(2, end) infinite; }
 .pixel-capy.is-tired { animation-duration: 3.4s; }
 .pet-shadow { position: absolute; z-index: 1; left: 50%; bottom: 10px; width: 235px; height: 23px; transform: translateX(-50%); border-radius: 50%; background: rgb(38 70 37 / 25%); }
@@ -432,7 +430,15 @@ dialog::backdrop { background: rgb(32 26 23 / 58%); backdrop-filter: blur(2px); 
 .cabin-window::before { content: ""; position: absolute; inset: 11px 0 auto; height: 3px; background: var(--ink); }
 .cabin-door { position: absolute; right: 14px; bottom: 0; width: 35px; height: 57px; border: 3px solid var(--ink); border-bottom: 0; background: repeating-linear-gradient(90deg, #704832 0 8px, #593d2c 8px 10px); box-shadow: 0 -3px #d0aa70; }
 .cabin-door::after { content: ""; position: absolute; right: 5px; top: 28px; width: 5px; height: 5px; background: var(--gold); }
-.habitat.is-sleeping .cabin-window { background: #ffd970; box-shadow: 7px 10px #2b211d, 18px 10px #2b211d; }
+.habitat.is-sleeping .cabin-window { background: #253952; box-shadow: inset 11px 0 #2d435e, -5px 0 #675442, 5px 0 #675442, 0 4px #74634c; }
+.cabin .sleep-z-one { top: -25px; right: 14px; font-size: 14px; }
+.cabin .sleep-z-two { top: -43px; right: -2px; font-size: 11px; }
+.cabin .sleep-z-three { top: -57px; right: -13px; font-size: 9px; animation: sleep-z 1.8s 1.2s steps(3, end) infinite; }
+.cabin-neon { display: none; position: absolute; inset: -2px; border: 2px solid var(--accent-primary); box-shadow: 0 0 6px var(--accent-primary), inset 0 0 5px var(--accent-primary); pointer-events: none; }
+.has-neon .cabin-neon { display: block; }
+.has-neon .cabin-roof { border-bottom-color: var(--accent-primary); filter: drop-shadow(0 2px 3px var(--accent-primary)); }
+.is-sleeping.has-neon .cabin-neon { opacity: .14; box-shadow: none; }
+.is-sleeping.has-neon .cabin-roof { filter: none; border-bottom-color: #352d2a; }
 .habitat.is-sleeping .pet-button { opacity: 0; pointer-events: none; }
 .deer-pen { position: absolute; display: none; left: 14px; right: 14px; bottom: 100px; height: 145px; border-bottom: 7px solid #6f5038; pointer-events: none; }
 .habitat[data-area="meadow"] .deer-pen { display: block; }
@@ -596,6 +602,21 @@ dialog::backdrop { background: rgb(32 26 23 / 58%); backdrop-filter: blur(2px); 
 .placed-world-item { position: absolute; left: var(--left); bottom: var(--bottom); width: 66px; height: 66px; display: grid; place-items: center; padding: 5px; transform: translateX(-50%); border: 3px solid var(--ink); background: #f4edf1; box-shadow: 4px 4px rgb(43 33 29 / 36%); pointer-events: auto; }
 .placed-world-item[data-item-id="card_table"] { background: #302235; }
 .placed-world-icon { width: 54px; height: 54px; display: block; object-fit: contain; image-rendering: pixelated; }
+.placed-world-item.is-scene-object { padding: 0; border: 0; background: transparent; box-shadow: none; filter: drop-shadow(2px 3px 0 #251c2733); }
+.placed-world-item.is-scene-object .placed-world-icon { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: contain; }
+.boombox-notes { position: absolute; inset: 0; pointer-events: none; }
+.boombox-notes i { position: absolute; left: 18%; top: -8px; color: #f0c9f5; font-size: 14px; font-style: normal; text-shadow: 1px 1px #302235; animation: boombox-note 2.8s steps(6, end) infinite; }
+.boombox-notes i:nth-child(2) { left: 62%; animation-delay: -.9s; }
+.boombox-notes i:nth-child(3) { left: 42%; animation-delay: -1.8s; }
+.is-beat .boombox-notes { animation: boombox-beat .3s steps(2, end) 4; }
+.is-sleeping .boombox-notes { display: none; }
+.placed-world-item[data-item-id="karaoke_mic"] { width: 32px; height: 58px; }
+.placed-world-item[data-item-id="karaoke_mic"] .placed-world-icon { color: transparent; background: linear-gradient(90deg, transparent 44%, #8e8492 44% 57%, transparent 57%) center 15px/100% 40px no-repeat; }
+.placed-world-item[data-item-id="karaoke_mic"]::before { content: ""; position: absolute; width: 15px; height: 23px; left: 8px; top: 0; border: 2px solid #2a202e; border-radius: 5px; background: repeating-linear-gradient(0deg, #aca2ac 0 2px, #514452 2px 4px); }
+.placed-world-item[data-item-id="karaoke_mic"]::after { content: ""; position: absolute; bottom: 0; left: 3px; width: 26px; height: 5px; background: #302235; }
+@keyframes boombox-note { 0% { opacity: 0; transform: translate(0, 0); } 20% { opacity: .9; } 100% { opacity: 0; transform: translate(7px, -28px); } }
+@keyframes boombox-beat { 50% { transform: scale(1.18); } }
+@media (prefers-reduced-motion: reduce) { .boombox-notes i, .is-beat .boombox-notes, .cabin .sleep-z { animation: none; } .boombox-notes i { opacity: .7; } }
 
 /* The three destination controls share one grounded pixel-wood sign asset. */
 .placed-world-item.is-world-sign {
@@ -1345,6 +1366,8 @@ dialog.story-sheet { width: min(calc(100% - 16px), 470px); max-height: calc(100d
 .story-looks button[aria-pressed="true"] { background: #302235; color: #fff; box-shadow: inset 0 -4px #bda6c8; }
 .story-mirror { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-height: 28px; font-size: 10px; font-weight: 900; }
 .story-mirror input { accent-color: #302235; width: 20px; height: 20px; margin: 0; }
+.story-decoration { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; font-size: 10px; font-weight: 900; }
+.story-decoration select { width: 100%; min-height: 42px; padding: 8px; border: 2px solid #302235; background: #fffaf3; color: #302235; font: inherit; }
 #story-canvas { display: block; width: 100%; height: auto; aspect-ratio: 9 / 16; background: #fff6e5; }
 .story-status { margin: 10px 0; font: 600 12px/1.4 system-ui, sans-serif; }
 .story-status:empty { display: none; }

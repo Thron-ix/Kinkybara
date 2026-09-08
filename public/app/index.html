@@ -62,19 +62,18 @@
 
         <div class="landscape-scenery">
           <span class="distant-hill hill-one" aria-hidden="true"></span><span class="distant-hill hill-two" aria-hidden="true"></span>
-          <button class="landmark cabin" type="button" data-landmark="cabin" data-i18n-aria="world.visitHome" aria-label="Visit the little den"><span class="cabin-roof"></span><span class="cabin-window"></span><span class="cabin-door"></span></button>
+          <button class="landmark cabin" type="button" data-landmark="cabin" data-i18n-aria="world.visitHome" aria-label="Visit the little den"><span class="cabin-roof"></span><span class="cabin-window"></span><span class="cabin-door"></span><span class="cabin-neon" aria-hidden="true"></span><span class="sleep-z sleep-z-one" aria-hidden="true">Z</span><span class="sleep-z sleep-z-two" aria-hidden="true">Z</span><span class="sleep-z sleep-z-three" aria-hidden="true">Z</span></button>
           <div class="deer-pen" data-i18n-aria="world.friendsAria" aria-label="Friends gather in the background"><span class="fence"></span><span class="pixel-deer deer-one"></span><span class="pixel-deer deer-two"></span></div>
           <button class="landmark garden-shed" type="button" data-landmark="garden" data-i18n-aria="world.visitGarden" aria-label="Visit the Play Area"><span></span></button>
           <button class="landmark wintergarden-house" type="button" data-landmark="wintergarden" data-i18n-aria="world.visitLounge" aria-label="Visit the Pack Lounge"><span class="glass-roof"></span><span class="glass-door"></span></button>
           <span class="pixel-chicken" id="pixel-chicken" data-i18n-aria="world.chicken" aria-label="A little chicken crosses the world"></span>
         </div>
 
-        <div class="placed-background-items-layer" id="placed-background-items-layer" aria-hidden="true"></div>
+        <div class="placed-background-items-layer" id="placed-background-items-layer"></div>
         <button class="pet-button" id="pet-button" type="button" aria-label="Pet Kinkybara or hand over the selected item">
           <span class="pixel-capy" id="pixel-capy" role="img" data-i18n-aria="pet.image" aria-label="A friendly pixel Kinkybara">
             <span class="outfit-layer" id="outfit-layer" aria-hidden="true"></span>
           </span>
-          <span class="sleep-z sleep-z-one" aria-hidden="true">Z</span><span class="sleep-z sleep-z-two" aria-hidden="true">Z</span>
           <span class="heart-layer" id="heart-layer" aria-hidden="true"></span>
           <span class="pet-shadow" aria-hidden="true"></span>
         </button>
@@ -400,6 +399,7 @@
       <div class="story-options">
         <div class="story-looks" role="group" data-i18n-aria="story.look" aria-label="Look"><button type="button" data-story-look="studio" aria-pressed="true">STUDIO</button><button type="button" data-story-look="neon" aria-pressed="false">NEON</button><button type="button" data-story-look="print" aria-pressed="false">PRINT</button></div>
         <label class="story-mirror"><input id="story-mirror" type="checkbox" /><span data-i18n="story.mirror">MIRROR</span></label>
+        <label class="story-decoration" id="story-decoration-row" hidden><span data-i18n="story.decoration">DECOR</span><select id="story-decoration"><option value="none">—</option></select></label>
       </div>
       <canvas id="story-canvas" width="1080" height="1920" role="img" data-i18n-aria="story.image" aria-label="Your Kinkybara in its current outfit, with space below for Story text" hidden></canvas>
       <p id="story-status" class="story-status" role="status"></p>

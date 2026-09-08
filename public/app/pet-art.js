@@ -43,3 +43,66 @@ export const CAPY_PIXELS = Object.freeze(
     Array.from({ length: CAPY_WIDTH }, (_, x) => capyPixelAt(x, y)).join(""),
   ),
 );
+
+// Finer fur lives INSIDE the original grid mask. Face cells stay untouched so
+// existing expressions, hood alignment and every equipment anchor still fit.
+const FUR_CODES = new Set(["m", "l", "s", "h", "r", "q", "d", "p", "i"]);
+export const FUR_SCALE = 4;
+export function furCellAt(x, y) {
+  const code = CAPY_PIXELS[Math.floor(y)]?.[Math.floor(x)];
+  return FUR_CODES.has(code) ? code : null;
+}
+
+export function drawCapyFur(ctx, palette, dirty = false) {
+  ctx.save();
+  // Clear coarse diagonal spot patterns, retaining the familiar warm silhouette.
+  for (let y = 0; y < CAPY_HEIGHT; y += 1) for (let x = 0; x < CAPY_WIDTH; x += 1) {
+    const code = furCellAt(x, y);
+    if (!code) continue;
+    ctx.fillStyle = palette[["l", "s", "h", "r"].includes(code) ? "m" : code];
+    ctx.fillRect(x, y, 1, 1);
+  }
+  // Four subpixels per source pixel, deterministic short tufts, no random flicker.
+  for (let sy = 0; sy < CAPY_HEIGHT * FUR_SCALE; sy += 1) for (let sx = 0; sx < CAPY_WIDTH * FUR_SCALE; sx += 1) {
+    const x = sx / FUR_SCALE, y = sy / FUR_SCALE;
+    const code = furCellAt(x, y);
+    if (!code || ["d", "p", "i"].includes(code)) continue;
+    const hash = ((sx * 73856093) ^ (sy * 19349663)) >>> 0;
+    const light = Math.max(0, 1 - Math.abs(y - (10.5 + Math.sin(x / 10))) / 7);
+    ctx.globalAlpha = light * .42;
+    ctx.fillStyle = palette.l;
+    ctx.fillRect(x, y, .25, .25);
+    if (hash % 11 === 0) {
+      ctx.globalAlpha = .12;
+      ctx.fillStyle = hash % 2 ? palette.l : palette.d;
+      ctx.fillRect(x, y, .25, .25);
+    }
+    if (hash % 43 === 0) {
+      // Short staggered hairs follow the flank, not a uniform noise texture.
+      ctx.globalAlpha = dirty ? .29 : .19;
+      ctx.fillStyle = hash % 2 ? palette.l : palette.d;
+      for (const [dx, dy] of [[0, 0], [.25, .25], [.25, .5]]) {
+        const next = furCellAt(x + dx, y + dy);
+        if (next && !["d", "p", "i"].includes(next)) ctx.fillRect(x + dx, y + dy, .25, .25);
+      }
+    }
+    if (dirty) {
+      const muddy = Math.sin(x * .7 + y * .4) + Math.cos(y * .8 - x * .3) > .9 && y > 14;
+      if (muddy || hash % 19 < 3) {
+        ctx.globalAlpha = muddy ? .27 : .4;
+        ctx.fillStyle = palette.d;
+        ctx.fillRect(x, y, .25, .25);
+      }
+    }
+  }
+  // Small directional clumps suggest ruffled fur without changing the outline.
+  if (dirty) {
+    ctx.globalAlpha = .42; ctx.fillStyle = palette.d;
+    for (let y = 11; y < 28; y += 3) for (let x = 6 + y % 4; x < 40; x += 5) {
+      for (const [dx, dy] of [[0, .5], [.25, .25], [.5, 0], [.75, .25]]) {
+        if (furCellAt(x + dx, y + dy) && !["d", "p"].includes(furCellAt(x + dx, y + dy))) ctx.fillRect(x + dx, y + dy, .25, .5);
+      }
+    }
+  }
+  ctx.restore();
+}

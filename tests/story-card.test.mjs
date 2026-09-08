@@ -14,7 +14,7 @@ test("Story export is 9:16 and captures appearance without leaking save data", (
   globalThis.getComputedStyle = () => ({ backgroundColor: "#a86f43", getPropertyValue: () => "#55bd82" });
   try {
     const appearance = captureStoryAppearance(state, { querySelector: (selector) => selector.startsWith(".pixel-") ? {} : null });
-    assert.deepEqual(Object.keys(appearance).sort(), ["name", "language", "primary", "secondary", "palette", "hood", "gear"].sort());
+    assert.deepEqual(Object.keys(appearance).sort(), ["name", "language", "primary", "secondary", "palette", "hood", "gear", "dirty", "decorations"].sort());
     assert.equal(appearance.name, "Thron");
     assert.equal(appearance.hood, null);
     assert.ok(!Object.hasOwn(appearance.palette, "."));
@@ -39,7 +39,7 @@ test("Story assets are local, deduplicated and precached, including tintable gea
 });
 
 test("all Story controls have natural German and English copy", () => {
-  for (const key of ["open", "title", "eyebrow", "look", "mirror", "image", "share", "save", "loading", "error", "shareError"]) {
+  for (const key of ["open", "title", "eyebrow", "look", "mirror", "decoration", "noDecoration", "image", "share", "save", "loading", "error", "shareError"]) {
     const id = `story.${key}`;
     assert.notEqual(t("de", id), id);
     assert.notEqual(t("en", id), id);
@@ -49,9 +49,9 @@ test("all Story controls have natural German and English copy", () => {
 });
 
 test("Story options stay local and normalize invalid or old settings", () => {
-  assert.deepEqual(normalizeStoryOptions(null), { look: "studio", mirrored: false });
-  assert.deepEqual(normalizeStoryOptions({ look: "toString", mirrored: "true" }), { look: "studio", mirrored: false });
-  for (const look of Object.keys(STORY_LOOKS)) assert.deepEqual(normalizeStoryOptions({ look, mirrored: true }), { look, mirrored: true });
+  assert.deepEqual(normalizeStoryOptions(null), { look: "studio", mirrored: false, decoration: "none" });
+  assert.deepEqual(normalizeStoryOptions({ look: "toString", mirrored: "true", decoration: "toString" }), { look: "studio", mirrored: false, decoration: "none" });
+  for (const look of Object.keys(STORY_LOOKS)) assert.deepEqual(normalizeStoryOptions({ look, mirrored: true }), { look, mirrored: true, decoration: "none" });
 });
 
 test("socks replace footwear, tail has its own slot, and both survive old saves", () => {

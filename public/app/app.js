@@ -18,7 +18,8 @@ import {
   moodFor,
   statusPhrase,
 } from "./game-core.js";
-import { CAPY_HEIGHT, CAPY_PIXELS, CAPY_WIDTH } from "./pet-art.js";
+import { CAPY_HEIGHT, CAPY_PIXELS, CAPY_WIDTH, FUR_SCALE, drawCapyFur } from "./pet-art.js";
+import { WORLD_ART, availableStoryDecorations } from "./world-art.js";
 import { dialogueFor, localizedDialogue } from "./dialogues.js";
 import {
   LIBRARY_KEY,
@@ -863,12 +864,18 @@ function applyGearTint(image, item) {
 }
 
 function renderPlacedItems(traveling = false, now = Date.now()) {
-  elements.placedBackgroundItemsLayer.replaceChildren();
-  elements.placedItemsLayer.replaceChildren();
+  const backgroundKey = `${state.landscapeArea}:${state.language}:${traveling}:${state.inventory.placedItemIds.join(",")}`;
+  if (elements.placedBackgroundItemsLayer.dataset.sceneKey !== backgroundKey) {
+    elements.placedBackgroundItemsLayer.replaceChildren();
+    elements.placedItemsLayer.replaceChildren();
+    elements.placedBackgroundItemsLayer.dataset.sceneKey = backgroundKey;
+  }
+  elements.placedItemsLayer.querySelectorAll(":scope > :not(.is-scene-object)").forEach((item) => item.remove());
+  elements.habitat.classList.toggle("has-neon", state.inventory.placedItemIds.includes("neon_lamp"));
   if (traveling) return;
   const areaItems = state.inventory.placedItemIds
     .map((id) => ITEM_DEFINITIONS[id])
-    .filter((item) => item?.area === state.landscapeArea);
+    .filter((item) => item?.area === state.landscapeArea && !item.effect);
   const activityArea = ["meadow", "garden"].includes(state.landscapeArea) ? state.landscapeArea : null;
   const activityItem = activityItemForArea(activityArea);
   const activityItemId = activityItem?.id || null;
@@ -877,21 +884,28 @@ function renderPlacedItems(traveling = false, now = Date.now()) {
     ? areaItems
     : [activityItem, ...areaItems];
 
-  visibleItems.forEach((item, index) => {
+  visibleItems.forEach((item) => {
     const isHomePlayMat = item.id === "play_mat" && state.landscapeArea === "home";
     const isWorldSign = ["kennel_sign", "play_area_sign", "card_table"].includes(item.id);
+    const sceneArt = WORLD_ART[item.id];
+    const isBackground = isHomePlayMat || item.id === "karaoke_mic";
+    const layer = isBackground ? elements.placedBackgroundItemsLayer : elements.placedItemsLayer;
+    if (layer.querySelector(`[data-item-id="${item.id}"]`)) return;
     const button = document.createElement(isHomePlayMat ? "div" : "button");
     if (button instanceof HTMLButtonElement) button.type = "button";
     button.className = "placed-world-item";
     button.dataset.itemId = item.id;
     button.classList.toggle("is-world-sign", isWorldSign);
+    button.classList.toggle("is-scene-object", Boolean(sceneArt) || item.id === "karaoke_mic");
+    if (isHomePlayMat) button.setAttribute("aria-hidden", "true");
     const isActivitySign = item.id === activityItemId;
     if (isActivitySign) {
       button.classList.add("is-activity-sign");
       button.dataset.worldActivity = activityArea;
     }
-    button.style.setProperty("--left", isHomePlayMat ? "40%" : `${19 + ((index * 31) % 66)}%`);
-    button.style.setProperty("--bottom", isHomePlayMat ? "56px" : isWorldSign ? "50px" : `${105 + ((index % 2) * 48)}px`);
+    button.style.setProperty("--left", sceneArt?.left || (item.id === "karaoke_mic" ? "64%" : isHomePlayMat ? "40%" : "19%"));
+    button.style.setProperty("--bottom", sceneArt?.bottom || (isHomePlayMat ? "56px" : isWorldSign ? "50px" : "99px"));
+    if (sceneArt) { button.style.width = `${sceneArt.width}px`; button.style.height = `${sceneArt.height}px`; }
     const copy = itemCopy(item);
     const active = state.world.activity?.area === activityArea;
     const activityLabel = active
@@ -902,6 +916,10 @@ function renderPlacedItems(traveling = false, now = Date.now()) {
       button.title = isActivitySign ? `${copy.label} · ${activityLabel}` : copy.label;
     }
     button.append(createItemArtwork(item, "placed-world-icon"));
+    if (item.id === "tiny_speaker") {
+      const notes = document.createElement("span"); notes.className = "boombox-notes"; notes.setAttribute("aria-hidden", "true");
+      notes.innerHTML = "<i>♪</i><i>♫</i><i>♪</i>"; button.append(notes);
+    }
     if (isActivitySign) {
       const badge = document.createElement("small");
       badge.className = "activity-sign-badge";
@@ -909,7 +927,7 @@ function renderPlacedItems(traveling = false, now = Date.now()) {
       button.append(badge);
       button.classList.toggle("is-running", active);
     }
-    (isHomePlayMat ? elements.placedBackgroundItemsLayer : elements.placedItemsLayer).append(button);
+    layer.append(button);
   });
 }
 
@@ -1886,7 +1904,30 @@ function buildPixelCapy() {
       fragment.append(pixel);
     });
   });
-  elements.capy.replaceChildren(fragment, elements.outfitLayer);
+  const fur = document.createElement("canvas");
+  fur.className = "capy-fur";
+  fur.width = CAPY_WIDTH * FUR_SCALE;
+  fur.height = CAPY_HEIGHT * FUR_SCALE;
+  fur.setAttribute("aria-hidden", "true");
+  elements.capy.replaceChildren(fragment, fur, elements.outfitLayer);
+}
+
+function renderCapyFur() {
+  const canvas = elements.capy.querySelector(".capy-fur");
+  const key = `${state.furVariant}:${state.clean < 38}`;
+  if (!canvas || canvas.dataset.furKey === key) return;
+  const palette = {};
+  for (const code of new Set(CAPY_PIXELS.join(""))) {
+    if (code === ".") continue;
+    const pixel = elements.capy.querySelector(`.pixel-${code}`);
+    if (pixel) palette[code] = getComputedStyle(pixel).backgroundColor;
+  }
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save(); ctx.scale(FUR_SCALE, FUR_SCALE);
+  drawCapyFur(ctx, palette, state.clean < 38);
+  ctx.restore();
+  canvas.dataset.furKey = key;
 }
 
 function render(now = Date.now()) {
@@ -1912,6 +1953,7 @@ function render(now = Date.now()) {
   elements.capy.dataset.mood = mood.tone;
   elements.capy.dataset.variant = state.furVariant;
   elements.capy.classList.toggle("is-dirty", state.clean < 38);
+  renderCapyFur();
   elements.capy.classList.toggle("is-tired", state.energy < 25 && !state.sleeping);
   elements.name.textContent = state.name.toUpperCase();
   elements.level.textContent = `LV. ${level.level}`;
@@ -2919,6 +2961,16 @@ let storyAppearance = null;
 let storyOptions = normalizeStoryOptions(null);
 try { storyOptions = normalizeStoryOptions(JSON.parse(localStorage.getItem("kinkybara-story-options-v1"))); } catch { /* Defaults also work without browser storage. */ }
 function syncStoryOptions() {
+  const available = availableStoryDecorations(state.inventory);
+  if (!available.includes(storyOptions.decoration)) storyOptions.decoration = "none";
+  const selector = $("#story-decoration");
+  selector.replaceChildren(...["none", ...available].map((id) => {
+    const option = document.createElement("option"); option.value = id;
+    option.textContent = id === "none" ? t(state.language, "story.noDecoration") : itemCopy(ITEM_DEFINITIONS[id]).label;
+    return option;
+  }));
+  selector.value = storyOptions.decoration;
+  $("#story-decoration-row").hidden = available.length === 0;
   $$('[data-story-look]').forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.storyLook === storyOptions.look)));
   $("#story-mirror").checked = storyOptions.mirrored;
 }
@@ -2949,7 +3001,7 @@ async function prepareStoryImage() {
     if (version === storyVersion && dialog.open) status.textContent = t(language, "story.error");
   }
 }
-$("#story-button").addEventListener("click", () => {
+function openStoryStudio() {
   syncStoryOptions();
   storyFile = null;
   storyAppearance = null;
@@ -2960,7 +3012,8 @@ $("#story-button").addEventListener("click", () => {
   try { storyAppearance = captureStoryAppearance(state, elements.capy); }
   catch { $("#story-status").textContent = t(state.language, "story.error"); return; }
   prepareStoryImage();
-});
+}
+$("#story-button").addEventListener("click", openStoryStudio);
 function changeStoryOptions(value) {
   storyOptions = normalizeStoryOptions(value);
   syncStoryOptions();
@@ -2969,6 +3022,7 @@ function changeStoryOptions(value) {
 }
 $$('[data-story-look]').forEach((button) => button.addEventListener("click", () => changeStoryOptions({ ...storyOptions, look: button.dataset.storyLook })));
 $("#story-mirror").addEventListener("change", (event) => changeStoryOptions({ ...storyOptions, mirrored: event.target.checked }));
+$("#story-decoration").addEventListener("change", (event) => changeStoryOptions({ ...storyOptions, decoration: event.target.value }));
 $("#story-dialog").addEventListener("close", () => { storyVersion += 1; storyFile = null; storyAppearance = null; });
 $("#story-save").addEventListener("click", () => {
   if (!storyFile) return;
@@ -3090,7 +3144,7 @@ elements.animalVisitor.addEventListener("click", () => {
   render();
 });
 
-elements.placedItemsLayer.addEventListener("click", (event) => {
+function handlePlacedItemClick(event) {
   const button = event.target.closest("button[data-item-id]");
   if (!button) return;
   if (button.dataset.worldActivity) {
@@ -3103,9 +3157,17 @@ elements.placedItemsLayer.addEventListener("click", (event) => {
     openPackCards();
     return;
   }
+  if (item.id === "memory_camera") { openStoryStudio(); return; }
+  if (item.id === "juice_bar") { if (!state.world.activity && !state.sleeping && !isTraveling(state.travel)) openTray("feed"); return; }
+  if (item.id === "tiny_speaker") {
+    button.classList.remove("is-beat"); void button.offsetWidth; button.classList.add("is-beat");
+    return;
+  }
   talk(`${item.label}: ${item.detail}`, { speak: false });
   showToast(state.language === "de" ? "In der Sammlung kannst du den Gegenstand wieder einpacken." : "You can pack this item away from the collection.");
-});
+}
+elements.placedItemsLayer.addEventListener("click", handlePlacedItemClick);
+elements.placedBackgroundItemsLayer.addEventListener("click", handlePlacedItemClick);
 
 elements.habitat.addEventListener("click", (event) => {
   const landmark = event.target.closest("button[data-landmark]");
