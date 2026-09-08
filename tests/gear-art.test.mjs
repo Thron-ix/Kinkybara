@@ -42,3 +42,12 @@ test("new cuffs survive old saves, replace only cuffs, and have German copy", ()
   assert.equal(localizedSlot("cuffs", "de"), "CUFFS");
   assert.equal(normalizeInventory(toggleEquipment(restored, "thigh_cuffs").inventory).equipped.cuffs, null);
 });
+
+test("paw warmers sit low on the paws without covering the upper legs", () => {
+  assert.deepEqual(GEAR_ART.paw_warmers.wear, [
+    { x: 9, y: 29, width: 7, height: 4 },
+    { x: 31, y: 29, width: 7, height: 4 },
+  ]);
+  assert.deepEqual(GEAR_ART.soft_collar.wear, [{ x: 31.5, y: 12.5, width: 12, height: 14 }]);
+  assert.deepEqual(GEAR_ART.sturdy_boots.wear, [{ x: 8, y: 24.5, width: 10, height: 9.5 }, { x: 30, y: 24.5, width: 10, height: 9.5 }]);
+});

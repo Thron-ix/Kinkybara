@@ -14,7 +14,7 @@ export const GEAR_ART = Object.freeze({
   soft_harness: { asset: asset("ring-harness"), wear: harnessFit },
   cross_harness: { asset: asset("cross-harness"), wear: harnessFit },
   reflective_harness: { asset: asset("reflective-harness"), wear: harnessFit },
-  paw_warmers: { asset: asset("paw-warmer-v2"), wear: [{ x: 9, y: 26, width: 7, height: 7 }, { x: 31, y: 26, width: 7, height: 7 }] },
+  paw_warmers: { asset: asset("paw-warmer-v2"), wear: [{ x: 9, y: 29, width: 7, height: 4 }, { x: 31, y: 29, width: 7, height: 4 }] },
   sturdy_boots: { asset: asset("pixel-boot"), wear: [{ x: 8, y: 24.5, width: 10, height: 9.5 }, { x: 30, y: 24.5, width: 10, height: 9.5 }] },
   ankle_cuffs: { asset: asset("leather-cuff"), wear: ankles },
   thigh_cuffs: { asset: asset("leather-cuff"), wear: [{ x: 7.5, y: 23, width: 10, height: 6.5 }, { x: 29.5, y: 23, width: 10, height: 6.5 }] },

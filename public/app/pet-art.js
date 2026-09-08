@@ -55,12 +55,25 @@ export function furCellAt(x, y) {
 
 export function drawCapyFur(ctx, palette, dirty = false) {
   ctx.save();
-  // Clear coarse diagonal spot patterns, retaining the familiar warm silhouette.
+  // Retain the finer base, then bring back the familiar blocky coat markings.
   for (let y = 0; y < CAPY_HEIGHT; y += 1) for (let x = 0; x < CAPY_WIDTH; x += 1) {
     const code = furCellAt(x, y);
     if (!code) continue;
     ctx.fillStyle = palette[["l", "s", "h", "r"].includes(code) ? "m" : code];
     ctx.fillRect(x, y, 1, 1);
+  }
+  for (let y = 0; y < CAPY_HEIGHT; y += 1) for (let x = 0; x < CAPY_WIDTH; x += 1) {
+    const code = furCellAt(x, y);
+    if (code === "l") {
+      ctx.globalAlpha = .78; ctx.fillStyle = palette.l;
+      ctx.fillRect(x, y, 1, 1);
+    } else if (code === "s") {
+      ctx.globalAlpha = .27; ctx.fillStyle = palette.d;
+      ctx.fillRect(x + .25, y, .75, 1);
+    } else if (code === "h") {
+      ctx.globalAlpha = .7; ctx.fillStyle = palette.l;
+      ctx.fillRect(x + .25, y + .25, .5, .5);
+    }
   }
   // Four subpixels per source pixel, deterministic short tufts, no random flicker.
   for (let sy = 0; sy < CAPY_HEIGHT * FUR_SCALE; sy += 1) for (let sx = 0; sx < CAPY_WIDTH * FUR_SCALE; sx += 1) {
@@ -69,7 +82,7 @@ export function drawCapyFur(ctx, palette, dirty = false) {
     if (!code || ["d", "p", "i"].includes(code)) continue;
     const hash = ((sx * 73856093) ^ (sy * 19349663)) >>> 0;
     const light = Math.max(0, 1 - Math.abs(y - (10.5 + Math.sin(x / 10))) / 7);
-    ctx.globalAlpha = light * .42;
+    ctx.globalAlpha = light * .2;
     ctx.fillStyle = palette.l;
     ctx.fillRect(x, y, .25, .25);
     if (hash % 11 === 0) {

@@ -70,3 +70,8 @@ Use case: stylized-concept. Create ONE thin fitted leather collar exterior sprit
 
 61 Node-Tests inklusive Besitz-/Save-Kompatibilität, Deko-Freischaltung und viertelpixelgenauer Maskenprüfung. Isolierte Browserchecks für Weltplätze, Kamera-Zugang, Schlaf, alle Fellfarben, sauberes/verschmutztes Fell und Hood-Kombination. Story in drei Looks, optionaler Deko, Spiegelung, DE/EN und 320/390/768 px Breite; Offline-Start und Export mit 46 Cache-Dateien; native Share-Schnittstelle mit Test-Ersatz, kein echter Social-Media-Post. Vorhandene Pack-Cards-Regeln und Minispiel-Varianten unverändert.
 
+## Nachkorrektur: Charakter und Porträt
+
+Die vertrauten hellen Rückenpartien, diagonalen Pixel-Strähnen und einzelnen Lichtflecken sind wieder deutlicher sichtbar. Die feinere Textur bleibt darunter erhalten; Kontur, Gesicht und Ausrüstungsanker in der Welt sind unverändert. Pfotenwärmer sind von 7 auf 4 Rastereinheiten Höhe verkürzt und sitzen entsprechend tiefer (Unterkante unverändert). Schuhe und Halsband bleiben exakt wie zuvor.
+
+Das Story-Porträt zeichnet ein eigenes offenes Auge mit Lichtpunkt und ein kleines Lächeln nach der Fellebene. Live-Schlaf-/Blinkfarben werden nicht übernommen, die Fellschicht kann die Mundwinkel nicht mehr verdecken. Bedürfnisse und Spielstand werden dabei nicht verändert. Zusätzliche Tests sichern den Ausdruck und den niedrigeren Sitz; insgesamt 63 Node-Tests. Im isolierten Browser sind die exportierten PNGs bei guten und niedrigen Bedürfnissen sowie beim Schlafen jeweils identisch – mit und ohne Hood.

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { STORY_SIZE, STORY_LOOKS, normalizeStoryOptions, captureStoryAppearance, storyAssetPaths } from "../public/app/story-card.js";
+import { STORY_SIZE, STORY_LOOKS, normalizeStoryOptions, captureStoryAppearance, storyAssetPaths, drawStoryFace } from "../public/app/story-card.js";
 import { CAPY_PIXELS } from "../public/app/pet-art.js";
 import { t } from "../public/app/i18n.js";
 import { createInventory, addInventoryItem, normalizeInventory, toggleEquipment, DESTINATION_REWARDS } from "../public/app/inventory-core.js";
@@ -36,6 +36,23 @@ test("Story assets are local, deduplicated and precached, including tintable gea
     await readFile(new URL(`../public/app/${path}`, import.meta.url));
   }
   assert.ok(shell.includes('"./story-card.js"'));
+});
+
+test("Story smile and bright eyes ignore live mood, sleep and blink colors", async () => {
+  const poses = [];
+  for (const moodColor of ["#1e1713", "#33231b", "transparent"]) {
+    const marks = [];
+    const palette = { m: "#b58250", q: "#c79662", e: moodColor, g: moodColor, k: moodColor };
+    const before = JSON.stringify(palette);
+    drawStoryFace({ save() {}, restore() {}, fillRect(...coords) { marks.push([...coords, this.fillStyle]); } }, palette);
+    assert.equal(JSON.stringify(palette), before);
+    poses.push(marks);
+  }
+  assert.deepEqual(poses[0], poses[1]);
+  assert.deepEqual(poses[1], poses[2]);
+  assert.ok(poses[0].some((mark) => mark[4] === "#fff3d4"), "eye glint stays visible");
+  const source = await readFile(new URL("../public/app/story-card.js", import.meta.url), "utf8");
+  assert.ok(source.indexOf("drawStoryFace(ctx, appearance.palette)") > source.indexOf("drawCapyFur(ctx, appearance.palette"), "fur cannot cover the smile");
 });
 
 test("all Story controls have natural German and English copy", () => {

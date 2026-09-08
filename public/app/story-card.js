@@ -99,6 +99,28 @@ function text(ctx, value, x, y, size, color, maxWidth = 880) {
   ctx.fillText(value, x, y);
 }
 
+// A portrait pose, not a snapshot of CSS mood/blink/sleep states. Draw after
+// the fur so the raised smile corners cannot be covered by the coat layer.
+export function drawStoryFace(ctx, palette) {
+  ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = palette.m;
+  ctx.fillRect(45, 10, 2, 2);
+  ctx.fillStyle = palette.q;
+  ctx.fillRect(49, 22, 5, 1);
+  ctx.fillStyle = "#1e1713";
+  ctx.fillRect(45.25, 10, 1.75, 1.75);
+  ctx.fillRect(45.5, 11.75, 1.25, .25);
+  ctx.fillRect(49, 21.5, .75, .75);
+  ctx.fillRect(49.5, 22, 1, .5);
+  ctx.fillRect(50.25, 22.25, 2.5, .5);
+  ctx.fillRect(52.5, 22, 1, .5);
+  ctx.fillRect(53.25, 21.5, .75, .75);
+  ctx.fillStyle = "#fff3d4";
+  ctx.fillRect(45.25, 10, .5, .5);
+  ctx.restore();
+}
+
 // One local PNG is both the preview and the export. No DOM serialization,
 // third-party renderer, remote font, upload or platform account is needed.
 export async function renderStoryCard(canvas, appearance, options = {}) {
@@ -179,12 +201,11 @@ export async function renderStoryCard(canvas, appearance, options = {}) {
     for (let x = 0; x < CAPY_WIDTH; x += 1) {
       const code = CAPY_PIXELS[y][x];
       if (!appearance.palette[code]) continue;
-      // A small smile for the portrait, without changing the pet's actual mood.
-      const offset = code === "k" ? (x === 49 || x === 53 ? -0.45 : x === 51 ? 0.45 : 0) : 0;
-      rect(x, y + offset, 1, 1, appearance.palette[code]);
+      rect(x, y, 1, 1, appearance.palette[code]);
     }
   }
   drawCapyFur(ctx, appearance.palette, appearance.dirty);
+  drawStoryFace(ctx, appearance.palette);
   drawGear("body");
   if (appearance.hood) {
     const hood = appearance.hood;

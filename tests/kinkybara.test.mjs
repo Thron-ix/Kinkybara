@@ -831,7 +831,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v47/);
+  assert.match(serviceWorker, /kinkybara-shell-v48/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);
