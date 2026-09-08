@@ -124,16 +124,16 @@ const NEED_LABEL_KEYS = {
 
 const GROUPS = {
   en: {
-    feed: { kicker: "FEED", title: "Give {name} something juicy", instruction: "Pick a treat and drag it to that impatient mouth.", items: FOODS },
-    play: { kicker: "PLAY", title: "Show me how you throw", instruction: "Throw it. A firm hand gets attention.", items: TOYS },
-    care: { kicker: "CARE", title: "Hands on, please", instruction: "Brush slowly or get your Kinkybara properly wet.", items: CARE },
-    together: { kicker: "CLOSER", title: "Come a little closer", instruction: "Choose the mood. We can discuss who leads.", items: TOGETHER },
+    feed: { kicker: "FEED", title: "Give {name} something juicy", items: FOODS },
+    play: { kicker: "PLAY", title: "Show me how you throw", items: TOYS },
+    care: { kicker: "CARE", title: "Hands on, please", items: CARE },
+    together: { kicker: "CLOSER", title: "Come a little closer", items: TOGETHER },
   },
   de: {
-    feed: { kicker: "FÜTTERN", title: "Gib {name} etwas Saftiges", instruction: "Wähl einen Happen und zieh ihn direkt zum ungeduldigen Maul.", items: FOODS },
-    play: { kicker: "SPIELEN", title: "Zeig mir, wie du wirfst", instruction: "Wirf. Eine feste Hand bekommt Aufmerksamkeit.", items: TOYS },
-    care: { kicker: "PFLEGEN", title: "Hände dran, bitte", instruction: "Bürste langsam oder mach dein Kinkybara ordentlich nass.", items: CARE },
-    together: { kicker: "NÄHER", title: "Komm ein bisschen näher", instruction: "Wähl die Stimmung. Wer führt, handeln wir aus.", items: TOGETHER },
+    feed: { kicker: "FÜTTERN", title: "Gib {name} etwas Saftiges", items: FOODS },
+    play: { kicker: "SPIELEN", title: "Zeig mir, wie du wirfst", items: TOYS },
+    care: { kicker: "PFLEGEN", title: "Hände dran, bitte", items: CARE },
+    together: { kicker: "NÄHER", title: "Komm ein bisschen näher", items: TOGETHER },
   },
 };
 
@@ -165,7 +165,6 @@ const elements = {
   tray: $("#activity-tray"),
   trayKicker: $("#tray-kicker"),
   trayTitle: $("#tray-title"),
-  trayInstruction: $("#tray-instruction"),
   trayItems: $("#tray-items"),
   trayProgress: $("#tray-progress"),
   ghost: $("#drag-ghost"),
@@ -295,22 +294,22 @@ const LANGUAGE_COPY = Object.freeze({
 });
 
 const ENGLISH_STATUS_COPY = Object.freeze({
-  sleeping: "Shh … collar off, lights low. Be good until I’m back.",
+  sleeping: "Shh … lights low. I’m dreaming.",
   urgent: {
-    satiety: ["Feed me. That was an order — unless you ask nicely.", "My mouth wants something juicy. Don’t keep it waiting.", "I’m hungry enough to stop pretending I’m patient."],
-    fun: ["I need a toy. And a little resistance.", "Throw something. I’m in the mood to chase trouble.", "I have far too much mischief and nowhere to put it."],
-    clean: ["Get me wet and call it self-care.", "I smell like a very good bad idea. Brush me.", "Firm hands, warm water. You know what to do."],
-    energy: ["I’m about to fold. Come here and be my pillow.", "Even a bossy pup needs a nap. Lights down.", "My stamina has left the club without me."],
-    social: ["Closer. Now. Please. See? Switch.", "I want attention — the good, deliberate kind.", "Your pocket has room. I checked."],
-    curiosity: ["Something smells like trouble. I want in.", "Take me somewhere with questionable lighting.", "My nose found a bad idea. Obviously we should follow it."],
+    satiety: ["I’m properly hungry. Food, please.", "My snout wants something juicy. Now.", "One more growl from my belly and I’ll get grumpy."],
+    fun: ["I’m bored. Play with me.", "Throw something. I’ll catch the trouble.", "Too much mischief, not enough toy."],
+    clean: ["I need a brush or a bath. Badly.", "I smell like last night. Help.", "Warm water. Firm hands. Go."],
+    energy: ["I’m about to drop. Lights out.", "Even a bossy pup needs sleep.", "Battery empty. I’m coming in for a cuddle."],
+    social: ["Come closer. I need you near.", "Stay with me a minute. Please.", "I miss your attention."],
+    curiosity: ["I need out. My nose found something.", "Trouble is waiting somewhere. Come on.", "I need something new to sniff."],
   },
   low: {
-    satiety: ["A peach would hit the spot. Yes, that was deliberate.", "Something firm, something juicy — surprise me."],
-    fun: ["The tug rope looks untouched. Rude.", "I could be good. Or we could play."],
-    clean: ["My fur is wearing last night’s attitude.", "A slow brush would improve my mood considerably."],
-    energy: ["I’m soft, sleepy, and temporarily harmless.", "Come closer. I need a warm place to crash."],
-    social: ["I miss your hands. The kind ones. Mostly.", "A little attention would make me dangerously charming."],
-    curiosity: ["Show me something I’m not supposed to find interesting.", "I’m bored enough to make excellent mistakes."],
+    satiety: ["An apple would be good.", "I have room for melon.", "Something juicy?"],
+    fun: ["One round?", "The tug rope is bored.", "I could be good. Or play."],
+    clean: ["A few brush strokes?", "My fur is still wearing yesterday.", "A slow brush sounds good."],
+    energy: ["Still awake. Barely.", "I’m getting soft and sleepy.", "Make room for me."],
+    social: ["A little closeness would be nice.", "Stay with me a minute?", "I miss your hands. The kind ones."],
+    curiosity: ["Show me something new.", "I’m ready for good mistakes.", "Quick wander?"],
   },
   time: {
     morning: ["Morning. Coffee first, commands later.", "I’m still soft. Don’t take advantage — or ask nicely.", "Good morning, good pup. Decide for yourself who I mean."],
@@ -325,7 +324,7 @@ const ENGLISH_STATUS_COPY = Object.freeze({
     "Come closer. Slowly. I like the tension.",
     "I can sit, stay, and set boundaries. Versatile, right?",
     "I’m a switch: lap pup one minute, giving orders the next.",
-    "Dom, sub, alpha, switch — I contain multitudes. And treats.",
+    "Dom, sub, alpha, switch — labels later. Treats now.",
     "Sniff first. Worship later. That’s my workflow.",
     "Netflix and chill? I control the remote. We negotiate the rest.",
     "Rubber, furry, or just the hood — I dress for the mood.",
@@ -348,13 +347,26 @@ const ENGLISH_STATUS_COPY = Object.freeze({
     "Your pocket looks inviting. Your lap looks better.",
     "Stay close. That was almost an order.",
     "Sweet face, sharp attitude. It’s called range.",
+    "Good to see you.",
+    "Move closer. There’s room.",
+    "Soft today. We’ll see about tomorrow.",
+    "Stay a minute. I like having you here.",
+    "When my ears wiggle, I’m happy. That simple.",
+    "We don’t have to do anything. Just come closer.",
+    "You take care of me. I notice.",
+    "Warm snout, familiar human. Enough.",
+    "I kept your spot free.",
+    "Maybe just melon and closeness today.",
+    "A quiet day? I can do that.",
+    "I see you. That’s good.",
+    "Good to have you back.",
   ],
 });
 
 const PET_PHRASES = Object.freeze({
   en: [
     "Yes. Right there.",
-    "Good hand. Keep going.",
+    "Don’t stop.",
     "Careful — I might get used to that.",
     "A little firmer. I can take it.",
     "That tickles. Don’t stop.",
@@ -364,7 +376,7 @@ const PET_PHRASES = Object.freeze({
   ],
   de: [
     "Ja. Genau da.",
-    "Gute Hand. Weitermachen.",
+    "Nicht aufhören.",
     "Vorsicht – daran könnte ich mich gewöhnen.",
     "Ein bisschen fester. Ich halte das aus.",
     "Das kitzelt. Nicht aufhören.",
@@ -382,6 +394,21 @@ function pickEnglishPhrase(options, value, now, salt = 0) {
 
 function ui() {
   return LANGUAGE_COPY[languageFor(state.language)];
+}
+
+function localizedAreaPhrase(area, direction = "at") {
+  const language = languageFor(state.language);
+  const places = {
+    en: {
+      at: { home: "at the Den", meadow: "at the Kennel Club", garden: "in the Play Area", wintergarden: "in the Pack Lounge" },
+      to: { home: "to the Den", meadow: "to the Kennel Club", garden: "to the Play Area", wintergarden: "to the Pack Lounge" },
+    },
+    de: {
+      at: { home: "in der Höhle", meadow: "im Kennel Club", garden: "in der Play Area", wintergarden: "in der Pack Lounge" },
+      to: { home: "in die Höhle", meadow: "in den Kennel Club", garden: "in die Play Area", wintergarden: "in die Pack Lounge" },
+    },
+  };
+  return places[language][direction][area] || ui().area[area];
 }
 
 function localizedStatusPhrase(value = state, now = Date.now()) {
@@ -747,9 +774,9 @@ function syncWorldState(now = Date.now(), traveling = isTraveling(state.travel, 
   if (state.sleeping) state.world = { ...state.world, area: "home" };
   state.landscapeArea = state.world.area;
   if (!settled.completion && !traveling && previousArea !== state.world.area && !interactionBusy && !document.querySelector("dialog[open]")) {
-    const area = ui().area[state.world.area];
-    currentPhrase = state.language === "de" ? `Ich bin von allein weitergezogen. Jetzt bin ich bei ${area.toLowerCase()}.` : `I wandered on by myself. Now I am at ${area.toLowerCase()}.`;
-    showToast(state.language === "de" ? `${state.name} ist jetzt bei ${area}.` : `${state.name} is now at ${area}.`, 2800);
+    const place = localizedAreaPhrase(state.world.area, "at");
+    currentPhrase = state.language === "de" ? `Ich bin von allein weitergezogen. Jetzt bin ich ${place}.` : `I wandered on by myself. Now I am ${place}.`;
+    showToast(state.language === "de" ? `${state.name} ist jetzt ${place}.` : `${state.name} is now ${place}.`, 2800);
   }
 }
 
@@ -817,17 +844,19 @@ function renderPlacedItems(traveling = false, now = Date.now()) {
 
   visibleItems.forEach((item, index) => {
     const isHomePlayMat = item.id === "play_mat" && state.landscapeArea === "home";
+    const isWorldSign = ["kennel_sign", "play_area_sign", "card_table"].includes(item.id);
     const button = document.createElement(isHomePlayMat ? "div" : "button");
     if (button instanceof HTMLButtonElement) button.type = "button";
     button.className = "placed-world-item";
     button.dataset.itemId = item.id;
+    button.classList.toggle("is-world-sign", isWorldSign);
     const isActivitySign = item.id === activityItemId;
     if (isActivitySign) {
       button.classList.add("is-activity-sign");
       button.dataset.worldActivity = activityArea;
     }
     button.style.setProperty("--left", isHomePlayMat ? "40%" : `${19 + ((index * 31) % 66)}%`);
-    button.style.setProperty("--bottom", isHomePlayMat ? "101px" : `${105 + ((index % 2) * 48)}px`);
+    button.style.setProperty("--bottom", isHomePlayMat ? "56px" : isWorldSign ? "50px" : `${105 + ((index % 2) * 48)}px`);
     const copy = itemCopy(item);
     const active = state.world.activity?.area === activityArea;
     const activityLabel = active
@@ -1120,7 +1149,6 @@ function openJourneyDialog() {
   state.world = normalizeWorld(state.world, Date.now(), worldSeed());
   const companions = availableCompanions(state.world, state.language, Date.now(), worldSeed());
   if (!companions.some((entry) => entry.friend.id === pendingJourneyCompanionId)) pendingJourneyCompanionId = null;
-  $("#journey-capy-name").textContent = state.name;
   $("#journey-title").textContent = state.language === "de" ? `${state.name}, wohin geht es wohl?` : `Where will ${state.name} go?`;
   const until = Math.max(0, (Number(state.travel?.nextDepartureAt) || Date.now()) - Date.now());
   const totalMinutes = Math.max(1, Math.ceil(until / 60_000));
@@ -1202,10 +1230,10 @@ function renderInventory(filter = inventoryFilter) {
   $$("button[data-filter]", $("#inventory-tabs")).forEach((button) => button.classList.toggle("is-active", button.dataset.filter === filter));
   const hint = $("#inventory-hint");
   hint.textContent = filter === "container"
-    ? (state.language === "de" ? "Der Gear-Schrank ist immer hier. Das Freundebuch kann dein Kinkybara von einer Reise mitbringen." : "The gear locker is always here. Your Kinkybara can bring the friend book home from a trip.")
+    ? (state.language === "de" ? "Der Gear-Schrank wartet schon. Das Freundebuch ist ein Reisefund." : "The gear locker is ready. The friend book is a travel find.")
     : filter === "placeable"
-      ? (state.language === "de" ? "Weltfunde kannst du platzieren und direkt in der jeweiligen Welt anklicken." : "World finds can be placed and clicked directly in their matching area.")
-      : (state.language === "de" ? "Jeder Outfit-Platz hält ein Teil. Deine Signaturfarben prägen besondere Ausrüstung automatisch." : "Each outfit slot holds one item. Your signature colors automatically shape special gear.");
+      ? (state.language === "de" ? "Platziere einen Fund, dann taucht er am passenden Ort auf." : "Place a find and it appears in its part of the world.")
+      : (state.language === "de" ? "Was du anziehst, ersetzt das vorige Teil. Signatur-Gear trägt deine Farben." : "New gear replaces what you were wearing. Signature pieces use your colors.");
   elements.inventoryGrid.replaceChildren();
 
   if (filter === "harvest") {
@@ -1242,7 +1270,7 @@ function renderInventory(filter = inventoryFilter) {
     const name = document.createElement("strong");
     name.textContent = known ? item.label : (state.language === "de" ? "Unbekannter Reisefund" : "Unknown party find");
     const detail = document.createElement("small");
-    detail.textContent = known ? item.detail : (state.language === "de" ? "Dein Kinkybara kann diesen Gegenstand von einer Party mitbringen." : "Your Kinkybara may bring this item home from a party.");
+    detail.textContent = known ? item.detail : (state.language === "de" ? "Vielleicht steckt es im nächsten Reisebeutel." : "Maybe it will turn up in the next travel bag.");
     const tag = document.createElement("em");
     tag.textContent = item.slot
       ? localizedSlot(item.slot, state.language)
@@ -1269,7 +1297,7 @@ function openInventory(filter = "all") {
 function openGearLocker() {
   const wearables = Object.values(ITEM_DEFINITIONS).filter((item) => item.type === "wearable");
   $("#gear-locker-title").textContent = state.language === "de" ? `${state.name}s Gear` : `${state.name}'s gear`;
-  $("#gear-locker-copy").textContent = state.language === "de" ? "Alle Accessoires nach Slots sortiert. Tippe auf ein gefundenes Teil, um es direkt anzuziehen oder abzulegen." : "All accessories sorted by slot. Tap a discovered piece to put it on or take it off.";
+  $("#gear-locker-copy").textContent = state.language === "de" ? "Such dir etwas aus. Nochmal tippen, dann kommt es zurück in den Schrank." : "Pick a piece. Tap it again to put it back.";
   const grid = $("#gear-locker-grid");
   grid.replaceChildren();
   wearables.forEach((baseItem) => {
@@ -1297,7 +1325,7 @@ function openFriendBook() {
   const now = Date.now();
   state.world = normalizeWorld(state.world, now, worldSeed());
   $("#friend-book-title").textContent = state.language === "de" ? `${state.world.metFriendIds.length} von ${Object.keys(ANIMAL_FRIENDS).length} Freunden` : `${state.world.metFriendIds.length} of ${Object.keys(ANIMAL_FRIENDS).length} friends`;
-  $("#friend-book-copy").textContent = state.language === "de" ? "Tippe auf einen Freund für Fundort, Beziehung, gemeinsame Erlebnisse und die besondere Begleiter-Eigenschaft." : "Tap a friend for where you met, your relationship, shared history and their companion trait.";
+  $("#friend-book-copy").textContent = state.language === "de" ? "Tippe auf einen Namen und blättere in eurer Geschichte." : "Tap a name and look back at your time together.";
   const grid = $("#friend-book-grid");
   grid.replaceChildren();
   Object.values(ANIMAL_FRIENDS).forEach((baseFriend) => {
@@ -1391,15 +1419,16 @@ function useInventoryItem(itemId) {
     state.inventory = result.inventory;
     const replaced = itemCopy(ITEM_DEFINITIONS[result.replacedId]);
     talk(state.language === "de"
-      ? (result.equipped ? `${item.label} steht mir ausgezeichnet!${replaced ? ` ${replaced.label} kommt dafür zurück in den Rucksack.` : ""}` : `${item.label} liegt wieder ordentlich im Rucksack.`)
-      : (result.equipped ? `${item.label} looks excellent on me!${replaced ? ` ${replaced.label} goes back into the party bag.` : ""}` : `${item.label} is neatly packed away again.`), { speak: false });
+      ? (result.equipped ? `${item.label}? Steht mir.${replaced ? ` ${replaced.label} kommt zurück in den Schrank.` : ""}` : `${item.label} kommt zurück in den Schrank.`)
+      : (result.equipped ? `${item.label}? Looks good on me.${replaced ? ` ${replaced.label} goes back in the locker.` : ""}` : `${item.label} goes back in the locker.`), { speak: false });
     animateCapy("is-loved", 1200);
   } else {
     const result = togglePlacedItem(state.inventory, itemId);
     state.inventory = result.inventory;
+    const place = localizedAreaPhrase(item.area, "at");
     talk(state.language === "de"
-      ? (result.placed ? `${item.label} steht jetzt bei ${ui().area[item.area].toLowerCase()}. Ich werde es dort wiederfinden.` : `${item.label} ist wieder sicher im Rucksack.`)
-      : (result.placed ? `${item.label} is now at ${ui().area[item.area].toLowerCase()}. I will find it there.` : `${item.label} is safely packed away again.`), { speak: false });
+      ? (result.placed ? `${item.label} steht jetzt ${place}. Passt.` : `${item.label} ist wieder eingepackt.`)
+      : (result.placed ? `${item.label} is now ${place}. Nice.` : `${item.label} is packed away again.`), { speak: false });
   }
   haptic(16);
   renderInventory();
@@ -2048,9 +2077,6 @@ function openTray(category) {
   selectedItem = null;
   elements.trayKicker.textContent = group.kicker;
   elements.trayTitle.textContent = group.title.replace("{name}", state.name);
-  elements.trayInstruction.textContent = category === "feed"
-    ? `${group.instruction} ${state.language === "de" ? "Drei Snacks und ein Saft wechseln regelmäßig; selten taucht ein Markt-Special auf." : "Three staples and one juice rotate regularly; a rare market special sometimes joins them."}`
-    : group.instruction;
   elements.trayProgress.hidden = true;
   elements.trayProgress.querySelector("span").style.width = "0%";
   elements.trayItems.replaceChildren();
@@ -2916,8 +2942,8 @@ $("#world-navigation").addEventListener("click", (event) => {
   }
   state.world = selectWorldArea(state.world, button.dataset.area, Date.now(), worldSeed());
   state.landscapeArea = state.world.area;
-  const area = ui().area[state.landscapeArea];
-  talk(state.language === "de" ? `Auf geht’s zum ${area}.` : `Off we go to ${area}.`, { speak: false });
+  const destination = localizedAreaPhrase(state.landscapeArea, "to");
+  talk(state.language === "de" ? `Auf geht’s ${destination}.` : `Off we go ${destination}.`, { speak: false });
   render();
 });
 

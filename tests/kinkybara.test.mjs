@@ -463,7 +463,7 @@ test("the collection has exclusive clothing slots and placeable finds", () => {
   assert.equal(ITEM_DEFINITIONS.gear_locker.type, "container");
   assert.equal(ITEM_DEFINITIONS.friend_book.type, "container");
   assert.equal(ITEM_DEFINITIONS.play_mat.area, "home");
-  assert.equal(ITEM_DEFINITIONS.kennel_sign.asset, undefined);
+  assert.equal(ITEM_DEFINITIONS.kennel_sign.asset, "./assets/kennel-sofa.png");
   assert.equal(inventory.ownedItemIds.includes("gear_locker"), true);
   assert.equal(inventory.ownedItemIds.includes("friend_book"), false);
   assert.equal(togglePlacedItem(addInventoryItem(placed.inventory, "gear_locker").inventory, "gear_locker").placed, false);
@@ -831,7 +831,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v41/);
+  assert.match(serviceWorker, /kinkybara-shell-v43/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);
@@ -840,6 +840,8 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(serviceWorker, /kennel-fruit-pair\.png/);
   assert.match(serviceWorker, /gear-locker\.png/);
   assert.match(serviceWorker, /friend-book\.png/);
+  assert.match(serviceWorker, /kennel-sofa\.png/);
+  assert.match(serviceWorker, /world-sign-post\.png/);
   assert.match(serviceWorker, /dialogues\.js/);
   assert.match(serviceWorker, /pet-library\.js/);
   assert.match(serviceWorker, /quest-core\.js/);

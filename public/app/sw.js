@@ -1,4 +1,4 @@
-const CACHE_NAME = "kinkybara-shell-v41";
+const CACHE_NAME = "kinkybara-shell-v43";
 const APP_SHELL = Object.freeze([
   "./index.html",
   "./styles.css",
@@ -9,6 +9,8 @@ const APP_SHELL = Object.freeze([
   "./assets/kennel-fruit-pair.png",
   "./assets/gear-locker.png",
   "./assets/friend-book.png",
+  "./assets/kennel-sofa.png",
+  "./assets/world-sign-post.png",
   "./game-core.js",
   "./pet-art.js",
   "./dialogues.js",
