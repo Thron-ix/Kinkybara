@@ -96,6 +96,8 @@ import {
   worldActivityTimeLabel,
 } from "./world-core.js";
 import { applyI18n, languageFor, t } from "./i18n.js";
+import { captureStoryAppearance, renderStoryCard } from "./story-card.js";
+import { tintedGearSource } from "./gear-art.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -199,7 +201,6 @@ const elements = {
   gardenPlots: $("#garden-plots"),
   animalVisitor: $("#animal-visitor"),
   outfitLayer: $("#outfit-layer"),
-  hoodToggle: $("#hood-toggle"),
   placedBackgroundItemsLayer: $("#placed-background-items-layer"),
   placedItemsLayer: $("#placed-items-layer"),
   dialogueDialog: $("#dialogue-dialog"),
@@ -472,6 +473,7 @@ function createItemArtwork(item, className, fallback = "?") {
     const image = document.createElement("img");
     image.className = className;
     image.src = item.asset;
+    if (item.tint) applyGearTint(image, item);
     image.alt = "";
     image.decoding = "async";
     image.dataset.item = item.id;
@@ -808,13 +810,13 @@ function berlinSolarScene(now = Date.now()) {
 }
 
 function renderOutfit() {
-  const outfitKey = JSON.stringify(state.inventory.equipped);
+  const outfitKey = JSON.stringify([state.inventory.equipped, state.primaryAccent, state.secondaryAccent]);
   if (elements.outfitLayer.dataset.equipmentKey === outfitKey
     && elements.capy.querySelector(".fitted-gear-body")
     && elements.capy.querySelector(".fitted-gear-face")) return;
   elements.outfitLayer.dataset.equipmentKey = outfitKey;
   elements.outfitLayer.replaceChildren();
-  const gearLayers = Object.fromEntries(["body", "face"].map((name) => {
+  const gearLayers = Object.fromEntries(["back", "body", "face"].map((name) => {
     let layer = elements.capy.querySelector(`.fitted-gear-${name}`);
     if (!layer) {
       layer = document.createElement("span");
@@ -833,6 +835,7 @@ function renderOutfit() {
         const image = document.createElement("img");
         image.className = "fitted-gear-piece";
         image.src = item.asset;
+        if (item.tint) applyGearTint(image, item);
         image.alt = "";
         image.draggable = false;
         image.dataset.item = itemId;
@@ -850,14 +853,13 @@ function renderOutfit() {
     piece.dataset.slot = slot;
     piece.dataset.item = itemId;
     piece.textContent = item.icon;
-    if (slot === "hood") {
-      const expression = document.createElement("span");
-      expression.className = "hood-expression";
-      expression.setAttribute("aria-hidden", "true");
-      piece.append(expression);
-    }
     elements.outfitLayer.append(piece);
   }
+}
+
+function applyGearTint(image, item) {
+  const color = ACCENT_COLORS[state.primaryAccent].hex;
+  tintedGearSource(item.asset, color).then((source) => { image.src = source; }).catch(() => { /* Untinted local artwork stays visible if rendering is unavailable. */ });
 }
 
 function renderPlacedItems(traveling = false, now = Date.now()) {
@@ -915,7 +917,9 @@ function renderAnimalVisitor(traveling = false) {
   const friend = !traveling && !state.sleeping ? friendCopy(ANIMAL_FRIENDS[state.world.friendId]) : null;
   elements.animalVisitor.hidden = !friend;
   if (!friend) return;
-  $("#visitor-icon").textContent = friend.icon;
+  elements.animalVisitor.dataset.friend = friend.id;
+  elements.animalVisitor.style.setProperty("--visitor-x", parseFloat(elements.petButton.style.getPropertyValue("--pet-x")) >= 50 ? "15%" : "85%");
+  $("#visitor-icon").textContent = { chicken: "", rabbit: "🐇", duck: "🦆", hedgehog: "🦔", alpaca: "🦙", goose: "🪿" }[friend.id] || "🐾";
   $("#visitor-name").textContent = friend.label;
   elements.animalVisitor.setAttribute("aria-label", state.language === "de" ? `${friend.label} begrüßen` : `Greet ${friend.label}`);
 }
@@ -1079,10 +1083,6 @@ function renderLandscape(now = Date.now(), traveling = isTraveling(state.travel,
   $('.cabin[data-landmark="cabin"]').setAttribute("aria-label", state.language === "de" ? `${state.name}s kleine Schlafhütte ansehen` : `Look at ${state.name}'s little sleeping den`);
   const petX = `${wanderPosition(now)}%`;
   elements.petButton.style.setProperty("--pet-x", petX);
-  elements.hoodToggle.style.setProperty("--pet-x", petX);
-  elements.hoodToggle.hidden = traveling || sessionAway || state.sleeping || !state.inventory.equipped.hood;
-  elements.hoodToggle.setAttribute("aria-label", state.language === "de" ? "Hood abnehmen" : "Take off hood");
-  elements.hoodToggle.title = state.language === "de" ? "Hood abnehmen" : "Take off hood";
   $$("button[data-area]", $("#world-navigation")).forEach((item) => {
     item.classList.toggle("is-active", item.dataset.area === state.landscapeArea);
     item.setAttribute("aria-pressed", String(item.dataset.area === state.landscapeArea));
@@ -1467,19 +1467,6 @@ function useInventoryItem(itemId) {
   renderInventory();
   render();
   if (elements.gearLockerDialog.open) openGearLocker();
-}
-
-function removeEquippedHood() {
-  const itemId = state.inventory.equipped.hood;
-  if (!itemId || interactionBusy || isTraveling(state.travel)) return;
-  const item = itemCopy(ITEM_DEFINITIONS[itemId]);
-  state.inventory = toggleEquipment(state.inventory, itemId).inventory;
-  talk(state.language === "de"
-    ? `${item.label} liegt wieder im Gear-Schrank. Frische Luft für die Ohren!`
-    : `${item.label} is back in the gear locker. Fresh air for those ears!`, { speak: false });
-  playSound("tap");
-  haptic(16);
-  render();
 }
 
 function renderGarden(now = Date.now()) {
@@ -2908,7 +2895,6 @@ document.addEventListener("pointerup", endDrag, { passive: false });
 document.addEventListener("pointercancel", endDrag, { passive: false });
 
 elements.petButton.addEventListener("click", petCapy);
-elements.hoodToggle.addEventListener("click", removeEquippedHood);
 elements.habitat.addEventListener("click", (event) => {
   if (Date.now() < suppressClickUntil || event.target.closest("button")) return;
   performSelectedInHabitat(event);
@@ -2926,6 +2912,58 @@ elements.questAlertOpen.addEventListener("click", openQuestBoard);
 elements.questAlertDismiss.addEventListener("click", dismissQuestIndicator);
 $("#journal-button").addEventListener("click", () => { renderJournal(); openDialog(elements.journalDialog); });
 $("#settings-button").addEventListener("click", () => { syncSettingsForm(); openDialog(elements.settingsDialog); });
+
+let storyVersion = 0;
+let storyFile = null;
+$("#story-button").addEventListener("click", async () => {
+  const version = ++storyVersion;
+  const language = state.language;
+  const dialog = $("#story-dialog");
+  const canvas = $("#story-canvas");
+  const status = $("#story-status");
+  storyFile = null;
+  canvas.hidden = true;
+  $("#story-save").disabled = true;
+  $("#story-share").hidden = true;
+  status.textContent = t(language, "story.loading");
+  openDialog(dialog);
+  try {
+    const appearance = captureStoryAppearance(state, elements.capy);
+    const prepared = document.createElement("canvas");
+    const blob = await renderStoryCard(prepared, appearance);
+    if (version !== storyVersion || !dialog.open) return;
+    canvas.getContext("2d").drawImage(prepared, 0, 0);
+    canvas.hidden = false;
+    canvas.setAttribute("aria-label", `${appearance.name}. ${t(language, "story.image")}`);
+    storyFile = new File([blob], "kinkybara-story.png", { type: "image/png" });
+    $("#story-save").disabled = false;
+    status.textContent = "";
+    try { $("#story-share").hidden = !(navigator.share && navigator.canShare?.({ files: [storyFile] })); } catch { /* Download remains available. */ }
+  } catch {
+    if (version === storyVersion && dialog.open) status.textContent = t(language, "story.error");
+  }
+});
+$("#story-dialog").addEventListener("close", () => { storyVersion += 1; storyFile = null; });
+$("#story-save").addEventListener("click", () => {
+  if (!storyFile) return;
+  const url = URL.createObjectURL(storyFile);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = storyFile.name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+});
+$("#story-share").addEventListener("click", async () => {
+  if (!storyFile) return;
+  const button = $("#story-share");
+  button.disabled = true;
+  try { await navigator.share({ files: [storyFile] }); }
+  catch (error) {
+    if (error.name !== "AbortError") $("#story-status").textContent = t(state.language, "story.shareError");
+  } finally { button.disabled = false; }
+});
 $("#weather-button").addEventListener("click", openWeatherDetails);
 elements.travelPostcard.addEventListener("click", openTravelDetails);
 $("#inventory-button").addEventListener("click", () => openInventory("all"));
@@ -3019,6 +3057,9 @@ elements.animalVisitor.addEventListener("click", () => {
   if (newEncounter) state = awardChanges({ social: 3, fun: 2, xp: 1 }, now);
   talk(friend.phrase);
   animateCapy("is-loved", 950);
+  elements.animalVisitor.classList.remove("is-greeted");
+  void elements.animalVisitor.offsetWidth;
+  elements.animalVisitor.classList.add("is-greeted");
   haptic(12);
   render();
 });

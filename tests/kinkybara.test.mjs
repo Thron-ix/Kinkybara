@@ -771,7 +771,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(html, /animal-visitor/);
   assert.match(html, /weather-dialog/);
   assert.match(html, /world-navigation/);
-  assert.match(html, /hood-toggle/);
+  assert.doesNotMatch(html, /hood-toggle/);
   assert.ok(html.indexOf('id="placed-background-items-layer"') < html.indexOf('id="pet-button"'));
   assert.doesNotMatch(html, /area-stay-panel/);
   assert.match(html, /data-filter="container"/);
@@ -809,7 +809,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.match(app, /departNow/);
   assert.match(app, /recallTravel/);
   assert.match(app, /toggleEquipment/);
-  assert.match(app, /removeEquippedHood/);
+  assert.doesNotMatch(app, /removeEquippedHood|hood-expression/);
   assert.match(app, /plantCrop/);
   assert.match(app, /normalizeWorld/);
   assert.doesNotMatch(app, /selectLandscapeArea/);
@@ -831,7 +831,7 @@ test("the published app is English-first, private, installable, and Kinkybara-br
   assert.doesNotMatch(packCardsSource, /PACK SPIRIT|PACKGEIST/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.equal(JSON.parse(manifest).lang, "en");
-  assert.match(serviceWorker, /kinkybara-shell-v44/);
+  assert.match(serviceWorker, /kinkybara-shell-v45/);
   assert.match(serviceWorker, /cache: "reload"/);
   assert.match(serviceWorker, /cachedShellResponse/);
   assert.match(serviceWorker, /if \(url\.origin !== self\.location\.origin\) return/);

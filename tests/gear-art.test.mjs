@@ -15,7 +15,7 @@ test("every fitted accessory has transparent local artwork and stays on the spri
     assert.equal(png[25], 6, `${id} needs RGBA, not a baked-in checkerboard`);
     for (const fit of art.wear) {
       assert.ok(fit.width > 0 && fit.height > 0);
-      assert.ok(fit.x >= 0 && fit.x + fit.width <= CAPY_WIDTH);
+      assert.ok(fit.x >= (art.gearLayer === "back" ? -8 : 0) && fit.x + fit.width <= CAPY_WIDTH);
       assert.ok(fit.y >= 0 && fit.y + fit.height <= CAPY_HEIGHT);
     }
   }

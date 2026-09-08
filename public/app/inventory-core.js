@@ -7,6 +7,7 @@ export const EQUIPMENT_SLOTS = Object.freeze({
   harness: "HARNESS",
   paws: "PAWS",
   cuffs: "CUFFS",
+  tail: "TAIL",
 });
 
 export const ITEM_DEFINITIONS = Object.freeze({
@@ -24,6 +25,9 @@ export const ITEM_DEFINITIONS = Object.freeze({
   sturdy_boots: { id: "sturdy_boots", type: "wearable", slot: "paws", label: "Sturdy boots", icon: "▰", ...GEAR_ART.sturdy_boots, detail: "For concrete floors and long nights." },
   ankle_cuffs: { id: "ankle_cuffs", type: "wearable", slot: "cuffs", label: "Ankle cuffs", icon: "○", ...GEAR_ART.ankle_cuffs, detail: "Padded leather around the ankles. A little jingle with every step." },
   thigh_cuffs: { id: "thigh_cuffs", type: "wearable", slot: "cuffs", label: "Thigh cuffs", icon: "○", ...GEAR_ART.thigh_cuffs, detail: "A pair of snug straps, worn a little higher." },
+  sport_socks: { id: "sport_socks", type: "wearable", slot: "paws", label: "White sports socks", icon: "∥", ...GEAR_ART.sport_socks, detail: "Fresh white cotton, ribbed cuffs and three little stripes." },
+  signature_socks: { id: "signature_socks", type: "wearable", slot: "paws", label: "Signature socks", icon: "∥", ...GEAR_ART.signature_socks, detail: "Your favorite pair. Your favorite color." },
+  signature_tail: { id: "signature_tail", type: "wearable", slot: "tail", label: "Signature pup tail", icon: "⌁", ...GEAR_ART.signature_tail, detail: "A little wag in your colors. Hard to keep still." },
   card_table: { id: "card_table", type: "placeable", area: "wintergarden", label: "Pack Cards table", icon: "▦", asset: "./assets/pack-cards-joker.png", detail: "Roxy and Jinx are always up for one more round." },
   karaoke_mic: { id: "karaoke_mic", type: "placeable", area: "wintergarden", label: "Karaoke mic", icon: "♪", detail: "For solos, duets and questionable encores." },
   juice_bar: { id: "juice_bar", type: "placeable", area: "wintergarden", label: "Juice bar", icon: "▥", detail: "Orange, pineapple, enough for the pack." },
@@ -51,6 +55,9 @@ const ITEM_COPY_DE = Object.freeze({
   sturdy_boots: ["Feste Boots", "Für Betonböden und lange Nächte."],
   ankle_cuffs: ["Knöchel-Cuffs", "Gepolstertes Leder an den Knöcheln. Klimpert bei jedem Schritt."],
   thigh_cuffs: ["Oberschenkel-Cuffs", "Zwei weiche Riemen, ein Stück höher getragen."],
+  sport_socks: ["Weiße Sportsocken", "Frische Baumwolle, gerippter Bund und drei kleine Streifen."],
+  signature_socks: ["Signatur-Socken", "Dein Lieblingspaar. Deine Lieblingsfarbe."],
+  signature_tail: ["Signatur-Pup-Tail", "Ein kleines Wedeln in deiner Farbe. Hält selten still."],
   card_table: ["Pack-Cards-Tisch", "Roxy und Jinx sind immer für eine Revanche zu haben."],
   karaoke_mic: ["Karaoke-Mikro", "Für Soli, Duette und fragwürdige Zugaben."],
   juice_bar: ["Saftbar", "Orange, Ananas, genug fürs Pack."],
@@ -63,7 +70,7 @@ const ITEM_COPY_DE = Object.freeze({
   memory_camera: ["Erinnerungskamera", "Hält den Moment hier fest – nur für dich."],
 });
 
-const SLOT_COPY_DE = Object.freeze({ hood: "HOOD", eyes: "AUGEN", neck: "HALS", harness: "HARNESS", paws: "PFOTEN", cuffs: "CUFFS" });
+const SLOT_COPY_DE = Object.freeze({ hood: "HOOD", eyes: "AUGEN", neck: "HALS", harness: "HARNESS", paws: "PFOTEN", cuffs: "CUFFS", tail: "TAIL" });
 
 export function localizedItem(item, language = "en") {
   if (!item || language !== "de") return item;
@@ -76,12 +83,12 @@ export function localizedSlot(slot, language = "en") {
 }
 
 export const DESTINATION_REWARDS = Object.freeze({
-  folsom: ["signature_hood", "soft_collar", "friend_book"],
+  folsom: ["signature_hood", "soft_collar", "friend_book", "signature_tail"],
   laboratory: ["night_hood", "reflective_harness", "neon_lamp", "thigh_cuffs"],
   berghain: ["neon_visors", "cross_harness", "tiny_speaker", "ankle_cuffs"],
-  ruhr_pack: ["sturdy_boots", "kennel_sign", "memory_camera"],
+  ruhr_pack: ["sturdy_boots", "kennel_sign", "memory_camera", "sport_socks", "signature_tail"],
   mannheim: ["pack_bandana", "karaoke_mic", "juice_bar", "friend_book"],
-  csd_berlin: ["prism_hood", "card_table", "memory_camera"],
+  csd_berlin: ["prism_hood", "card_table", "memory_camera", "signature_socks"],
   csd_cologne: ["paw_warmers", "play_mat", "juice_bar", "friend_book"],
   csd_hamburg: ["round_glasses", "tiny_speaker", "neon_lamp"],
 });
@@ -99,7 +106,7 @@ export function createInventory() {
   return {
     version: 1,
     ownedItemIds: [...STARTER_ITEMS],
-    equipped: { hood: "signature_hood", eyes: null, neck: null, harness: null, paws: null, cuffs: null },
+    equipped: { hood: "signature_hood", eyes: null, neck: null, harness: null, paws: null, cuffs: null, tail: null },
     placedItemIds: ["card_table"],
     discoveredAt: {},
   };

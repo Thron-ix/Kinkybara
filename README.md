@@ -17,10 +17,13 @@ The interface starts in English and can switch to German. On first launch, the o
 - Pack Cards, a quick Quartett-style game with two simple rules, two rivals and rare twists
 - Peaches, eggplants, orange juice and pineapple juice
 - Offline-ready Progressive Web App, optimized for small portrait screens
+- A clean 9:16 Story portrait with your actual outfit, downloadable as a 1080×1920 PNG with space for your own text
 
 ## Privacy
 
 Kinkybara has no account, ads, analytics, tracking, cloud save, location request or external gameplay API. Names, colors, progress and memories stay in the current browser. A static host necessarily receives normal request metadata when serving the app files; Kinkybara adds no tracking to those requests.
+
+Under **⋯ → Show off your Kinkybara** (German: **Zeig dein Kinkybara**), prepare a Story image locally. It includes the chosen pet name, colors and outfit, but no needs, journal or friend records. Save it or use the device's share sheet where supported; nothing is posted automatically. The lower part stays blank for your own Instagram text and stickers. This also works offline after the app has cached its artwork.
 
 After one complete load, the app shell is cached for offline starts. Kinkybara does not run in the background; when reopened, it catches up from the device clock. Keeping the tab or installed app preserves the local save unless browser data is cleared.
 

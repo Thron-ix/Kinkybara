@@ -78,11 +78,10 @@
           <span class="heart-layer" id="heart-layer" aria-hidden="true"></span>
           <span class="pet-shadow" aria-hidden="true"></span>
         </button>
-        <button class="hood-toggle" id="hood-toggle" type="button" hidden><span aria-hidden="true">×</span><small>HOOD</small></button>
 
         <div class="scene-layer" id="scene-layer" aria-hidden="true"></div>
         <div class="placed-items-layer" id="placed-items-layer" data-i18n-aria="inventory.placed" aria-label="Placed collection items"></div>
-        <button class="animal-visitor" id="animal-visitor" type="button" hidden><span id="visitor-icon">♢</span><strong id="visitor-name">Fips</strong><small data-i18n="world.visitor">VISITOR</small></button>
+        <button class="animal-visitor" id="animal-visitor" type="button" hidden><span id="visitor-icon" aria-hidden="true">🐇</span><strong id="visitor-name">Fips</strong></button>
         <div class="bubble-layer" id="bubble-layer" data-i18n-aria="play.bubbles" aria-label="Bubble game"></div>
         <div class="splash-layer" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
@@ -366,6 +365,7 @@
       <form id="settings-form">
         <div class="sheet-handle" aria-hidden="true"></div>
         <div class="sheet-title"><div><p class="sheet-kicker">KINKYBARA</p><h2 data-i18n="settings.title">Settings</h2></div><button type="button" data-close data-i18n-aria="common.close" aria-label="Close">×</button></div>
+        <button class="secondary-button story-menu-button" id="story-button" type="button"><span aria-hidden="true">↗</span> <span data-i18n="story.open">SHOW OFF YOUR KINKYBARA</span></button>
         <label class="text-field"><span data-i18n="welcome.name">NAME</span><input id="settings-name" maxlength="14" autocomplete="off" /></label>
         <fieldset class="settings-language">
           <legend data-i18n="settings.language">LANGUAGE</legend>
@@ -393,6 +393,17 @@
         </aside>
         <button class="danger-button" id="reset-button" type="button" data-i18n="settings.delete">DELETE THIS KINKYBARA</button>
       </form>
+    </dialog>
+
+    <dialog class="sheet story-sheet" id="story-dialog" aria-labelledby="story-title">
+      <div class="sheet-title"><div><p class="sheet-kicker">STORY · 9:16</p><h2 id="story-title" data-i18n="story.title">Made for your Story</h2></div><button type="button" data-close data-i18n-aria="common.close" aria-label="Close">×</button></div>
+      <p class="story-hint" data-i18n="story.hint">Save the image or take a screenshot. The space below is yours for text and stickers.</p>
+      <canvas id="story-canvas" width="1080" height="1920" role="img" data-i18n-aria="story.image" aria-label="Your Kinkybara in its current outfit, with space below for Story text" hidden></canvas>
+      <p id="story-status" class="story-status" role="status"></p>
+      <div class="story-actions">
+        <button class="primary-button" id="story-share" type="button" data-i18n="story.share" hidden>SHARE IMAGE</button>
+        <button class="secondary-button" id="story-save" type="button" data-i18n="story.save" disabled>SAVE IMAGE</button>
+      </div>
     </dialog>
 
   <script type="module" src="./app.js"></script>
