@@ -2982,7 +2982,6 @@ async function prepareStoryImage() {
   const status = $("#story-status");
   storyFile = null;
   canvas.hidden = true;
-  $("#story-save").disabled = true;
   $("#story-share").hidden = true;
   status.textContent = t(language, "story.loading");
   try {
@@ -2994,9 +2993,8 @@ async function prepareStoryImage() {
     canvas.hidden = false;
     canvas.setAttribute("aria-label", `${appearance.name}. ${t(language, "story.image")}`);
     storyFile = new File([blob], "kinkybara-story.png", { type: "image/png" });
-    $("#story-save").disabled = false;
     status.textContent = "";
-    try { $("#story-share").hidden = !(navigator.share && navigator.canShare?.({ files: [storyFile] })); } catch { /* Download remains available. */ }
+    try { $("#story-share").hidden = !(navigator.share && navigator.canShare?.({ files: [storyFile] })); } catch { /* The portrait remains visible without native sharing. */ }
   } catch {
     if (version === storyVersion && dialog.open) status.textContent = t(language, "story.error");
   }
@@ -3006,7 +3004,6 @@ function openStoryStudio() {
   storyFile = null;
   storyAppearance = null;
   $("#story-canvas").hidden = true;
-  $("#story-save").disabled = true;
   $("#story-share").hidden = true;
   openDialog($("#story-dialog"));
   try { storyAppearance = captureStoryAppearance(state, elements.capy); }
@@ -3024,17 +3021,6 @@ $$('[data-story-look]').forEach((button) => button.addEventListener("click", () 
 $("#story-mirror").addEventListener("change", (event) => changeStoryOptions({ ...storyOptions, mirrored: event.target.checked }));
 $("#story-decoration").addEventListener("change", (event) => changeStoryOptions({ ...storyOptions, decoration: event.target.value }));
 $("#story-dialog").addEventListener("close", () => { storyVersion += 1; storyFile = null; storyAppearance = null; });
-$("#story-save").addEventListener("click", () => {
-  if (!storyFile) return;
-  const url = URL.createObjectURL(storyFile);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = storyFile.name;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
-});
 $("#story-share").addEventListener("click", async () => {
   if (!storyFile) return;
   const button = $("#story-share");

@@ -56,13 +56,25 @@ test("Story smile and bright eyes ignore live mood, sleep and blink colors", asy
 });
 
 test("all Story controls have natural German and English copy", () => {
-  for (const key of ["open", "title", "eyebrow", "look", "mirror", "decoration", "noDecoration", "image", "share", "save", "loading", "error", "shareError"]) {
+  for (const key of ["open", "title", "eyebrow", "look", "mirror", "decoration", "noDecoration", "image", "share", "loading", "error", "shareError"]) {
     const id = `story.${key}`;
     assert.notEqual(t("de", id), id);
     assert.notEqual(t("en", id), id);
     if (!["title", "eyebrow"].includes(key)) assert.notEqual(t("de", id), t("en", id));
   }
   assert.equal(t("de", "story.eyebrow"), "KINKYBARA");
+});
+
+test("Story offers native image sharing only, with no separate download action", async () => {
+  const html = await readFile(new URL("../public/app/index.html", import.meta.url), "utf8");
+  const app = await readFile(new URL("../public/app/app.js", import.meta.url), "utf8");
+  assert.match(html, /id="story-share"/);
+  assert.ok(!html.includes('id="story-save"'));
+  assert.ok(!app.includes("#story-save"));
+  const storyHandlers = app.slice(app.indexOf('let storyVersion'), app.indexOf('$("#weather-button").addEventListener'));
+  assert.match(storyHandlers, /navigator\.share\(\{ files: \[storyFile\] \}\)/);
+  assert.ok(!storyHandlers.includes("createObjectURL"));
+  assert.ok(!storyHandlers.includes(".download"));
 });
 
 test("Story options stay local and normalize invalid or old settings", () => {
